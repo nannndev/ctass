@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ctas: pecut AI biar rajin</title>
+  <meta name="description" content="Pecut virtual dengan fisika tali beneran buat macOS. Ayun, sentak, CTARR! Omelan lu langsung diketik ke jendela AI.">
+  <meta property="og:title" content="Ctas: pecut AI biar rajin">
+  <meta property="og:description" content="Pecut virtual dengan fisika tali beneran. AI lelet? Pecut aja.">
+  <meta name="theme-color" content="#17120e">
+  <link rel="icon" href="/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="wordmark" href="#top" aria-label="Ctas, ke atas">CTAS</a>
+    <nav aria-label="Navigasi">
+      <a href="#varian">Varian</a>
+      <a href="#cara">Cara kerja</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-sm" href="#download">Download</a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow">Buat macOS · gratis · open source</p>
+      <h1>AI lelet? <em>Pecut aja.</em></h1>
+      <p class="lede">Ctas itu pecut virtual dengan fisika tali beneran. Ayun, sentak, <strong>CTARR!</strong> Terus omelan lu langsung diketik ke jendela AI yang lagi ngeles.</p>
+      <div class="cta">
+        <a class="btn" href="https://github.com/nannndev/ctass/releases/latest/download/Ctas-macOS.dmg">Download untuk macOS</a>
+        <a class="btn btn-ghost" href="#demo">Coba dulu di bawah ↓</a>
+      </div>
+    </section>
+
+    <section class="demo" id="demo" aria-label="Demo pecut interaktif">
+      <canvas id="stage" aria-label="Arena pecut. Gerakkan mouse atau jari buat ngayun pecut."></canvas>
+      <div class="demo-top">
+        <div class="chips" id="variants" role="group" aria-label="Pilih varian pecut"></div>
+        <button class="chip" id="sound" aria-pressed="true">Suara: on</button>
+      </div>
+      <div class="demo-hint" id="hint">
+        <strong>Klik di sini, terus ayun dan sentak.</strong>
+        Gerakin mouse cepat lalu balik arah mendadak. Tembus Mach 1, bunyi CTARR. Sabet robotnya biar dia kerja.
+      </div>
+      <div class="bubble" id="bubble"></div>
+      <div class="demo-hud">
+        <div class="stat">ctarr<b id="sCrack">0</b></div>
+        <div class="stat">kena AI<b id="sHit">0</b></div>
+        <div class="stat">rekor<b id="sBest">0.0</b></div>
+        <div class="mach">kecepatan ujung · <span id="sMach">Mach 0.00</span><div class="bar"><i id="machBar"></i></div></div>
+      </div>
+    </section>
+
+    <section class="physics">
+      <div class="physics-copy">
+        <p class="eyebrow">Kok bisa bunyi?</p>
+        <h2>Bunyi ctarr itu sonic boom mini.</h2>
+        <p>Pecut asli bunyi karena ujungnya bergerak lebih cepat dari suara, sekitar 343 m/s. Energi ayunan merambat di sepanjang tali yang makin ke ujung makin ringan, jadi kecepatannya makin naik sampai tembus batas itu.</p>
+        <p>Ctas niru hal yang sama. Kecepatan ujung tali diukur tiap sub-step. Begitu lewat Mach 1, bunyi ctarr disintesis langsung di browser: letupan, dentuman, klik tajam, dan gema. Nggak pakai file rekaman sama sekali.</p>
+      </div>
+      <dl class="spec">
+        <div><dt>Segmen tali</dt><dd>22–44</dd></div>
+        <div><dt>Sub-step fisika</dt><dd>240<span>/detik</span></dd></div>
+        <div><dt>Iterasi constraint</dt><dd>10<span>/sub-step</span></dd></div>
+        <div><dt>File suara</dt><dd>0</dd></div>
+      </dl>
+    </section>
+
+    <section class="variants" id="varian">
+      <p class="eyebrow">Varian</p>
+      <h2>Lima pecut, lima rasa.</h2>
+      <p class="section-lede">Tiap pecut punya panjang, berat, kelenturan, dan nada sendiri. Klik "Coba" buat langsung pakai di demo.</p>
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <section class="how" id="cara">
+      <p class="eyebrow">Cara kerja</p>
+      <h2>Tiga langkah. Nggak pakai sabar.</h2>
+      <ol class="steps">
+        <li>
+          <kbd>⌘</kbd><kbd>⇧</kbd><kbd>X</kbd>
+          <h3>Panggil pecutnya</h3>
+          <p>Ctas nyatet jendela AI yang lagi aktif, terus overlay transparan muncul nutupin layar.</p>
+        </li>
+        <li>
+          <span class="step-icon" aria-hidden="true">〰</span>
+          <h3>Pecut sepuasnya</h3>
+          <p>Ganti varian pakai tombol 1–5. Robot AI-nya bisa disabet juga.</p>
+        </li>
+        <li>
+          <kbd>esc</kbd>
+          <h3>Omelan terkirim</h3>
+          <p>Overlay ilang, fokus balik ke jendela AI tadi, dan omelan lu diketik di sana.</p>
+        </li>
+      </ol>
+      <figure class="chatbox" aria-label="Contoh omelan yang diketik Ctas">
+        <div class="chat-label">Kotak chat AI lu, setelah dipecut 7 kali</div>
+        <div class="chat-input"><span id="typed"></span><i class="caret"></i></div>
+      </figure>
+    </section>
+
+    <section class="download" id="download">
+      <div>
+        <p class="eyebrow">Download</p>
+        <h2>Ctas buat macOS</h2>
+        <p class="section-lede">Versi 0.1 · universal (Apple Silicon &amp; Intel) · macOS 11 ke atas.</p>
+        <div class="cta">
+          <a class="btn" href="https://github.com/nannndev/ctass/releases/latest/download/Ctas-macOS.dmg">Download .dmg</a>
+          <a class="btn btn-ghost" href="https://github.com/nannndev/ctass">Source di GitHub</a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><strong>Pertama kali buka:</strong> app-nya belum di-sign Apple, jadi klik kanan Ctas.app → <em>Open</em> → <em>Open</em>.</li>
+        <li><strong>Izin Accessibility:</strong> dibutuhin biar Ctas bisa ngetik omelan ke app lain. System Settings → Privacy &amp; Security → Accessibility.</li>
+        <li><strong>Windows &amp; Linux:</strong> lagi dikerjain. Sementara itu, <a href="/play/">main versi browser full layar</a>.</li>
+      </ul>
+    </section>
+
+    <section class="faq" id="faq">
+      <p class="eyebrow">FAQ</p>
+      <h2>Pertanyaan yang sering muncul</h2>
+      <details>
+        <summary>AI-nya beneran ngerasa sakit?</summary>
+        <p>Nggak. Tapi dia jadi tau lu kesel, dan kadang itu udah cukup.</p>
+      </details>
+      <details>
+        <summary>Omelannya langsung kekirim?</summary>
+        <p>Defaultnya cuma diketik, belum dikirim, jadi lu masih bisa baca dulu. Kalau mau langsung kirim, nyalain "Langsung kirim (tekan Enter)" di ikon Ctas di menu bar.</p>
+      </details>
+      <details>
+        <summary>Bisa dipake ke AI apa aja?</summary>
+        <p>Apa aja yang punya kotak teks: Claude, ChatGPT, Gemini, Cursor, terminal. Ctas cuma ngetik ke jendela yang aktif sebelum lu manggil pecutnya.</p>
+      </details>
+      <details>
+        <summary>Aman nggak?</summary>
+        <p>Ctas nggak ngirim data ke mana-mana dan nggak butuh internet. Izin Accessibility cuma dipakai buat ngetik omelan. Semua kodenya bisa dicek di GitHub.</p>
+      </details>
+      <details>
+        <summary>Gratis?</summary>
+        <p>Gratis. Kalau AI lu jadi rajin, itu bonus.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span class="wordmark">CTAS</span>
+    <span>Dibikin karena AI kadang perlu disemangatin.</span>
+    <a href="https://github.com/nannndev/ctass">GitHub</a>
+  </footer>
+
+  <script type="module" src="/site.js"></script>
+</body>
+</html>
