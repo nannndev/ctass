@@ -6,6 +6,9 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+permissions:
+  contents: write # buat upload .dmg ke GitHub Release waktu push tag
+
 jobs:
   build:
     runs-on: macos-latest
@@ -32,7 +35,18 @@ jobs:
       - name: Build universal .app + .dmg
         run: npm run build:mac
 
+      # nama tetap, biar link download di landing page nggak pernah berubah
+      - name: Rename .dmg
+        run: cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg Ctas-macOS.dmg
+
       - uses: actions/upload-artifact@v4
         with:
           name: Ctas-macOS
-          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          path: Ctas-macOS.dmg
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Ctas-macOS.dmg
+          generate_release_notes: true

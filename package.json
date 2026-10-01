@@ -8,7 +8,7 @@
     "dev": "tauri dev",
     "build": "tauri build",
     "build:mac": "tauri build --target universal-apple-darwin",
-    "web": "npx --yes serve src",
+    "web": "node scripts/build-web.mjs && npx --yes serve dist",
     "icon": "tauri icon scripts/icon.png"
   },
   "devDependencies": {

@@ -37,7 +37,8 @@ ke app lain.
 
 ## Install
 
-Ambil `.dmg` dari tab **Actions** → run **Build macOS** terbaru → artifact `Ctas-macOS`.
+Download `.dmg` terbaru: https://github.com/nannndev/ctass/releases/latest/download/Ctas-macOS.dmg
+
 App-nya belum di-sign, jadi buka pertama kali pakai klik kanan → **Open**.
 
 ## Develop
@@ -47,7 +48,7 @@ Butuh Node 22+ dan Rust stable.
 ```sh
 npm install
 npm run dev        # app desktop, hot reload
-npm run web        # versi browser aja (tanpa overlay) di http://localhost:3000
+npm run web        # landing page + demo di http://localhost:3000
 npm run build:mac  # .app + .dmg universal (Apple Silicon + Intel)
 ```
 
@@ -58,11 +59,25 @@ src/                 frontend (HTML/CSS/JS polos, tanpa bundler)
   js/physics.js      simulasi tali Verlet
   js/audio.js        sintesis suara
   js/variants.js     parameter tiap varian + omelan si AI
-  js/main.js         render, input, deteksi ctarr, jembatan ke Tauri
+  js/stage.js        render, input, deteksi ctarr (dipakai app & landing)
+  js/main.js         UI app + jembatan ke Tauri
+web/                 landing page (Vercel)
 src-tauri/           shell desktop (Tauri 2)
   src/lib.rs         overlay, shortcut global, menu bar
   src/nag.rs         ngetik omelan ke app lain (macOS, AppleScript)
 ```
+
+### Rilis
+
+Push tag `v*` (misalnya `git tag v0.1.1 && git push origin v0.1.1`). CI bakal build `.dmg`
+dan upload ke GitHub Release sebagai `Ctas-macOS.dmg`, jadi link download di landing
+page otomatis ngarah ke versi terbaru.
+
+### Landing page (Vercel)
+
+Import repo ini di Vercel, nggak perlu ubah setting apa-apa karena udah diatur di
+`vercel.json`. Build-nya cuma nyalin `web/` + mesin pecut dari `src/js` ke `dist/`.
+Versi browser full layar ada di `/play`.
 
 ### Nambah varian
 
