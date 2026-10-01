@@ -69,9 +69,9 @@ src-tauri/           shell desktop (Tauri 2)
 
 ### Rilis
 
-Push tag `v*` (misalnya `git tag v0.1.1 && git push origin v0.1.1`). CI bakal build `.dmg`
-dan upload ke GitHub Release sebagai `Ctas-macOS.dmg`, jadi link download di landing
-page otomatis ngarah ke versi terbaru.
+Naikin `version` di `src-tauri/tauri.conf.json`, terus push ke `main`. CI bakal build `.dmg`
+dan bikin (atau update) GitHub Release `v<versi>` berisi `Ctas-macOS.dmg`, jadi link download
+di landing page otomatis ngarah ke versi terbaru.
 
 ### Landing page (Vercel)
 
