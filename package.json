@@ -1,0 +1,17 @@
+{
+  "name": "ctas",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pecut realistis buat mecut AI biar rajin",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:mac": "tauri build --target universal-apple-darwin",
+    "web": "npx --yes serve src",
+    "icon": "tauri icon scripts/icon.png"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
