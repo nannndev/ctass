@@ -1,0 +1,38 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      - name: Test
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Build universal .app + .dmg
+        run: npm run build:mac
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ctas-macOS
+          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg

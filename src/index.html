@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ctas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="stage" aria-label="Arena pecut. Gerakkan mouse untuk mengayun pecut."></canvas>
+
+  <div class="rail">
+    <div class="brand">CTAS<small>mecut AI biar rajin</small></div>
+    <div class="chips" id="variants" role="group" aria-label="Pilih varian pecut"></div>
+    <div class="tools">
+      <button class="chip" id="sound" aria-pressed="true">Suara: on</button>
+      <button class="chip" id="reset">Reset skor</button>
+      <button class="chip only-overlay" id="done" title="Esc atau ⌘⇧X">Udahan (Esc)</button>
+    </div>
+  </div>
+
+  <div class="hint" id="hint">
+    <strong>Ayun, terus sentak!</strong>
+    Gerakin mouse cepat lalu balik arah mendadak. Kalau ujungnya tembus Mach 1, bunyi CTARR.
+    <span class="only-overlay">Pas udahan, omelan lu diketik ke jendela AI yang tadi aktif.</span>
+  </div>
+  <div class="bubble" id="bubble"></div>
+
+  <div class="gauge">
+    <div class="stat">ctarr<b id="sCrack">0</b></div>
+    <div class="stat">kena AI<b id="sHit">0</b></div>
+    <div class="stat">rekor<b id="sBest">0.0</b></div>
+    <div class="mach">kecepatan ujung · <span id="sMach">Mach 0.00</span><div class="bar"><i id="machBar"></i></div></div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
