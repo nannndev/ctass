@@ -14,15 +14,12 @@ const stage = createStage({
   canvas: $("stage"),
   sound,
   transparent: OVERLAY,
-  aiScale: 0.17,
-  showAI: !OVERLAY,       // di overlay, "AI"-nya ya jendela AI beneran
   cursorDot: !OVERLAY,    // di overlay pakai kursor sistem
   size: OVERLAY ? 0.75 : 1,
   onFirstMove: () => { $("hint").style.opacity = "0"; },
   onScore: (s) => {
     $("pillCount").textContent = stage.session.crack + " ctarr";
     $("sCrack").textContent = s.crack;
-    $("sHit").textContent = s.hit;
     $("sBest").textContent = s.best.toFixed(1);
   },
   onMach: (mach, shown) => {

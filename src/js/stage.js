@@ -10,7 +10,7 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
  * @param {import("./audio.js").Sound} o.sound
  * @param {boolean} [o.transparent]  gambar tanpa latar (overlay desktop)
  * @param {number}  [o.aiScale]      ukuran robot relatif sisi terpendek
- * @param {boolean} [o.showAI]       tampilkan robot (default true)
+ * @param {boolean} [o.showAI]       tampilkan robot sasaran (default false)
  * @param {number}  [o.size]         skala panjang pecut (default 1)
  * @param {(s:{crack:number,hit:number,best:number}) => void} [o.onScore]
  * @param {(mach:number, shown:number) => void} [o.onMach]
@@ -52,7 +52,7 @@ export function createStage(o) {
     if (!ptr.seen) { ptr.x = ptr.px = W * 0.3; ptr.y = ptr.py = H * 0.62; }
     build();
   }
-  const showAI = o.showAI ?? true;
+  const showAI = o.showAI ?? false;
   function build() { whip = new Whip(v, S * (o.size ?? 1), ptr, dir); }
 
   function move(e) {
@@ -122,7 +122,6 @@ export function createStage(o) {
     prevAbove = above;
     if (showAI && mach > 0.45 && hitCool <= 0 && tipInAI()) { onHit(cracked); hitCool = 0.6; }
 
-    o.sound.whoosh(mach, v.pitch, (whip.tip().x / W) * 2 - 1);
     o.onMach?.(mach, machShown);
     draw(dt);
     if (running) requestAnimationFrame(frame);
