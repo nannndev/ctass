@@ -98,3 +98,10 @@ body.overlay .pill { display: inline-flex; }
   padding: 14px 20px; border-radius: 14px; background: rgba(17, 17, 19, 0.86);
   border: 1px solid var(--accent); color: var(--fg); font: 500 14px var(--body);
 }
+
+/* tema futuristik */
+:root[data-theme="future"] {
+  --panel: rgba(6, 12, 22, 0.86); --fg: #e6f6ff; --muted: #6f8aa3; --line: #17283f; --accent: #4de3ff;
+  --stage-1: #0a1424; --stage-2: #04060b; --stage-line: rgba(77, 227, 255, 0.12); --ring: 77, 227, 255;
+}
+:root[data-theme="future"] .pill, :root[data-theme="future"] .chip[aria-pressed="true"] { box-shadow: 0 0 16px rgba(77, 227, 255, 0.25); }

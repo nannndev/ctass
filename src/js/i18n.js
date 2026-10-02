@@ -41,6 +41,6 @@ export const t = (key, lang) => T[key]?.[lang] ?? T[key]?.id ?? key;
 // Nama pecut dalam bahasa Inggris (yang nama khas tetap aslinya)
 const NAMES_EN = {
   jaranan: "Jaranan", sapi: "Cattle whip", bullwhip: "Bullwhip", samandiman: "Samandiman", cemeti: "Cemeti",
-  sapulidi: "Broom", kabel: "Charger cable", sabuk: "Belt", api: "Fire whip",
+  sapulidi: "Broom", kabel: "Charger cable", sabuk: "Belt", api: "Fire whip", plasma: "Plasma whip",
 };
 export const whipName = (key, v, lang) => (lang === "en" ? NAMES_EN[key] || v.name : v.name);

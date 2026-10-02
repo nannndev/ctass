@@ -3,6 +3,7 @@ import { Sound } from "./audio.js";
 import { createStage } from "./stage.js";
 import { normalize, effective } from "./settings.js";
 import { t, whipName } from "./i18n.js";
+import { ensureSound } from "./sounds.js";
 
 const TAURI = window.__TAURI__;
 const IS_MAC = /Mac/i.test(navigator.userAgent);
@@ -61,6 +62,9 @@ function applySettings(s) {
   if (settings.home) stage.setHome(settings.home);
   if (stage.mode !== settings.mode) stage.setMode(settings.mode);
   if (stage.is3D !== (settings.view === "3d")) stage.set3D(settings.view === "3d");
+  stage.setTheme(settings.theme);
+  document.documentElement.dataset.theme = settings.theme;
+  ensureSound(sound, v.sound);
   sound.setVolume(settings.volume);
   const L = settings.lang;
   document.documentElement.lang = L;
@@ -87,8 +91,8 @@ $("done").onclick = () => dismiss();
 addEventListener("keydown", (e) => {
   sound.init();
   if (e.key === "Escape" && OVERLAY) dismiss();
-  const keys = Object.keys(VARIANTS), n = Number(e.key);
-  if (n >= 1 && n <= keys.length) pick(keys[n - 1]);
+  const keys = Object.keys(VARIANTS), i = (Number(e.key) + 9) % 10;
+  if (/^[0-9]$/.test(e.key) && i < keys.length) pick(keys[i]);
 });
 addEventListener("resize", () => stage.resize());
 

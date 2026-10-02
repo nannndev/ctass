@@ -211,6 +211,47 @@ fn start(app: AppHandle) {
     });
 }
 
+// ---------- suara sendiri ----------
+// File audio dari user disimpan di <config>/sounds/<id>. id dibikin frontend
+// (hex acak + ekstensi), dicek di sini biar nggak bisa nulis ke luar folder.
+
+fn sound_path(app: &AppHandle, id: &str) -> Result<std::path::PathBuf, String> {
+    let ok = !id.is_empty() && id.len() <= 40 && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '.') && !id.starts_with('.');
+    if !ok {
+        return Err("id suara nggak valid".into());
+    }
+    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?.join("sounds");
+    Ok(dir.join(id))
+}
+
+const MAX_SOUND_BYTES: usize = 8 * 1024 * 1024;
+
+#[tauri::command]
+fn save_sound(app: AppHandle, request: tauri::ipc::Request<'_>) -> Result<(), String> {
+    let id = request.headers().get("x-sound-id").and_then(|v| v.to_str().ok()).ok_or("id suara kosong")?;
+    let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else { return Err("isi file kosong".into()) };
+    if bytes.len() > MAX_SOUND_BYTES {
+        return Err("file kegedean".into());
+    }
+    let path = sound_path(&app, id)?;
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    }
+    std::fs::write(path, bytes).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn load_sound(app: AppHandle, id: String) -> Result<tauri::ipc::Response, String> {
+    let bytes = std::fs::read(sound_path(&app, &id)?).map_err(|e| e.to_string())?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
+#[tauri::command]
+fn delete_sound(app: AppHandle, id: String) -> Result<(), String> {
+    let _ = std::fs::remove_file(sound_path(&app, &id)?);
+    Ok(())
+}
+
 /// Cek versi baru di GitHub Releases. Balikin nomor versinya kalau ada.
 #[tauri::command]
 async fn check_update(app: AppHandle) -> Result<Option<String>, String> {
@@ -251,7 +292,7 @@ pub fn run() {
             tray_items: Mutex::new(Vec::new()),
             update: Mutex::new(None),
         })
-        .invoke_handler(tauri::generate_handler![dismiss, set_passthrough, get_settings, save_settings, start, check_update, install_update])
+        .invoke_handler(tauri::generate_handler![dismiss, set_passthrough, get_settings, save_settings, start, check_update, install_update, save_sound, load_sound, delete_sound])
         .on_window_event(|window, event| {
             // nutup jendela Ctas = sembunyiin aja, app tetap jalan di menu bar / tray
             if let WindowEvent::CloseRequested { api, .. } = event {
