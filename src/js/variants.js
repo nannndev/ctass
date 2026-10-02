@@ -28,7 +28,7 @@ export const VARIANTS = {
   },
   bullwhip: {
     name: "Bullwhip", segs: 44, len: 0.78, handle: 0.13, bend: 0.07, damp: 0.996, grav: 900, w0: 9, w1: 1.2,
-    rope: "#8a5429", grip: "#2d1d12", tassel: false, glow: false, threshold: 5600,
+    rope: "#8a5429", grip: "#2d1d12", tassel: false, glow: false, threshold: 5600, d3: true,
     sound: { nDur: 0.0006, snap: 0.0015, tail: 0.012, tailLevel: 0.25, rate: 1.15, body: [220, 70, 0.05, 0.35], wet: 0.24, echo: [0.34, 0.4, 0.5], extra: null },
     fx: "shock", word: "CRACK!", color: "#ece8e1", shake: 1.3,
   },

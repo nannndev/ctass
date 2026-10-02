@@ -60,6 +60,7 @@ function applySettings(s) {
   stage.setShowWord(settings.showWord);
   if (settings.home) stage.setHome(settings.home);
   if (stage.mode !== settings.mode) stage.setMode(settings.mode);
+  if (stage.is3D !== (settings.view === "3d")) stage.set3D(settings.view === "3d");
   sound.setVolume(settings.volume);
   const L = settings.lang;
   document.documentElement.lang = L;

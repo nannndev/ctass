@@ -52,6 +52,11 @@
         <label class="mode"><input type="radio" name="mode" value="click"><span><b data-t="modeClick"></b><span data-t="modeClickSub"></span></span></label>
       </div>
       <p class="note" id="clickNote" hidden data-t="linuxNote"></p>
+      <div class="modes" role="radiogroup">
+        <label class="mode"><input type="radio" name="view" value="2d"><span><b data-t="view2d"></b><span data-t="view2dSub"></span></span></label>
+        <label class="mode"><input type="radio" name="view" value="3d"><span><b data-t="view3d"></b><span data-t="view3dSub"></span></span></label>
+      </div>
+      <p class="note" id="viewNote" hidden data-t="view3dFail"></p>
       <div class="grid">
         <label class="field"><span><span data-t="easy"></span> <output id="oSens"></output></span><input type="range" id="sensitivity"></label>
         <label class="field"><span><span data-t="volume"></span> <output id="oVol"></output></span><input type="range" id="volume"></label>
