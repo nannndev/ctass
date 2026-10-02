@@ -15,14 +15,20 @@ jobs:
           - name: macOS
             os: macos-latest
             rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
-            build: npm run build:mac
+            build: npx tauri build --target universal-apple-darwin
             # nama tetap, biar link download di landing page nggak pernah berubah
-            collect: cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg out/Ctas-macOS.dmg
+            collect: |
+              cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg out/Ctas-macOS.dmg
+              # file buat auto-update (cuma ada kalau secret signing dipasang)
+              cp src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz out/Ctas-macOS.app.tar.gz || true
+              cp src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz.sig out/Ctas-macOS.app.tar.gz.sig || true
           - name: Windows
             os: windows-latest
             rust_targets: ""
             build: npx tauri build --bundles nsis
-            collect: cp src-tauri/target/release/bundle/nsis/*-setup.exe out/Ctas-Windows-setup.exe
+            collect: |
+              cp src-tauri/target/release/bundle/nsis/*-setup.exe out/Ctas-Windows-setup.exe
+              cp src-tauri/target/release/bundle/nsis/*-setup.exe.sig out/Ctas-Windows-setup.exe.sig || true
           - name: Linux
             os: ubuntu-22.04
             rust_targets: ""
@@ -30,6 +36,7 @@ jobs:
             collect: |
               cp src-tauri/target/release/bundle/appimage/*.AppImage out/Ctas-Linux.AppImage
               cp src-tauri/target/release/bundle/deb/*.deb out/Ctas-Linux.deb
+              cp src-tauri/target/release/bundle/appimage/*.AppImage.sig out/Ctas-Linux.AppImage.sig || true
 
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -59,8 +66,17 @@ jobs:
       - name: Test
         run: cargo test --manifest-path src-tauri/Cargo.toml
 
+      # Auto-update: kalau secret TAURI_SIGNING_PRIVATE_KEY ada, sekalian bikin file update
+      # yang ditandatangani. Kalau belum ada, build tetap jalan kayak biasa.
       - name: Build
-        run: ${{ matrix.build }}
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        run: |
+          EXTRA=()
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then EXTRA=(--config '{"bundle":{"createUpdaterArtifacts":true}}'); fi
+          ${{ matrix.build }} "${EXTRA[@]}"
 
       - name: Collect
         shell: bash
@@ -92,6 +108,9 @@ jobs:
       - name: Read version
         id: ver
         run: echo "tag=v$(node -p "require('./src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Updater manifest
+        run: node scripts/updater-manifest.mjs out ${{ steps.ver.outputs.tag }} ${{ github.repository }}
 
       - uses: softprops/action-gh-release@v2
         with:

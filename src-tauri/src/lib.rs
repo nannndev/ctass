@@ -19,6 +19,7 @@ use tauri::Wry;
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, State, WindowEvent};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_updater::{Update, UpdaterExt};
 
 mod mouse;
 mod nag;
@@ -30,6 +31,8 @@ struct Ctas {
     tracking: Arc<AtomicBool>,
     /// Item menu tray, biar teksnya bisa ganti bahasa.
     tray_items: Mutex<Vec<MenuItem<Wry>>>,
+    /// Update yang ketemu pas dicek, nunggu diinstall.
+    update: Mutex<Option<Update>>,
 }
 
 fn setting_lang(app: &AppHandle) -> String {
@@ -208,10 +211,47 @@ fn start(app: AppHandle) {
     });
 }
 
+/// Cek versi baru di GitHub Releases. Balikin nomor versinya kalau ada.
+#[tauri::command]
+async fn check_update(app: AppHandle) -> Result<Option<String>, String> {
+    let found = app.updater().map_err(|e| e.to_string())?.check().await.map_err(|e| e.to_string())?;
+    let version = found.as_ref().map(|u| u.version.clone());
+    *app.state::<Ctas>().update.lock().unwrap() = found;
+    Ok(version)
+}
+
+/// Download + install update yang tadi ketemu, terus buka ulang Ctas.
+#[tauri::command]
+async fn install_update(app: AppHandle) -> Result<(), String> {
+    let update = app.state::<Ctas>().update.lock().unwrap().take();
+    let Some(update) = update else { return Err("nggak ada update".into()) };
+    let progress = app.clone();
+    let mut done = 0u64;
+    update
+        .download_and_install(
+            move |chunk, total| {
+                done += chunk as u64;
+                let _ = progress.emit("ctas://update-progress", (done, total));
+            },
+            || {},
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    app.restart()
+}
+
 pub fn run() {
     tauri::Builder::default()
-        .manage(Ctas { settings: Mutex::new(json!({})), tracking: Arc::new(AtomicBool::new(false)), tray_items: Mutex::new(Vec::new()) })
-        .invoke_handler(tauri::generate_handler![dismiss, set_passthrough, get_settings, save_settings, start])
+        // buka Ctas lagi (Start Menu, Launchpad, dll) pas udah jalan = munculin jendela yang lama
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| open_panel(app)))
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(Ctas {
+            settings: Mutex::new(json!({})),
+            tracking: Arc::new(AtomicBool::new(false)),
+            tray_items: Mutex::new(Vec::new()),
+            update: Mutex::new(None),
+        })
+        .invoke_handler(tauri::generate_handler![dismiss, set_passthrough, get_settings, save_settings, start, check_update, install_update])
         .on_window_event(|window, event| {
             // nutup jendela Ctas = sembunyiin aja, app tetap jalan di menu bar / tray
             if let WindowEvent::CloseRequested { api, .. } = event {
