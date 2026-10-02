@@ -25,6 +25,8 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
   ke atas diulur lagi. Dilepas bentar, keulur sendiri.
 - **Tampilan 2D / 3D:** Bullwhip udah ada versi 3D (tali kepang, cahaya, bayangan) pakai Three.js.
   Defaultnya 2D biar ringan; Three.js baru dimuat kalau 3D dinyalain. Pecut lain nyusul.
+- **Update otomatis:** Ctas ngecek versi baru pas dibuka. Kalau ada, tinggal klik "Update sekarang".
+  Buka Ctas lagi pas udah jalan = jendela yang lama yang muncul, nggak dobel.
 - **Dua bahasa:** Indonesia & English (landing page, app, sampai omelannya).
 
 ## Pakai
@@ -139,3 +141,10 @@ Tambah entri di `src/js/variants.js`. Parameter yang paling ngaruh:
 - [ ] Varian lain: sapu lidi, sandal jepit, kabel charger
 - [ ] Rekam suara pecut asli sebagai opsi
 - [ ] Haptic trackpad pas CTARR
+
+## Auto-update (buat yang maintain)
+
+File update ditandatangani pakai kunci Tauri. Kunci privatnya disimpan di GitHub
+Secrets `TAURI_SIGNING_PRIVATE_KEY` (tanpa password). Kalau secret-nya belum ada,
+CI tetap build kayak biasa, cuma `latest.json` nggak dibikin jadi app nggak dapet update.
+Kunci publiknya ada di `src-tauri/tauri.conf.json` → `plugins.updater.pubkey`.

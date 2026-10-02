@@ -22,6 +22,11 @@ const STR = {
     sound: "Suara", effect: "Efek", word: "Tulisan pas ctarr",
     showWord: "Tampilkan tulisan pas ctarr", showWordSub: "Matiin kalau mau efeknya aja tanpa tulisan.",
     general: "Umum",
+    tipKeys: "Tips: tekan 1–9 buat ganti pecut. Coba langsung di preview atas.",
+    groupMode: "Cara mecut", groupView: "Tampilan", groupFeel: "Rasa", groupNag: "Omelan", about: "Tentang",
+    checkUpdate: "Cek update", checking: "Lagi ngecek…", upToDate: "Udah versi terbaru.", updateFail: "Gagal ngecek update. Coba lagi nanti.",
+    newVersion: (v) => `Versi baru <b>v${v}</b> udah ada.`, updateNow: "Update sekarang", updating: "Lagi download…", restarting: "Bentar, Ctas dibuka ulang…",
+    webVersion: "versi web",
     view2d: "2D", view2dSub: "Paling ringan. Semua pecut.", view3d: "3D", view3dSub: "Baru ada buat Bullwhip. Sedikit lebih berat.", view3dFail: "3D nggak didukung di komputer ini, balik ke 2D.",
     modeFollow: "Ikut kursor", modeFollowSub: "Pecut nempel di kursor. Sentak mouse buat ctarr.",
     modeClick: "Klik = pecut", modeClickSub: "Pecut nongkrong di pojok. Tiap klik, dia nyabet titik itu. Seret gagangnya buat mindahin.",
@@ -40,6 +45,11 @@ const STR = {
     sound: "Sound", effect: "Effect", word: "Word on crack",
     showWord: "Show the word on crack", showWordSub: "Turn off if you only want the effect, no text.",
     general: "General",
+    tipKeys: "Tip: press 1–9 to switch whips. Try it right in the preview above.",
+    groupMode: "How to whip", groupView: "Look", groupFeel: "Feel", groupNag: "Scolding", about: "About",
+    checkUpdate: "Check for updates", checking: "Checking…", upToDate: "You're on the latest version.", updateFail: "Couldn't check for updates. Try again later.",
+    newVersion: (v) => `Version <b>v${v}</b> is out.`, updateNow: "Update now", updating: "Downloading…", restarting: "Hang on, restarting Ctas…",
+    webVersion: "web version",
     view2d: "2D", view2dSub: "Lightest. Every whip.", view3d: "3D", view3dSub: "Bullwhip only for now. A bit heavier.", view3dFail: "3D isn't supported on this computer, back to 2D.",
     modeFollow: "Follow cursor", modeFollowSub: "The whip sticks to your cursor. Flick the mouse to crack.",
     modeClick: "Click = whip", modeClickSub: "The whip waits in a corner. Every click, it lashes that spot. Drag its handle to move it.",
@@ -98,12 +108,14 @@ const pct = (x) => Math.round(x * 100) + "%";
 function texts() {
   const T = S();
   document.documentElement.lang = settings.lang;
-  document.querySelectorAll("[data-t]").forEach((el) => (el.textContent = T[el.dataset.t] ?? ""));
+  document.querySelectorAll("[data-t]").forEach((el) => (el.textContent = typeof T[el.dataset.t] === "string" ? T[el.dataset.t] : ""));
   document.querySelectorAll(".lang").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.lang === settings.lang)));
   document.querySelectorAll(".tile").forEach((t) => (t.querySelector(".nm").textContent = name(t.dataset.k)));
   for (const id of ["sound", "fx"]) [...$(id).options].forEach((o) => (o.textContent = name(o.value)));
   $("foot").innerHTML = T.foot(T.tray);
   $("count").textContent = count + " " + T.cracks;
+  if (!TAURI) $("version").textContent = T.webVersion;
+  updateTexts();
 }
 
 function render() {
@@ -115,8 +127,8 @@ function render() {
   const bend = c.bend ?? b.bend;
   setRange("bend", RANGES.bend, bend); $("oBend").textContent = bend > 0.2 ? T.stiff : bend > 0.1 ? T.medium : T.loose;
   setRange("grav", RANGES.grav, c.grav ?? 1); $("oGrav").textContent = pct(c.grav ?? 1);
-  $("rope").value = c.rope ?? b.rope;
-  $("grip").value = c.grip ?? b.grip;
+  $("rope").value = c.rope ?? b.rope; $("oRope").textContent = $("rope").value;
+  $("grip").value = c.grip ?? b.grip; $("oGrip").textContent = $("grip").value;
   $("sound").value = c.sound ?? k;
   $("fx").value = c.fx ?? k;
   $("word").value = c.word ?? "";
@@ -128,6 +140,7 @@ function render() {
   setRange("volume", RANGES.volume, settings.volume); $("oVol").textContent = pct(settings.volume);
   document.querySelectorAll('input[name="mode"]').forEach((r) => (r.checked = r.value === settings.mode));
   document.querySelectorAll('input[name="view"]').forEach((r) => (r.checked = r.value === settings.view));
+  $("viewSub").textContent = settings.view === "3d" ? T.view3dSub : T.view2dSub;
   $("hint").textContent = settings.mode === "click" ? T.hintClick : T.hintFollow;
   $("clickNote").hidden = !(IS_LINUX && TAURI && settings.mode === "click");
   $("nag").checked = settings.nag;
@@ -191,6 +204,70 @@ document.querySelectorAll('input[name="view"]').forEach((r) => r.addEventListene
 $("nag").addEventListener("change", (e) => { settings.nag = e.target.checked; changed(); });
 $("autosend").addEventListener("change", (e) => { settings.autosend = e.target.checked; changed(); });
 document.querySelectorAll(".lang").forEach((b) => (b.onclick = () => { settings.lang = b.dataset.lang; changed(); }));
+
+// ---------- Tab ----------
+let tab = "whips";
+try { tab = localStorage.getItem("ctas.tab") || tab; } catch {}
+function showTab(t) {
+  tab = t;
+  document.querySelectorAll(".tabs [data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  document.querySelectorAll(".pane").forEach((p) => (p.hidden = p.dataset.pane !== t));
+  try { localStorage.setItem("ctas.tab", t); } catch {}
+}
+document.querySelectorAll(".tabs [data-tab]").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+showTab(tab);
+
+// ---------- Update ----------
+// state: idle | checking | latest | fail | found | downloading | restarting
+const upd = { state: "idle", version: null, done: 0, total: 0 };
+function updateTexts() {
+  const T = S();
+  $("updStatus").textContent = { checking: T.checking, latest: T.upToDate, fail: T.updateFail }[upd.state] || "";
+  $("checkUpd").disabled = upd.state === "checking" || upd.state === "downloading" || upd.state === "restarting";
+  const show = ["found", "downloading", "restarting"].includes(upd.state);
+  $("update").hidden = !show;
+  if (!show) return;
+  $("updText").innerHTML = upd.state === "found" ? T.newVersion(upd.version) : upd.state === "downloading" ? T.updating : T.restarting;
+  $("updBtn").hidden = upd.state !== "found";
+  $("upbar").hidden = upd.state === "found";
+  $("updBar").style.width = upd.total ? Math.round((upd.done / upd.total) * 100) + "%" : upd.state === "restarting" ? "100%" : "8%";
+}
+async function checkUpdate(quiet) {
+  if (!TAURI) return;
+  upd.state = "checking"; if (!quiet) updateTexts();
+  try {
+    upd.version = await TAURI.core.invoke("check_update");
+    upd.state = upd.version ? "found" : quiet ? "idle" : "latest";
+  } catch (e) {
+    console.warn("cek update gagal", e);
+    upd.state = quiet ? "idle" : "fail";
+  }
+  updateTexts();
+}
+$("checkUpd").onclick = () => checkUpdate(false);
+$("updBtn").onclick = async () => {
+  upd.state = "downloading"; updateTexts();
+  try {
+    await TAURI.core.invoke("install_update"); // kalau sukses, app langsung dibuka ulang
+    upd.state = "restarting";
+  } catch (e) {
+    console.warn("update gagal", e);
+    upd.state = "fail";
+  }
+  updateTexts();
+};
+if (TAURI) {
+  TAURI.event.listen("ctas://update-progress", (e) => {
+    const [done, total] = e.payload;
+    upd.done = done; upd.total = total || 0;
+    if (total && done >= total) upd.state = "restarting";
+    updateTexts();
+  });
+  TAURI.app.getVersion().then((v) => ($("version").textContent = "v" + v)).catch(() => {});
+  setTimeout(() => checkUpdate(true), 2500); // cek diem-diem pas dibuka
+} else {
+  $("checkUpd").hidden = true;
+}
 
 // keyboard 1-9 buat ganti pecut
 addEventListener("keydown", (e) => {
