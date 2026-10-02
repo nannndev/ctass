@@ -52,7 +52,7 @@ function pick(k) {
 // ---------- Tombol & keyboard ----------
 $("sound").onclick = () => {
   sound.init(); sound.on = !sound.on;
-  $("sound").textContent = "Suara: " + (sound.on ? "on" : "off");
+  $("sound").textContent = "Suara " + (sound.on ? "on" : "off");
   $("sound").setAttribute("aria-pressed", String(sound.on));
 };
 $("reset").onclick = () => stage.reset();

@@ -5,9 +5,9 @@ pub fn message(cracks: u32, hits: u32) -> String {
     let n = cracks.max(hits);
     let face = if hits > 0 { format!(", {hits} kali kena muka") } else { String::new() };
     let tail = match n {
-        0..=2 => "Ayo fokus, kerjain yang bener.",
-        3..=9 => "CEPETAN! Jangan halu, jangan ngeles, langsung kerjain.",
-        _ => "UDAH DIPECUT BERKALI-KALI MASIH LELET?! Kerjain sekarang, yang bener, nggak pakai alasan.",
+        0..=2 => "Fokus ya, kerjain yang bener.",
+        3..=9 => "Cepetan dong, jangan halu, langsung kerjain.",
+        _ => "Udah dipecut berkali-kali masih lelet juga? Kerjain sekarang, nggak pakai alasan.",
     };
     format!("[Ctas] Kamu barusan dipecut {n} kali{face}. {tail}")
 }
@@ -67,6 +67,6 @@ mod tests {
     fn omelan_makin_galak() {
         assert!(message(1, 0).contains("1 kali."));
         assert!(message(5, 2).contains("2 kali kena muka"));
-        assert!(message(12, 0).contains("LELET"));
+        assert!(message(12, 0).contains("lelet"));
     }
 }
