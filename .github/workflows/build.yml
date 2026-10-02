@@ -63,6 +63,11 @@ jobs:
 
       - run: npm ci
 
+      # cek syntax semua JS: error kayak nama dobel bikin overlay nggak jalan sama sekali
+      - name: Check JS
+        shell: bash
+        run: for f in src/js/*.js web/*.js scripts/*.mjs; do node --check "$f"; done
+
       - name: Test
         run: cargo test --manifest-path src-tauri/Cargo.toml
 
