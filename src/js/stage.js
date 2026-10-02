@@ -10,6 +10,8 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
  * @param {import("./audio.js").Sound} o.sound
  * @param {boolean} [o.transparent]  gambar tanpa latar (overlay desktop)
  * @param {number}  [o.aiScale]      ukuran robot relatif sisi terpendek
+ * @param {boolean} [o.showAI]       tampilkan robot (default true)
+ * @param {number}  [o.size]         skala panjang pecut (default 1)
  * @param {(s:{crack:number,hit:number,best:number}) => void} [o.onScore]
  * @param {(mach:number, shown:number) => void} [o.onMach]
  * @param {(text:string, x:number, y:number) => void} [o.onSay]  x,y relatif ke kanvas
@@ -50,7 +52,8 @@ export function createStage(o) {
     if (!ptr.seen) { ptr.x = ptr.px = W * 0.3; ptr.y = ptr.py = H * 0.62; }
     build();
   }
-  function build() { whip = new Whip(v, S, ptr, dir); }
+  const showAI = o.showAI ?? true;
+  function build() { whip = new Whip(v, S * (o.size ?? 1), ptr, dir); }
 
   function move(e) {
     const r = cv.getBoundingClientRect();
@@ -117,7 +120,7 @@ export function createStage(o) {
     let cracked = false;
     if (above && !prevAbove && crackCool <= 0) { onCrack(mach); crackCool = 0.28; cracked = true; }
     prevAbove = above;
-    if (mach > 0.45 && hitCool <= 0 && tipInAI()) { onHit(cracked); hitCool = 0.6; }
+    if (showAI && mach > 0.45 && hitCool <= 0 && tipInAI()) { onHit(cracked); hitCool = 0.6; }
 
     o.sound.whoosh(mach, v.pitch, (whip.tip().x / W) * 2 - 1);
     o.onMach?.(mach, machShown);
@@ -141,13 +144,15 @@ export function createStage(o) {
       cx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
       shake *= 0.82; if (shake < 0.3) shake = 0;
     }
-    drawAI(dt);
+    if (showAI) drawAI(dt);
     drawHandle();
     drawRope();
     drawFx(dt);
     cx.restore();
-    cx.fillStyle = "rgba(243,231,211,0.9)";
-    cx.beginPath(); cx.arc(ptr.x, ptr.y, 4, 0, Math.PI * 2); cx.fill();
+    if (o.cursorDot ?? true) {
+      cx.fillStyle = "rgba(243,231,211,0.9)";
+      cx.beginPath(); cx.arc(ptr.x, ptr.y, 4, 0, Math.PI * 2); cx.fill();
+    }
   }
 
   function drawHandle() {
@@ -269,5 +274,10 @@ export function createStage(o) {
     get variant() { return key; },
     reset() { score.crack = score.hit = score.best = 0; o.onScore?.(score); },
     rearm() { ptr.seen = false; resize(); },
+    // posisi kursor dari luar (overlay tembus klik nggak dapet event mouse)
+    pointer(x, y) {
+      ptr.x = x; ptr.y = y;
+      if (!ptr.seen) { ptr.seen = true; ptr.px = x; ptr.py = y; build(); o.onFirstMove?.(); }
+    },
   };
 }

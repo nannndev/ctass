@@ -1,6 +1,6 @@
 [package]
 name = "ctas"
-version = "0.1.1"
+version = "0.1.2"
 description = "Pecut realistis buat mecut AI biar rajin"
 edition = "2021"
 
@@ -21,3 +21,7 @@ codegen-units = 1
 lto = true
 opt-level = "s"
 strip = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-graphics = "0.25"
+core-foundation = "0.10"

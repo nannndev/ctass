@@ -20,20 +20,20 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
 
 ## Pakai
 
-| Aksi | Tombol |
+| Aksi | Caranya |
 | --- | --- |
-| Mulai mecut | ⌘⇧X atau ikon Ctas di menu bar |
-| Ganti varian | 1–5, atau klik chip di atas |
-| Udahan, kirim omelan | Esc atau ⌘⇧X lagi |
+| Mulai / udahan mecut | ⌘⇧X, atau ikon Ctas di menu bar |
+| Ganti pecut | Menu bar → Pecut |
+| Ctarr | Ayun mouse terus balik arah mendadak |
 
-Di menu bar ada dua pilihan:
+Overlay-nya tembus klik dan nggak ngambil fokus, jadi selama mecut lu tetap bisa klik dan
+ngetik kayak biasa. Pecutnya cuma nempel di kursor.
 
-- **Ketik omelan ke AI pas udahan** (default nyala)
-- **Langsung kirim (tekan Enter)** (default mati, jadi lu masih bisa baca dulu sebelum kekirim)
+Di menu bar ada dua pilihan, dua-duanya default mati:
 
-Pertama kali ngetik omelan, macOS bakal minta izin **Accessibility** buat Ctas
-(System Settings → Privacy & Security → Accessibility). Itu wajib biar Ctas bisa ngetik
-ke app lain.
+- **Ketik omelan ke AI pas udahan**: omelan diketik ke jendela yang lagi aktif. Waktu
+  dinyalain, macOS minta izin **Accessibility** buat Ctas (sekali aja).
+- **Langsung kirim (tekan Enter)**
 
 ## Install
 
@@ -73,7 +73,7 @@ src/                 frontend (HTML/CSS/JS polos, tanpa bundler)
 web/                 landing page (Vercel)
 src-tauri/           shell desktop (Tauri 2)
   src/lib.rs         overlay, shortcut global, menu bar
-  src/nag.rs         ngetik omelan ke app lain (macOS, AppleScript)
+  src/nag.rs         ngetik omelan ke app lain (macOS, CGEvent)
 ```
 
 ### Rilis
