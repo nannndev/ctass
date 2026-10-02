@@ -133,7 +133,7 @@ function applyLang() {
   $("heroDl").textContent = T.download[OS || "none"];
   $("langBtn").textContent = lang === "en" ? "ID" : "EN";
   $("langBtn").title = lang === "en" ? "Ganti ke Bahasa Indonesia" : "Switch to English";
-  document.title = lang === "en" ? "Ctas · a whip for your AI" : "Ctas · pecut buat AI";
+  document.title = lang === "en" ? "Ctas · a virtual whip" : "Ctas · pecut virtual";
   labels();
   retype();
 }

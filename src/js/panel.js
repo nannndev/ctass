@@ -17,7 +17,7 @@ let settings = normalize({});
 
 const STR = {
   id: {
-    tagline: "pecut buat AI", start: "Mulai mecut", whips: "Pecut", customize: "Atur", reset: "Balikin default",
+    tagline: "pecut virtual", start: "Mulai mecut", whips: "Pecut", customize: "Atur", reset: "Balikin default",
     length: "Panjang", stiffness: "Kekakuan", weight: "Berat", rope: "Tali", handle: "Gagang",
     sound: "Suara", effect: "Efek", word: "Tulisan pas ctarr",
     showWord: "Tampilkan tulisan pas ctarr", showWordSub: "Matiin kalau mau efeknya aja tanpa tulisan.",
@@ -34,7 +34,7 @@ const STR = {
     tray: IS_MAC ? "menu bar" : "system tray",
   },
   en: {
-    tagline: "a whip for your AI", start: "Start whipping", whips: "Whips", customize: "Customize", reset: "Reset to default",
+    tagline: "a virtual whip", start: "Start whipping", whips: "Whips", customize: "Customize", reset: "Reset to default",
     length: "Length", stiffness: "Stiffness", weight: "Weight", rope: "Rope", handle: "Handle",
     sound: "Sound", effect: "Effect", word: "Word on crack",
     showWord: "Show the word on crack", showWordSub: "Turn off if you only want the effect, no text.",
