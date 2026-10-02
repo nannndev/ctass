@@ -6,9 +6,9 @@ export const EN = {
   "FAQ": "FAQ",
   "Download": "Download",
   "Mac · Windows · Linux · gratis": "Mac · Windows · Linux · free",
-  "AI-nya lelet?<br><em>Pecut aja.</em>": "AI being slow?<br><em>Whip it.</em>",
-  "Pecut virtual buat jendela AI lu. Ayun, sentak, ctarr. Abis itu omelan lu langsung keketik di chat-nya.":
-    "A virtual whip for your AI window. Swing, flick, crack. Then your scolding gets typed straight into its chat.",
+  "Ctas.<br><em>Ctass.</em>": "Ctas.<br><em>Ctass.</em>",
+  "Pecut virtual di layar lu. Ayun, sentak, ctas. Nggak bikin AI-nya lebih pinter, tapi lumayan buat ngelampiasin kesel.":
+    "A virtual whip on your screen. Swing, flick, crack. It won't make your AI any smarter, but it's a decent way to blow off steam.",
   "Cobain dulu": "Try it first",
   "<strong>Klik, terus ayun dan sentak.</strong> Ayun pelan nggak bunyi. Harus disentak.":
     "<strong>Click, then swing and flick.</strong> A slow swing won't crack. You have to snap it.",
