@@ -12,7 +12,7 @@ export class Whip {
     this.py = new Float32Array(this.n);
     const hx = base.x + dir.x * this.handleLen, hy = base.y + dir.y * this.handleLen;
     for (let i = 0; i < this.n; i++) {
-      this.x[i] = this.px[i] = hx + i * this.seg * 0.15;
+      this.x[i] = this.px[i] = hx + i * this.seg * 0.15 * Math.sign(dir.x || 1);
       this.y[i] = this.py[i] = hy + i * this.seg * 0.98;
     }
   }
