@@ -23,6 +23,8 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
 - **Hidup pas diem:** didiemin bentar, pecutnya goyang pelan kayak ketiup angin.
 - **Scroll = gulung tali** (di preview & demo web): scroll ke bawah talinya ngegulung ke gagang,
   ke atas diulur lagi. Dilepas bentar, keulur sendiri.
+- **Tampilan 2D / 3D:** Bullwhip udah ada versi 3D (tali kepang, cahaya, bayangan) pakai Three.js.
+  Defaultnya 2D biar ringan; Three.js baru dimuat kalau 3D dinyalain. Pecut lain nyusul.
 - **Dua bahasa:** Indonesia & English (landing page, app, sampai omelannya).
 
 ## Pakai

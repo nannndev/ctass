@@ -32,6 +32,7 @@ const ID = {
   soundOn: "Suara on", soundOff: "Suara off",
   wordOn: "Tulisan on", wordOff: "Tulisan off",
   modeFollow: "Mode: ikut kursor", modeClick: "Mode: klik = pecut",
+  view2d: "Tampilan: 2D", view3d: "Tampilan: 3D", view3dOnly: "3D: baru ada Bullwhip", view3dFail: "3D nggak didukung browser ini",
   hintClick: "<strong>Klik di mana aja.</strong>Pecutnya nyabet titik itu. Double klik = dua kali. Seret gagangnya buat mindahin.",
   hintFollow: "<strong>Klik, terus ayun dan sentak.</strong>Ayun pelan nggak bunyi. Harus disentak.",
   nag: "[Ctas] Kamu barusan dipecut 7 kali, 2 kali kena muka. Cepetan dong, jangan halu, langsung kerjain.",
@@ -66,7 +67,7 @@ addEventListener("resize", () => stage.resize());
 const chips = $("variants"), cards = $("cards");
 Object.entries(VARIANTS).forEach(([k, v]) => {
   const b = document.createElement("button");
-  b.className = "chip"; b.dataset.k = k;
+  b.className = v.d3 ? "chip has3d" : "chip"; b.dataset.k = k;
   b.onclick = () => { sound.init(); pick(k); };
   chips.appendChild(b);
 
@@ -83,12 +84,21 @@ Object.entries(VARIANTS).forEach(([k, v]) => {
 function pick(k) {
   stage.pick(k);
   document.querySelectorAll(".chips .chip[data-k]").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.k === k)));
+  labels();
 }
 
 // ---------- Tombol demo ----------
 let showWord = true;
 $("sound").onclick = () => { sound.init(); sound.on = !sound.on; labels(); };
 $("wordBtn").onclick = () => { showWord = !showWord; stage.setShowWord(showWord); labels(); };
+let view3dFail = false;
+$("viewBtn").onclick = async () => {
+  if (stage.is3D) { await stage.set3D(false); labels(); return; }
+  const ok = await stage.set3D(true);
+  view3dFail = !ok;
+  if (ok && !VARIANTS[stage.variant].d3) pick("bullwhip");
+  labels();
+};
 $("modeBtn").onclick = () => {
   sound.init();
   stage.setMode(stage.mode === "click" ? "follow" : "click");
@@ -119,6 +129,9 @@ function labels() {
   $("modeBtn").textContent = click ? T.modeClick : T.modeFollow;
   $("modeBtn").setAttribute("aria-pressed", String(click));
   $("hint").innerHTML = click ? T.hintClick : T.hintFollow;
+  const on = stage.is3D;
+  $("viewBtn").textContent = view3dFail ? T.view3dFail : !on ? T.view2d : VARIANTS[stage.variant].d3 ? T.view3d : T.view3dOnly;
+  $("viewBtn").setAttribute("aria-pressed", String(on));
 }
 function applyLang() {
   translateDom(document.body, EN, lang, TRANSLATE);

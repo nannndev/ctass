@@ -77,6 +77,7 @@ export const EN_DYNAMIC = {
   soundOn: "Sound on", soundOff: "Sound off",
   wordOn: "Words on", wordOff: "Words off",
   modeFollow: "Mode: follow cursor", modeClick: "Mode: click = whip",
+  view2d: "View: 2D", view3d: "View: 3D", view3dOnly: "3D: Bullwhip only for now", view3dFail: "3D isn't supported in this browser",
   hintClick: "<strong>Click anywhere.</strong>The whip lashes that spot. Double-click = twice. Drag its handle to move it.",
   hintFollow: "<strong>Click, then swing and flick.</strong>A slow swing won't crack. You have to snap it.",
   nag: "[Ctas] You just got whipped 7 times, 2 of them in the face. Hurry up, no hallucinating, just do it.",

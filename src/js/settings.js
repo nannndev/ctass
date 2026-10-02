@@ -8,6 +8,7 @@ export const DEFAULTS = {
   mode: "follow",  // "follow" = pecut nempel di kursor, "click" = klik buat nyabet titik itu
   home: null,      // mode klik: posisi pecut nongkrong { x, y } dalam pecahan layar (null = pojok kanan)
   showWord: true,  // tampilkan tulisan pas ctarr
+  view: "2d",      // "2d" / "3d" (3D baru buat pecut yang punya versi 3D, sisanya tetap 2D)
   lang: null,      // "id" / "en" (null = ikut bahasa sistem)
   sensitivity: 1, // pengali batas Mach 1. Kecil = lebih gampang bunyi
   volume: 1,
@@ -32,6 +33,7 @@ export function normalize(raw) {
   if (s.lang !== "id" && s.lang !== "en") s.lang = detectLang();
   if (!s.home || !isFinite(s.home.x) || !isFinite(s.home.y)) s.home = null;
   s.showWord = s.showWord !== false;
+  s.view = s.view === "3d" ? "3d" : "2d";
   if (!s.custom || typeof s.custom !== "object") s.custom = {};
   return s;
 }

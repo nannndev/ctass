@@ -22,6 +22,7 @@ const STR = {
     sound: "Suara", effect: "Efek", word: "Tulisan pas ctarr",
     showWord: "Tampilkan tulisan pas ctarr", showWordSub: "Matiin kalau mau efeknya aja tanpa tulisan.",
     general: "Umum",
+    view2d: "2D", view2dSub: "Paling ringan. Semua pecut.", view3d: "3D", view3dSub: "Baru ada buat Bullwhip. Sedikit lebih berat.", view3dFail: "3D nggak didukung di komputer ini, balik ke 2D.",
     modeFollow: "Ikut kursor", modeFollowSub: "Pecut nempel di kursor. Sentak mouse buat ctarr.",
     modeClick: "Klik = pecut", modeClickSub: "Pecut nongkrong di pojok. Tiap klik, dia nyabet titik itu. Seret gagangnya buat mindahin.",
     linuxNote: "Di Linux, mode klik baru jalan di preview ini, belum di overlay.",
@@ -39,6 +40,7 @@ const STR = {
     sound: "Sound", effect: "Effect", word: "Word on crack",
     showWord: "Show the word on crack", showWordSub: "Turn off if you only want the effect, no text.",
     general: "General",
+    view2d: "2D", view2dSub: "Lightest. Every whip.", view3d: "3D", view3dSub: "Bullwhip only for now. A bit heavier.", view3dFail: "3D isn't supported on this computer, back to 2D.",
     modeFollow: "Follow cursor", modeFollowSub: "The whip sticks to your cursor. Flick the mouse to crack.",
     modeClick: "Click = whip", modeClickSub: "The whip waits in a corner. Every click, it lashes that spot. Drag its handle to move it.",
     linuxNote: "On Linux, click mode only works in this preview for now, not the overlay.",
@@ -125,6 +127,7 @@ function render() {
   $("oSens").textContent = pct(2 - settings.sensitivity);
   setRange("volume", RANGES.volume, settings.volume); $("oVol").textContent = pct(settings.volume);
   document.querySelectorAll('input[name="mode"]').forEach((r) => (r.checked = r.value === settings.mode));
+  document.querySelectorAll('input[name="view"]').forEach((r) => (r.checked = r.value === settings.view));
   $("hint").textContent = settings.mode === "click" ? T.hintClick : T.hintFollow;
   $("clickNote").hidden = !(IS_LINUX && TAURI && settings.mode === "click");
   $("nag").checked = settings.nag;
@@ -137,6 +140,11 @@ function apply() {
   stage.setShowWord(settings.showWord);
   if (settings.home) stage.setHome(settings.home);
   if (stage.mode !== settings.mode) stage.setMode(settings.mode);
+  if (stage.is3D !== (settings.view === "3d")) {
+    stage.set3D(settings.view === "3d").then((ok) => {
+      if (settings.view === "3d" && !ok) { settings.view = "2d"; $("viewNote").hidden = false; changed(); }
+    });
+  }
   sound.setVolume(settings.volume);
 }
 
@@ -146,7 +154,7 @@ function changed() { render(); save(); }
 KEYS.forEach((k, i) => {
   const t = document.createElement("button");
   t.type = "button"; t.className = "tile"; t.dataset.k = k; t.setAttribute("role", "radio");
-  t.innerHTML = `<canvas aria-hidden="true"></canvas><span class="nm"></span><span class="num">${i + 1}</span>`;
+  t.innerHTML = `<canvas aria-hidden="true"></canvas><span class="nm"></span><span class="num">${i + 1}${VARIANTS[k].d3 ? ' <b class="badge">3D</b>' : ""}</span>`;
   t.onclick = () => { sound.init(); settings.variant = k; changed(); };
   $("tiles").appendChild(t);
   requestAnimationFrame(() => drawSwatch(t.querySelector("canvas"), VARIANTS[k]));
@@ -173,6 +181,12 @@ $("sensitivity").addEventListener("input", (e) => { settings.sensitivity = +(2 -
 $("volume").addEventListener("input", (e) => { settings.volume = +e.target.value; sound.init(); changed(); });
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => {
   settings.mode = r.value; $("hint").style.opacity = "1"; changed();
+}));
+document.querySelectorAll('input[name="view"]').forEach((r) => r.addEventListener("change", () => {
+  settings.view = r.value;
+  // 3D baru ada buat sebagian pecut: langsung pindah ke situ biar kelihatan bedanya
+  if (r.value === "3d" && !VARIANTS[settings.variant].d3) settings.variant = KEYS.find((k) => VARIANTS[k].d3);
+  changed();
 }));
 $("nag").addEventListener("change", (e) => { settings.nag = e.target.checked; changed(); });
 $("autosend").addEventListener("change", (e) => { settings.autosend = e.target.checked; changed(); });

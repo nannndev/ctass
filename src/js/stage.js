@@ -48,6 +48,7 @@ export function createStage(o) {
     W = r.width; H = r.height; S = Math.min(W, H);
     cv.width = W * dpr; cv.height = H * dpr;
     cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    r3d?.resize(W, H, dpr);
     ai.w = Math.max(72, S * (o.aiScale ?? 0.17)); ai.h = ai.w * 0.86;
     ai.x = W > 700 ? W * 0.8 : W * 0.74; ai.y = H * 0.48;
     if (!ptr.seen) { ptr.x = ptr.px = W * 0.3; ptr.y = ptr.py = H * 0.62; }
@@ -119,6 +120,24 @@ export function createStage(o) {
 
   // diem kelamaan = pecutnya goyang pelan kayak ketiup angin
   let still = 0, clock = 0;
+
+  // Tampilan 3D: fisika sama, cuma ada kedalaman (z) + digambar pakai WebGL (whip3d.js).
+  // Baru pecut yang punya `d3` (Bullwhip) yang ada versi 3D-nya; sisanya tetap 2D.
+  let view3d = false, r3d = null, r3dLoad = null, dz = 0;
+  const is3D = () => view3d && r3d && v.d3;
+  function load3D() {
+    r3dLoad ||= import("./whip3d.js")
+      .then((m) => { r3d = m.createWhip3D(); if (r3d) r3d.resize(W, H, window.devicePixelRatio); return !!r3d; })
+      .catch((e) => { console.warn("3D nggak bisa dimuat", e); return false; });
+    return r3dLoad;
+  }
+  async function set3D(on) {
+    view3d = !!on;
+    if (!view3d) { dz = 0; build(); return false; }
+    const ok = await load3D();
+    if (!ok) view3d = false;
+    return ok;
+  }
 
   // Sabetan otomatis: dari posisi sekarang (biasanya rumah) melesat ke samping target,
   // narik dikit, nyentak ke arah target (ctarr dipaksa pas di target), terus balik pulang.
@@ -272,13 +291,22 @@ export function createStage(o) {
     dir.x += (tx - dir.x) * 0.3; dir.y += (ty - dir.y) * 0.3;
     const dl = Math.hypot(dir.x, dir.y) || 1; dir.x /= dl; dir.y /= dl;
 
+    // 3D: gagang agak nyondong ke depan, makin kenceng ngayun makin keluar layar
+    const d3 = is3D(), oz = dz;
+    if (d3) {
+      const tz = 0.35 + Math.max(-0.35, Math.min(0.35, (ptr.vx * side) / 5000)) + sway * 0.25 * Math.sin(clock * 1.1);
+      dz += (tz - dz) * 0.2;
+    } else dz = 0;
+    whip.windZ = d3 ? sway * S * 0.9 * Math.sin(clock * 0.7 + 2) : 0;
+
     const sub = Math.max(2, Math.ceil(dt * 240)), h = dt / sub;
     let tip = 0;
     for (let s = 1; s <= sub; s++) {
       const f = s / sub;
       const bx = ptr.px + (ptr.x - ptr.px) * f, by = ptr.py + (ptr.y - ptr.py) * f;
       const ddx = ox + (dir.x - ox) * f, ddy = oy + (dir.y - oy) * f;
-      tip = Math.max(tip, whip.step(h, bx, by, bx + ddx * whip.handleLen, by + ddy * whip.handleLen));
+      const ddz = oz + (dz - oz) * f, hl = whip.handleLen / Math.sqrt(1 + ddz * ddz);
+      tip = Math.max(tip, whip.step(h, bx, by, bx + ddx * hl, by + ddy * hl, 0, ddz * hl));
     }
     ptr.px = ptr.x; ptr.py = ptr.y;
 
@@ -313,9 +341,14 @@ export function createStage(o) {
       shake *= 0.82; if (shake < 0.3) shake = 0;
     }
     if (showAI) drawAI(dt);
-    drawHandle();
-    if (coil > 0.01) drawCoil();
-    drawRope();
+    if (is3D()) {
+      if (coil > 0.01) drawCoil();
+      cx.drawImage(r3d.render(whip, { x: ptr.x, y: ptr.y, z: 0 }, v, S), 0, 0, W, H);
+    } else {
+      drawHandle();
+      if (coil > 0.01) drawCoil();
+      drawRope();
+    }
     if (mode === "click" && !auto) drawHomeRing();
     drawFx(dt);
     cx.restore();
@@ -601,6 +634,8 @@ export function createStage(o) {
     setMode(m) { mode = m === "click" ? "click" : "follow"; auto = null; dragging = false; if (mode === "click") goHome(); else build(); },
     setHome(h) { if (h && isFinite(h.x) && isFinite(h.y)) { home = { x: h.x, y: h.y }; if (mode === "click" && !auto && !dragging) goHome(); } },
     setShowWord(b) { showWord = !!b; },
+    set3D,
+    get is3D() { return view3d; },
     strike, pressAt, releaseAt,
     get mode() { return mode; },
     pointer(x, y) {
