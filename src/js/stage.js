@@ -34,7 +34,8 @@ export function createStage(o) {
   let W = 0, H = 0, S = 0;
   let key = "jaranan", v = VARIANTS[key], whip;
   const ptr = { x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0, seen: false };
-  const dir = { x: 0.45, y: -0.89 };
+  const dir = { x: 0.4, y: -0.92 };
+  let side = 1; // -1 = terakhir ngayun ke kiri, 1 = ke kanan
   let prevAbove = false, crackCool = 0, hitCool = 0, shake = 0, machShown = 0;
   const fx = [];
   const ai = { x: 0, y: 0, w: 0, h: 0, wobble: 0, mood: 0 };
@@ -135,10 +136,13 @@ export function createStage(o) {
   function frame(now) {
     const dt = Math.min(0.033, (now - last) / 1000 || 0.016); last = now;
 
-    // arah gagang ikut arah ayunan tangan, balik ke posisi santai kalau diam
+    // arah gagang ikut arah ayunan tangan. Kalau diam, gagang tegak dan miring dikit
+    // ke sisi terakhir lu ngayun (kiri atau kanan), jadi bisa nyabet ke dua arah.
     ptr.vx += ((ptr.x - ptr.px) / dt - ptr.vx) * 0.35;
     ptr.vy += ((ptr.y - ptr.py) / dt - ptr.vy) * 0.35;
-    let tx = 0.45 * 500 + ptr.vx * 0.5, ty = -0.89 * 500 + ptr.vy * 0.5;
+    if (Math.abs(ptr.vx) > 250) side += (Math.sign(ptr.vx) - side) * 0.2;
+    const rx = 0.4 * side, ry = -Math.sqrt(1 - rx * rx);
+    let tx = rx * 260 + ptr.vx * 0.6, ty = ry * 260 + ptr.vy * 0.6;
     const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
     const ox = dir.x, oy = dir.y;
     dir.x += (tx - dir.x) * 0.3; dir.y += (ty - dir.y) * 0.3;
