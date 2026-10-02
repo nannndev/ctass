@@ -3,7 +3,6 @@ export const EN = {
   "Varian": "Whips",
   "Cara pakai": "How it works",
   "Install": "Install",
-  "FAQ": "FAQ",
   "Download": "Download",
   "Mac · Windows · Linux · gratis": "Mac · Windows · Linux · free",
   "Ctas.<br><em>Ctass.</em>": "Ctas.<br><em>Ctass.</em>",
@@ -58,22 +57,6 @@ export const EN = {
   "Bikin AppImage-nya bisa dijalanin, terus buka:": "Make the AppImage executable, then run it:",
   "Atau install <code>.deb</code>-nya. Fitur ketik omelan butuh <code>xdotool</code> (<code>sudo apt install xdotool</code>).":
     "Or install the <code>.deb</code>. Scolding needs <code>xdotool</code> (<code>sudo apt install xdotool</code>).",
-  "Yang sering ditanya": "Questions people ask",
-  "AI-nya kesakitan?": "Does the AI feel it?",
-  "Nggak lah. Tapi seenggaknya dia tau lu kesel.": "Nope. But at least it knows you're annoyed.",
-  "Omelannya langsung kekirim?": "Does the scolding send itself?",
-  "Defaultnya omelan mati. Nyalain di jendela Ctas. Itu juga cuma diketik, kecuali \"Langsung kirim\" ikut dinyalain.":
-    "Scolding is off by default. Turn it on in the Ctas window. Even then it's only typed, unless \"Send right away\" is on too.",
-  "Bisa buat AI apa aja?": "Which AIs does it work with?",
-  "Apa aja yang ada kolom chat-nya. Claude, ChatGPT, Cursor, terminal juga bisa.": "Anything with a chat box. Claude, ChatGPT, Cursor, even a terminal.",
-  "Kok dibilang \"Ctas is damaged and can't be opened\"?": "Why does it say \"Ctas is damaged and can't be opened\"?",
-  "Itu karena app-nya belum di-sign Apple, bukan beneran rusak. Jalanin <code>xattr -cr /Applications/Ctas.app</code> di Terminal, terus buka lagi. Detailnya ada di <a href=\"#install\">cara install</a>.":
-    "Because the app isn't signed by Apple, not because it's broken. Run <code>xattr -cr /Applications/Ctas.app</code> in Terminal and open it again. Details in the <a href=\"#install\">install steps</a>.",
-  "Kok macOS nanya \"would like to access data from other apps\"?": "Why does macOS ask \"would like to access data from other apps\"?",
-  "Itu karena app-nya belum di-sign Apple, jadi tiap update dianggap app yang beda, dan \"app lain\" itu sebenernya Ctas versi lama. Mulai v0.1.6 Ctas nggak nyimpen data apa-apa, jadi dialog ini harusnya nggak muncul lagi. Kalau masih muncul, Allow atau Don't Allow sama-sama aman.":
-    "Because the app isn't signed by Apple, every update looks like a different app, and the \"other app\" is really the old Ctas. Since v0.1.6 Ctas stores no web data, so it shouldn't show up again. If it does, Allow and Don't Allow are both safe.",
-  "Aman?": "Is it safe?",
-  "Aman. Nggak ada data yang dikirim ke mana-mana, dan kodenya terbuka di GitHub.": "Yes. Nothing gets sent anywhere, and the code is open on GitHub.",
   "Dibikin iseng.": "Made for fun.",
 };
 

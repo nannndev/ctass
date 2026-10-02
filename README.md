@@ -20,6 +20,9 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
 - **Bisa dicustom** di jendela Ctas: panjang, kekakuan, berat, warna tali & gagang,
   campur suara & efek dari pecut lain, tulisan pas ctarr, gampang/susahnya bunyi, volume.
   Ada preview buat nyobain langsung, dan pengaturannya disimpan. Tulisan pas ctarr bisa dimatiin.
+- **Hidup pas diem:** didiemin bentar, pecutnya goyang pelan kayak ketiup angin.
+- **Scroll = gulung tali** (di preview & demo web): scroll ke bawah talinya ngegulung ke gagang,
+  ke atas diulur lagi. Dilepas bentar, keulur sendiri.
 - **Dua bahasa:** Indonesia & English (landing page, app, sampai omelannya).
 
 ## Pakai

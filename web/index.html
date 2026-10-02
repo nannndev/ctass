@@ -11,7 +11,7 @@
   <link rel="icon" href="/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/site.css">
 </head>
 <body>
@@ -21,7 +21,6 @@
       <a href="#varian">Varian</a>
       <a href="#cara">Cara pakai</a>
       <a href="#install">Install</a>
-      <a href="#faq">FAQ</a>
     </nav>
     <button class="lang" id="langBtn" type="button" aria-label="Ganti bahasa / Change language">EN</button>
     <a class="btn btn-sm" href="#download">Download</a>
@@ -159,34 +158,6 @@
       </div>
     </section>
 
-    <section class="faq" id="faq">
-      <p class="eyebrow">FAQ</p>
-      <h2>Yang sering ditanya</h2>
-      <details>
-        <summary>AI-nya kesakitan?</summary>
-        <p>Nggak lah. Tapi seenggaknya dia tau lu kesel.</p>
-      </details>
-      <details>
-        <summary>Omelannya langsung kekirim?</summary>
-        <p>Defaultnya omelan mati. Nyalain di jendela Ctas. Itu juga cuma diketik, kecuali "Langsung kirim" ikut dinyalain.</p>
-      </details>
-      <details>
-        <summary>Bisa buat AI apa aja?</summary>
-        <p>Apa aja yang ada kolom chat-nya. Claude, ChatGPT, Cursor, terminal juga bisa.</p>
-      </details>
-      <details>
-        <summary>Kok dibilang "Ctas is damaged and can't be opened"?</summary>
-        <p>Itu karena app-nya belum di-sign Apple, bukan beneran rusak. Jalanin <code>xattr -cr /Applications/Ctas.app</code> di Terminal, terus buka lagi. Detailnya ada di <a href="#install">cara install</a>.</p>
-      </details>
-      <details>
-        <summary>Kok macOS nanya "would like to access data from other apps"?</summary>
-        <p>Itu karena app-nya belum di-sign Apple, jadi tiap update dianggap app yang beda, dan "app lain" itu sebenernya Ctas versi lama. Mulai v0.1.6 Ctas nggak nyimpen data apa-apa, jadi dialog ini harusnya nggak muncul lagi. Kalau masih muncul, Allow atau Don't Allow sama-sama aman.</p>
-      </details>
-      <details>
-        <summary>Aman?</summary>
-        <p>Aman. Nggak ada data yang dikirim ke mana-mana, dan kodenya terbuka di GitHub.</p>
-      </details>
-    </section>
   </main>
 
   <footer class="foot">
