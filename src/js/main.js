@@ -50,8 +50,10 @@ function applySettings(s) {
   settings = normalize(s);
   const v = effective(settings);
   stage.use(v, settings.variant);
+  if (stage.mode !== settings.mode) stage.setMode(settings.mode);
   sound.setVolume(settings.volume);
   $("pillName").textContent = v.name;
+  $("pillMode").textContent = settings.mode === "click" ? "klik buat nyabet" : "sentak buat ctarr";
 }
 function pick(k) {
   applySettings({ ...settings, variant: k });
@@ -117,6 +119,11 @@ if (OVERLAY) {
   });
   TAURI.event.listen("ctas://cursor", (e) => stage.pointer(e.payload[0], e.payload[1]));
   TAURI.event.listen("ctas://settings", (e) => applySettings(e.payload));
+  TAURI.event.listen("ctas://click", (e) => {
+    if (settings.mode !== "click") return;
+    const [x, y, n] = e.payload;
+    sound.init(); stage.strike(x, y, n);
+  });
   TAURI.event.listen("ctas://request-dismiss", dismiss);
 }
 

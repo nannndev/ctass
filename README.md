@@ -31,7 +31,8 @@ Pas dibuka, muncul **jendela Ctas**: pilih pecut, custom, cobain di preview, ter
 | --- | --- |
 | Mulai / udahan mecut | ⌘⇧X di Mac, Ctrl+Alt+X di Windows/Linux |
 | Ganti & custom pecut | Jendela Ctas (angka 1–9 juga bisa) |
-| Ctarr | Ayun mouse terus balik arah mendadak |
+| Ctarr (mode **Ikut kursor**) | Ayun mouse terus balik arah mendadak |
+| Ctarr (mode **Klik = pecut**) | Klik di mana aja, pecut nyabet titik itu. Double klik = dua kali |
 
 Overlay-nya tembus klik dan nggak ngambil fokus, jadi selama mecut lu tetap bisa klik dan
 ngetik kayak biasa. Pecutnya cuma nempel di kursor.
@@ -42,7 +43,8 @@ Di jendela Ctas ada dua pilihan omelan, dua-duanya default mati:
   waktu dinyalain, macOS minta izin **Accessibility** buat Ctas (sekali aja).
 - **Langsung kirim**: sekalian tekan Enter.
 
-Kalau ctarr-nya susah keluar, geser **Gampang bunyi** ke kanan.
+Kalau ctarr-nya susah keluar, geser **Gampang bunyi** ke kanan, atau pakai mode **Klik = pecut**
+yang pasti bunyi tiap klik. Mode klik di overlay jalan di Mac & Windows (di Linux baru di preview).
 
 ## Install
 

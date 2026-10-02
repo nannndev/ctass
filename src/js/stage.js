@@ -56,21 +56,66 @@ export function createStage(o) {
   const showAI = o.showAI ?? false;
   function build() { whip = new Whip(v, S * (o.size ?? 1), ptr, dir); }
 
+  // mode "follow" = pecut nempel di kursor. Mode "click" = pecut sembunyi, tiap klik
+  // (atau double klik) pecut muncul dan otomatis nyabet titik yang diklik.
+  let mode = "follow", auto = null, vis = 1, hideIn = 0;
+  const local = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
   function move(e) {
-    const r = cv.getBoundingClientRect();
-    ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top;
+    if (mode === "click") return;
+    [ptr.x, ptr.y] = local(e);
     if (!ptr.seen) { ptr.seen = true; o.onFirstMove?.(); }
   }
   cv.addEventListener("pointermove", move);
-  cv.addEventListener("pointerdown", (e) => { o.sound.init(); move(e); cv.setPointerCapture?.(e.pointerId); });
+  cv.addEventListener("pointerdown", (e) => {
+    o.sound.init();
+    if (mode === "click") { const [x, y] = local(e); strike(x, y, e.detail >= 2 ? 2 : 1); return; }
+    move(e); cv.setPointerCapture?.(e.pointerId);
+  });
+
+  // Rencana sabetan otomatis: gagang berdiri di samping target (ke arah tengah layar),
+  // narik ke belakang, terus nyentak ke arah target. Ctarr-nya dipaksa pas di target.
+  function strike(x, y, n = 1) {
+    if (!ptr.seen) { ptr.seen = true; o.onFirstMove?.(); }
+    // lagi nyabet dan belum kena: klik berikutnya (double klik) nunggu giliran
+    if (auto && !auto.fired) { auto.next = { x, y, n }; return; }
+    const L = v.len * S * (o.size ?? 1) + whip.handleLen;
+    const s = x < W * 0.5 ? 1 : -1;
+    const clampX = (q) => Math.min(W - 20, Math.max(20, q)), clampY = (q) => Math.min(H - 20, Math.max(20, q));
+    const hx = clampX(x + s * 0.5 * L), hy = clampY(y + 0.4 * L);
+    let dx = x - hx, dy = y - hy; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+    const plan = { t: 0, x, y, n, fired: false,
+      from: [ptr.x, ptr.y], wind: [hx - dx * 0.22 * L - dy * 0.08 * L * s, hy - dy * 0.22 * L + dx * 0.08 * L * s], end: [hx + dx * 0.3 * L, hy + dy * 0.3 * L] };
+    if (vis < 0.1 || !auto) {
+      // pecut belum kelihatan: munculin langsung di posisi gagang
+      ptr.x = ptr.px = hx; ptr.y = ptr.py = hy; ptr.vx = ptr.vy = 0;
+      dir.x = s * 0.4; dir.y = -0.92; side = s;
+      build(); plan.from = [hx, hy];
+    }
+    auto = plan; hideIn = 0;
+  }
+  function driveAuto(dt) {
+    const a = auto; a.t += dt;
+    const lerp = (p, q, f) => [p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f];
+    let pos;
+    if (a.t < 0.14) { const f = a.t / 0.14; pos = lerp(a.from, a.wind, 1 - (1 - f) * (1 - f)); }
+    else if (a.t < 0.24) { const f = (a.t - 0.14) / 0.1; pos = lerp(a.wind, a.end, f * f); }
+    else pos = a.end;
+    [ptr.x, ptr.y] = pos;
+    if (!a.fired && a.t >= 0.22) {
+      a.fired = true; crackCool = 0.3;
+      onCrack(a.n >= 2 ? 1.7 : 1.3, { x: a.x, y: a.y });
+    }
+    if (a.next && a.fired && a.t > 0.3) { const q = a.next; a.next = null; auto = { ...a, fired: true }; strike(q.x, q.y, q.n); return; }
+    if (a.t > 0.85) { auto = null; hideIn = 0.5; }
+  }
 
   function pick(k) { if (!VARIANTS[k]) return; key = k; v = VARIANTS[k]; build(); warm(); }
   // pakai pecut yang udah dicustom (lihat settings.js)
   function use(variant, k = key) { key = k; v = variant; build(); warm(); }
   function warm() { o.sound.pending = v.sound; o.sound.prepare?.(v.sound); }
 
-  function onCrack(mach) {
-    const t = whip.tip();
+  function onCrack(mach, at) {
+    const t = at || whip.tip();
     score.crack++; session.crack++; score.best = Math.max(score.best, mach); o.onScore?.(score);
     o.sound.crack(mach - 1, v.sound, (t.x / W) * 2 - 1);
     shake = reduced ? 0 : (6 + Math.min(10, (mach - 1) * 8)) * (v.shake ?? 1);
@@ -159,6 +204,12 @@ export function createStage(o) {
   let last = performance.now(), running = true;
   function frame(now) {
     const dt = Math.min(0.033, (now - last) / 1000 || 0.016); last = now;
+    if (auto) driveAuto(dt);
+    if (mode === "click") {
+      if (!auto && hideIn > 0) hideIn -= dt;
+      const want = auto || hideIn > 0 ? 1 : 0;
+      vis += (want - vis) * Math.min(1, dt * (want ? 18 : 6));
+    } else vis = 1;
 
     // arah gagang ikut arah ayunan tangan. Kalau diam, gagang tegak dan miring dikit
     // ke sisi terakhir lu ngayun (kiri atau kanan), jadi bisa nyabet ke dua arah.
@@ -187,7 +238,7 @@ export function createStage(o) {
     crackCool -= dt; hitCool -= dt;
     const above = mach >= 1;
     let cracked = false;
-    if (above && !prevAbove && crackCool <= 0) { onCrack(mach); crackCool = 0.28; cracked = true; }
+    if (above && !prevAbove && crackCool <= 0 && mode === "follow") { onCrack(mach); crackCool = 0.28; cracked = true; }
     prevAbove = above;
     if (showAI && mach > 0.45 && hitCool <= 0 && tipInAI()) { onHit(cracked); hitCool = 0.6; }
 
@@ -213,11 +264,15 @@ export function createStage(o) {
       shake *= 0.82; if (shake < 0.3) shake = 0;
     }
     if (showAI) drawAI(dt);
-    drawHandle();
-    drawRope();
+    if (vis > 0.02) {
+      cx.globalAlpha = vis;
+      drawHandle();
+      drawRope();
+      cx.globalAlpha = 1;
+    }
     drawFx(dt);
     cx.restore();
-    if (o.cursorDot ?? true) {
+    if ((o.cursorDot ?? true) && mode === "follow") {
       cx.fillStyle = "rgba(243,231,211,0.9)";
       cx.beginPath(); cx.arc(ptr.x, ptr.y, 4, 0, Math.PI * 2); cx.fill();
     }
@@ -466,7 +521,11 @@ export function createStage(o) {
     reset() { score.crack = score.hit = score.best = 0; o.onScore?.(score); },
     rearm() { ptr.seen = false; resize(); },
     // posisi kursor dari luar (overlay tembus klik nggak dapet event mouse)
+    setMode(m) { mode = m === "click" ? "click" : "follow"; auto = null; vis = mode === "click" ? 0 : 1; if (mode === "follow") build(); },
+    strike,
+    get mode() { return mode; },
     pointer(x, y) {
+      if (mode === "click") return;
       ptr.x = x; ptr.y = y;
       if (!ptr.seen) { ptr.seen = true; ptr.px = x; ptr.py = y; build(); o.onFirstMove?.(); }
     },

@@ -67,6 +67,8 @@ function render() {
   setRange("sensitivity", RANGES.sensitivity, 2 - settings.sensitivity);
   $("oSens").textContent = pct(2 - settings.sensitivity);
   setRange("volume", RANGES.volume, settings.volume); $("oVol").textContent = pct(settings.volume);
+  document.querySelectorAll('input[name="mode"]').forEach((r) => (r.checked = r.value === settings.mode));
+  $("hint").textContent = settings.mode === "click" ? "Klik di sini buat nyabet. Double klik = dua kali." : "Coba ayun di sini, terus sentak.";
   $("nag").checked = settings.nag;
   $("autosend").checked = settings.autosend;
   apply();
@@ -74,6 +76,7 @@ function render() {
 
 function apply() {
   stage.use(effective(settings), settings.variant);
+  if (stage.mode !== settings.mode) stage.setMode(settings.mode);
   sound.setVolume(settings.volume);
 }
 
@@ -108,6 +111,10 @@ $("resetOne").onclick = () => { delete settings.custom[settings.variant]; change
 // umum
 $("sensitivity").addEventListener("input", (e) => { settings.sensitivity = +(2 - e.target.value).toFixed(2); changed(); });
 $("volume").addEventListener("input", (e) => { settings.volume = +e.target.value; sound.init(); changed(); });
+document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => {
+  settings.mode = r.value; $("hint").style.opacity = "1"; changed();
+}));
+$("clickNote").hidden = !/Linux/i.test(navigator.userAgent) || !TAURI;
 $("nag").addEventListener("change", (e) => { settings.nag = e.target.checked; changed(); });
 $("autosend").addEventListener("change", (e) => { settings.autosend = e.target.checked; changed(); });
 
