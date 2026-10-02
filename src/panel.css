@@ -160,3 +160,45 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius
 .ghost:disabled { opacity: 0.5; cursor: default; }
 .foot { color: var(--muted); font-size: 12px; margin: 14px 0 0; }
 .foot b { color: var(--fg); font-weight: 500; }
+
+/* ---------- suara ---------- */
+.sound-row { display: flex; gap: 10px; align-items: end; }
+.sound-row .field { flex: 1; }
+.play {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; font-size: 12px; font-weight: 600;
+}
+.play:hover { border-color: var(--accent); color: var(--accent); }
+.play.on { border-color: var(--accent); color: var(--accent); }
+.editor { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--line); border-radius: 10px; background: var(--bg); }
+.editor[hidden] { display: none; }
+.ed-head { display: flex; align-items: baseline; gap: 10px; font-size: 13px; font-weight: 500; min-width: 0; }
+.ed-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#wave { width: 100%; height: 72px; display: block; border-radius: 6px; background: var(--bg-2); cursor: ew-resize; touch-action: none; }
+.ed-times { display: flex; justify-content: space-between; }
+.ed-times code:nth-child(2) { color: var(--accent); }
+.segs { display: flex; flex-wrap: wrap; gap: 10px; }
+.seg span { white-space: nowrap; }
+
+/* ---------- tema futuristik ---------- */
+:root[data-theme="future"] {
+  --bg: #05070c; --bg-2: #0a0f18; --surface: #0e1522; --surface-2: #13203a;
+  --fg: #e6f6ff; --muted: #6f8aa3; --line: #17283f;
+  --accent: #4de3ff; --ember: #ff4fd8;
+  --stage-1: #0a1424; --stage-2: #04060b; --stage-line: rgba(77, 227, 255, 0.12); --ring: 77, 227, 255;
+  --display: ui-monospace, Menlo, Consolas, monospace;
+}
+:root[data-theme="future"] body {
+  background: radial-gradient(120% 60% at 50% 0%, rgba(77, 227, 255, 0.07), transparent 60%), var(--bg);
+}
+:root[data-theme="future"] .brand { letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; text-shadow: 0 0 12px rgba(77, 227, 255, 0.6); }
+:root[data-theme="future"] .btn { background: var(--accent); box-shadow: 0 0 18px rgba(77, 227, 255, 0.35); }
+:root[data-theme="future"] .btn:hover { background: #fff; }
+:root[data-theme="future"] .preview,
+:root[data-theme="future"] .tile[aria-checked="true"],
+:root[data-theme="future"] .mode:has(input:checked) { box-shadow: 0 0 0 1px rgba(77, 227, 255, 0.25), 0 0 22px rgba(77, 227, 255, 0.12); }
+:root[data-theme="future"] .card, :root[data-theme="future"] .tile, :root[data-theme="future"] .mode { border-radius: 4px; }
+:root[data-theme="future"] .tabs button[aria-selected="true"] { text-shadow: 0 0 10px rgba(77, 227, 255, 0.7); }
+:root[data-theme="future"] .seg input:checked + span { background: var(--accent); }
+:root[data-theme="future"] input[type="range"]::-webkit-slider-thumb { background: var(--accent); box-shadow: 0 0 10px rgba(77, 227, 255, 0.8); }
+:root[data-theme="future"] h2 { text-transform: uppercase; letter-spacing: 0.04em; }

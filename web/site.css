@@ -94,7 +94,8 @@ main > section { width: min(var(--wrap), calc(100% - 32px)); margin-inline: auto
 }
 .chip:hover { color: var(--fg); border-color: var(--muted); }
 .chip[aria-pressed="true"] { color: var(--fg); border-color: var(--accent); }
-.chip.has3d::after { content: "3D"; margin-left: 6px; font: 500 9px/1 var(--mono); letter-spacing: 0.06em; color: var(--accent); border: 1px solid currentColor; border-radius: 4px; padding: 2px 3px; vertical-align: 1px; }
+.demo.is-future { border-color: rgba(77, 227, 255, 0.35); box-shadow: 0 0 40px rgba(77, 227, 255, 0.12); }
+.demo.is-future .chip[aria-pressed="true"] { border-color: #4de3ff; }
 .demo-hint {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: min(320px, calc(100% - 32px)); text-align: center; pointer-events: none;

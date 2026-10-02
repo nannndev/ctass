@@ -7,12 +7,13 @@
 //   tail   panjang desis sisa udara, tailLevel kerasnya
 //   rate   kecepatan playback (nada), body = dentum rendah [frek awal, frek akhir, durasi, gain]
 //   wet    banyaknya gema ruangan, echo = pantulan jauh [jeda, feedback, level] atau null
-//   extra  lapisan khas: "rustle" (rumbai), "chime" (denting sakti), "double" (tsik-tsik)
+//   extra  lapisan khas: "rustle" (rumbai), "chime" (denting sakti), "double" (tsik-tsik),
+//          "swish", "zap", "slap", "flame", "laser" (dengung plasma)
 //   gain   pengali volume (nada tinggi kedengeran lebih tipis)
 //
 // fx: efek visual khas pas ctarr, word = tulisan yang muncul, shake = kuatnya layar goyang
 // Bentuk khusus: strands (jumlah lidi), plug (colokan di ujung), flat + buckle (sabuk),
-// glow (warna nyala), fire (bara ngikutin ujung)
+// glow (warna nyala), fire (bara ngikutin ujung), core (inti terang, plasma)
 export const VARIANTS = {
   jaranan: {
     name: "Jaranan", segs: 34, len: 0.60, handle: 0.17, bend: 0.10, damp: 0.994, grav: 950, w0: 6, w1: 1.4,
@@ -28,7 +29,7 @@ export const VARIANTS = {
   },
   bullwhip: {
     name: "Bullwhip", segs: 44, len: 0.78, handle: 0.13, bend: 0.07, damp: 0.996, grav: 900, w0: 9, w1: 1.2,
-    rope: "#8a5429", grip: "#2d1d12", tassel: false, glow: false, threshold: 5600, d3: true,
+    rope: "#8a5429", grip: "#2d1d12", tassel: false, glow: false, threshold: 5600,
     sound: { nDur: 0.0006, snap: 0.0015, tail: 0.012, tailLevel: 0.25, rate: 1.15, body: [220, 70, 0.05, 0.35], wet: 0.24, echo: [0.34, 0.4, 0.5], extra: null },
     fx: "shock", word: "CRACK!", color: "#ece8e1", shake: 1.3,
   },
@@ -67,6 +68,12 @@ export const VARIANTS = {
     rope: "#ff7a2e", grip: "#3b1a0c", glow: "#ff6a1a", fire: true, threshold: 5000,
     sound: { nDur: 0.0009, snap: 0.0022, tail: 0.025, tailLevel: 0.35, rate: 1, body: [150, 45, 0.1, 0.55], wet: 0.35, echo: [0.16, 0.25, 0.2], extra: "flame", gain: 1.2 },
     fx: "fire", word: "BWOSH!", color: "#ff7a2e", shake: 1.2,
+  },
+  plasma: {
+    name: "Cambuk plasma", segs: 36, len: 0.72, handle: 0.15, bend: 0.08, damp: 0.996, grav: 520, w0: 5, w1: 2.4,
+    rope: "#4de3ff", grip: "#aeb9c7", glow: "#4de3ff", core: "#eafcff", threshold: 5000,
+    sound: { nDur: 0.0005, snap: 0.0012, tail: 0.01, tailLevel: 0.2, rate: 1.3, body: [90, 40, 0.14, 0.6], wet: 0.4, echo: [0.22, 0.35, 0.3], extra: "laser", gain: 1.2 },
+    fx: "pulse", word: "VZWAP!", color: "#4de3ff", shake: 1.1,
   },
 };
 

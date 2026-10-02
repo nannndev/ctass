@@ -15,16 +15,19 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
   makin keras kalau makin kenceng.
 - **Suara disintesis pakai Web Audio**, nggak ada file rekaman. Ayun pelan nggak bunyi,
   cuma pas ujungnya tembus Mach 1 keluar ctarr.
-- **9 pecut, beda suara & efek:** Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti,
-  Sapu lidi (srak!), Kabel charger (zzt!), Ikat pinggang (plak!), Cambuk api (bwosh!)
+- **10 pecut, beda suara & efek:** Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti,
+  Sapu lidi (srak!), Kabel charger (zzt!), Ikat pinggang (plak!), Cambuk api (bwosh!), Cambuk plasma (vzwap!)
 - **Bisa dicustom** di jendela Ctas: panjang, kekakuan, berat, warna tali & gagang,
   campur suara & efek dari pecut lain, tulisan pas ctarr, gampang/susahnya bunyi, volume.
   Ada preview buat nyobain langsung, dan pengaturannya disimpan. Tulisan pas ctarr bisa dimatiin.
 - **Hidup pas diem:** didiemin bentar, pecutnya goyang pelan kayak ketiup angin.
 - **Scroll = gulung tali** (di preview & demo web): scroll ke bawah talinya ngegulung ke gagang,
   ke atas diulur lagi. Dilepas bentar, keulur sendiri.
-- **Tampilan 2D / 3D:** Bullwhip udah ada versi 3D (tali kepang, cahaya, bayangan) pakai Three.js.
-  Defaultnya 2D biar ringan; Three.js baru dimuat kalau 3D dinyalain. Pecut lain nyusul.
+- **Tampilan 2D / 3D:** semua pecut ada versi 3D (tali kepang, lidi, sabuk pipih + gesper, kabel + colokan,
+  pendar buat yang nyala) pakai Three.js. Defaultnya 2D biar ringan; Three.js baru dimuat kalau 3D dinyalain.
+- **Tema klasik / futuristik:** futuristik = neon cyan, lantai grid, tulisan nyala.
+- **Atur suara:** tombol tes, gema, ruang (reverb), nada. Bisa pakai **suara sendiri** (mp3/wav/ogg/m4a, maks 8 MB)
+  plus editor: lihat gelombangnya, potong awal & akhir, atur volume.
 - **Update otomatis:** Ctas ngecek versi baru pas dibuka. Kalau ada, tinggal klik "Update sekarang".
   Buka Ctas lagi pas udah jalan = jendela yang lama yang muncul, nggak dobel.
 - **Dua bahasa:** Indonesia & English (landing page, app, sampai omelannya).

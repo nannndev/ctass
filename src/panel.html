@@ -52,10 +52,27 @@
         <label class="color"><input type="color" id="rope"><span><b data-t="rope"></b><code id="oRope"></code></span></label>
         <label class="color"><input type="color" id="grip"><span><b data-t="handle"></b><code id="oGrip"></code></span></label>
       </div>
+      <div class="card">
+        <div class="sound-row">
+          <label class="field"><span data-t="sound"></span><select id="sound"></select></label>
+          <button class="play" id="testSound" type="button"><span aria-hidden="true">▶</span> <span data-t="testSound"></span></button>
+        </div>
+        <div class="editor" id="editor" hidden>
+          <div class="ed-head"><span id="fileName"></span><button class="link" id="replaceFile" type="button" data-t="replaceFile"></button></div>
+          <canvas id="wave" aria-label="Gelombang suara"></canvas>
+          <div class="ed-times"><code id="tStart"></code><code id="tLen"></code><code id="tEnd"></code></div>
+          <p class="sub" data-t="trimHint"></p>
+          <label class="field"><span><span data-t="fileGain"></span> <output id="oFgain"></output></span><input type="range" id="fgain"></label>
+        </div>
+        <p class="note" id="fileNote" hidden></p>
+        <label class="field"><span><span data-t="echo"></span> <output id="oEcho"></output></span><input type="range" id="echo"></label>
+        <label class="field"><span><span data-t="room"></span> <output id="oRoom"></output></span><input type="range" id="room"></label>
+        <label class="field"><span><span data-t="pitch"></span> <output id="oPitch"></output></span><input type="range" id="pitch"></label>
+        <input type="file" id="fileIn" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac" hidden>
+      </div>
       <div class="card grid">
-        <label class="field"><span data-t="sound"></span><select id="sound"></select></label>
         <label class="field"><span data-t="effect"></span><select id="fx"></select></label>
-        <label class="field wide"><span data-t="word"></span><input type="text" id="word" maxlength="16"></label>
+        <label class="field"><span data-t="word"></span><input type="text" id="word" maxlength="16"></label>
       </div>
       <label class="switch"><span><b data-t="showWord"></b><span data-t="showWordSub"></span></span><input type="checkbox" id="showWord"></label>
     </section>
@@ -69,9 +86,15 @@
       <p class="note" id="clickNote" hidden data-t="linuxNote"></p>
 
       <h3 data-t="groupView"></h3>
-      <div class="seg" role="radiogroup">
-        <label><input type="radio" name="view" value="2d"><span>2D</span></label>
-        <label><input type="radio" name="view" value="3d"><span>3D</span></label>
+      <div class="segs">
+        <div class="seg" role="radiogroup">
+          <label><input type="radio" name="view" value="2d"><span>2D</span></label>
+          <label><input type="radio" name="view" value="3d"><span>3D</span></label>
+        </div>
+        <div class="seg" role="radiogroup">
+          <label><input type="radio" name="theme" value="classic"><span data-t="themeClassic"></span></label>
+          <label><input type="radio" name="theme" value="future"><span data-t="themeFuture"></span></label>
+        </div>
       </div>
       <p class="sub" id="viewSub"></p>
       <p class="note" id="viewNote" hidden data-t="view3dFail"></p>

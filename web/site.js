@@ -26,13 +26,15 @@ const ID = {
     kabel: "Kabel charger yang udah nggak kepake. Nyetrum dikit.",
     sabuk: "Ikat pinggang bapak. Lu tau rasanya.",
     api: "Cambuk berapi. Ada bara yang ngikutin ujungnya.",
+    plasma: "Dari masa depan. Dengung, nyala, vzwap.",
   },
   try: "Coba",
   download: { mac: "Download buat Mac", win: "Download buat Windows", linux: "Download buat Linux", none: "Download" },
   soundOn: "Suara on", soundOff: "Suara off",
   wordOn: "Tulisan on", wordOff: "Tulisan off",
   modeFollow: "Mode: ikut kursor", modeClick: "Mode: klik = pecut",
-  view2d: "Tampilan: 2D", view3d: "Tampilan: 3D", view3dOnly: "3D: baru ada Bullwhip", view3dFail: "3D nggak didukung browser ini",
+  view2d: "Tampilan: 2D", view3d: "Tampilan: 3D", view3dFail: "3D nggak didukung browser ini",
+  themeClassic: "Tema: klasik", themeFuture: "Tema: futuristik",
   hintClick: "<strong>Klik di mana aja.</strong>Pecutnya nyabet titik itu. Double klik = dua kali. Seret gagangnya buat mindahin.",
   hintFollow: "<strong>Klik, terus ayun dan sentak.</strong>Ayun pelan nggak bunyi. Harus disentak.",
   nag: "[Ctas] Kamu barusan dipecut 7 kali, 2 kali kena muka. Cepetan dong, jangan halu, langsung kerjain.",
@@ -67,7 +69,7 @@ addEventListener("resize", () => stage.resize());
 const chips = $("variants"), cards = $("cards");
 Object.entries(VARIANTS).forEach(([k, v]) => {
   const b = document.createElement("button");
-  b.className = v.d3 ? "chip has3d" : "chip"; b.dataset.k = k;
+  b.className = "chip"; b.dataset.k = k;
   b.onclick = () => { sound.init(); pick(k); };
   chips.appendChild(b);
 
@@ -96,7 +98,13 @@ $("viewBtn").onclick = async () => {
   if (stage.is3D) { await stage.set3D(false); labels(); return; }
   const ok = await stage.set3D(true);
   view3dFail = !ok;
-  if (ok && !VARIANTS[stage.variant].d3) pick("bullwhip");
+  labels();
+};
+let future = false;
+$("themeBtn").onclick = () => {
+  future = !future;
+  stage.setTheme(future ? "future" : "classic");
+  demo.classList.toggle("is-future", future);
   labels();
 };
 $("modeBtn").onclick = () => {
@@ -106,8 +114,8 @@ $("modeBtn").onclick = () => {
   labels();
 };
 addEventListener("keydown", (e) => {
-  const keys = Object.keys(VARIANTS), n = Number(e.key);
-  if (n >= 1 && n <= keys.length && !e.metaKey && !e.ctrlKey && !e.altKey) pick(keys[n - 1]);
+  const keys = Object.keys(VARIANTS), i = (Number(e.key) + 9) % 10;
+  if (/^[0-9]$/.test(e.key) && i < keys.length && !e.metaKey && !e.ctrlKey && !e.altKey) pick(keys[i]);
 });
 
 // ---------- Tombol download ngikutin OS pengunjung ----------
@@ -130,7 +138,9 @@ function labels() {
   $("modeBtn").setAttribute("aria-pressed", String(click));
   $("hint").innerHTML = click ? T.hintClick : T.hintFollow;
   const on = stage.is3D;
-  $("viewBtn").textContent = view3dFail ? T.view3dFail : !on ? T.view2d : VARIANTS[stage.variant].d3 ? T.view3d : T.view3dOnly;
+  $("viewBtn").textContent = view3dFail ? T.view3dFail : on ? T.view3d : T.view2d;
+  $("themeBtn").textContent = future ? T.themeFuture : T.themeClassic;
+  $("themeBtn").setAttribute("aria-pressed", String(future));
   $("viewBtn").setAttribute("aria-pressed", String(on));
 }
 function applyLang() {

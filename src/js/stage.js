@@ -30,6 +30,17 @@ export function createStage(o) {
     eye: tok("--robot-eye", "#e9dcc0"), accent: tok("--accent", "#d4b98c"), ember: tok("--ember", "#e2775a"),
     ring: tok("--ring", "236,232,225"),
   };
+  // tema: "classic" = warna dari halaman, "future" = neon cyan di lantai grid
+  const CLASSIC = { ...C };
+  const FUTURE = { stage1: "#0a1424", stage2: "#03050a", floor: "rgba(77,227,255,0.16)", accent: "#4de3ff", ember: "#ff4fd8", ring: "77,227,255" };
+  let theme = "classic";
+  function setTheme(t) {
+    t = t === "future" ? "future" : "classic";
+    if (t === theme) return;
+    theme = t;
+    Object.assign(C, CLASSIC, t === "future" ? FUTURE : {});
+    r3d?.setTheme?.(t);
+  }
 
   let W = 0, H = 0, S = 0;
   let key = "jaranan", v = VARIANTS[key], whip;
@@ -122,12 +133,12 @@ export function createStage(o) {
   let still = 0, clock = 0;
 
   // Tampilan 3D: fisika sama, cuma ada kedalaman (z) + digambar pakai WebGL (whip3d.js).
-  // Baru pecut yang punya `d3` (Bullwhip) yang ada versi 3D-nya; sisanya tetap 2D.
+  // Semua pecut punya versi 3D; WebGL nggak ada = otomatis tetap 2D.
   let view3d = false, r3d = null, r3dLoad = null, dz = 0;
-  const is3D = () => view3d && r3d && v.d3;
+  const is3D = () => view3d && r3d;
   function load3D() {
     r3dLoad ||= import("./whip3d.js")
-      .then((m) => { r3d = m.createWhip3D(); if (r3d) r3d.resize(W, H, window.devicePixelRatio); return !!r3d; })
+      .then((m) => { r3d = m.createWhip3D(); if (r3d) { r3d.resize(W, H, window.devicePixelRatio); r3d.setTheme(theme); } return !!r3d; })
       .catch((e) => { console.warn("3D nggak bisa dimuat", e); return false; });
     return r3dLoad;
   }
@@ -237,6 +248,12 @@ export function createStage(o) {
         add({ k: "flash", r: 40 + mach * 20, rate: 5, tint: "124,199,255" });
         for (let i = 0; i < 5; i++) add({ k: "bolt", a: rnd(0, Math.PI * 2), len: rnd(35, 80) * Math.min(1.5, mach), rate: rnd(4, 6) });
         break;
+      case "pulse": // denyut plasma: kilat cyan + cincin berlapis + percikan listrik
+        add({ k: "flash", r: 60 + mach * 30, rate: 4, tint: "77,227,255" });
+        add({ k: "ring", r: 2, speed: 760, width: 2.5, color: "77,227,255", rate: 2.6 });
+        add({ k: "ring", r: 2, speed: 430, width: 1.2, color: "234,252,255", rate: 2 });
+        for (let i = 0; i < 4; i++) add({ k: "bolt", a: rnd(0, Math.PI * 2), len: rnd(30, 70) * Math.min(1.5, mach), rate: rnd(4, 6) });
+        break;
       case "impact": // ledakan ala komik
         add({ k: "burst", r: 16, grow: 160, spikes: 12, rot: rnd(0, 1), rate: 3.2 });
         break;
@@ -334,7 +351,8 @@ export function createStage(o) {
       gr.addColorStop(0, C.stage1); gr.addColorStop(1, C.stage2);
       cx.fillStyle = gr; cx.fillRect(0, 0, W, H);
       cx.strokeStyle = C.floor; cx.lineWidth = 1;
-      for (let i = 0; i < 6; i++) { const y = H * 0.78 + i * i * 6; cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
+      if (theme === "future") drawGrid();
+      else for (let i = 0; i < 6; i++) { const y = H * 0.78 + i * i * 6; cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
     }
     if (shake > 0) {
       cx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
@@ -343,7 +361,7 @@ export function createStage(o) {
     if (showAI) drawAI(dt);
     if (is3D()) {
       if (coil > 0.01) drawCoil();
-      cx.drawImage(r3d.render(whip, { x: ptr.x, y: ptr.y, z: 0 }, v, S), 0, 0, W, H);
+      cx.drawImage(r3d.render(whip, { x: ptr.x, y: ptr.y, z: 0 }, v, S, clock), 0, 0, W, H);
     } else {
       drawHandle();
       if (coil > 0.01) drawCoil();
@@ -353,9 +371,22 @@ export function createStage(o) {
     drawFx(dt);
     cx.restore();
     if ((o.cursorDot ?? true) && mode === "follow") {
-      cx.fillStyle = "rgba(243,231,211,0.9)";
+      cx.fillStyle = theme === "future" ? "rgba(160,240,255,0.95)" : "rgba(243,231,211,0.9)";
       cx.beginPath(); cx.arc(ptr.x, ptr.y, 4, 0, Math.PI * 2); cx.fill();
     }
+  }
+
+  // lantai grid neon yang jalan pelan ke arah kamera
+  function drawGrid() {
+    const hz = H * 0.62, vx = W / 2;
+    cx.beginPath();
+    for (let i = -12; i <= 12; i++) { cx.moveTo(vx + i * W * 0.02, hz); cx.lineTo(vx + i * W * 0.16, H); }
+    const off = (clock * 0.35) % 1;
+    for (let i = 0; i < 9; i++) { const f = (i + off) / 9, y = hz + (H - hz) * f * f; cx.moveTo(0, y); cx.lineTo(W, y); }
+    cx.stroke();
+    const glow = cx.createLinearGradient(0, hz - 40, 0, hz + 30);
+    glow.addColorStop(0, "rgba(77,227,255,0)"); glow.addColorStop(0.6, "rgba(77,227,255,0.10)"); glow.addColorStop(1, "rgba(77,227,255,0)");
+    cx.fillStyle = glow; cx.fillRect(0, hz - 40, W, 70);
   }
 
   // lingkaran tipis di gagang: tanda pecut bisa digeser
@@ -575,10 +606,11 @@ export function createStage(o) {
           break;
         case "text":
           p.y -= dt * 60;
-          cx.font = `700 ${Math.round((18 + S * 0.02) * p.size)}px ${FONT_DISPLAY}`;
+          cx.font = `700 ${Math.round((18 + S * 0.02) * p.size)}px ${theme === "future" ? "ui-monospace, Menlo, Consolas, monospace" : FONT_DISPLAY}`;
           cx.textAlign = "center"; cx.globalAlpha = L; cx.fillStyle = p.color;
+          if (theme === "future") { cx.shadowColor = p.color; cx.shadowBlur = 18; }
           cx.fillText(p.s, p.x, p.y);
-          cx.globalAlpha = 1;
+          cx.globalAlpha = 1; cx.shadowBlur = 0;
           break;
       }
     }
@@ -634,7 +666,7 @@ export function createStage(o) {
     setMode(m) { mode = m === "click" ? "click" : "follow"; auto = null; dragging = false; if (mode === "click") goHome(); else build(); },
     setHome(h) { if (h && isFinite(h.x) && isFinite(h.y)) { home = { x: h.x, y: h.y }; if (mode === "click" && !auto && !dragging) goHome(); } },
     setShowWord(b) { showWord = !!b; },
-    set3D,
+    set3D, setTheme,
     get is3D() { return view3d; },
     strike, pressAt, releaseAt,
     get mode() { return mode; },

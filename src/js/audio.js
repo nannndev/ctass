@@ -11,7 +11,10 @@
 //   6. gema jauh + lapisan khas tiap varian (rumbai, denting, tsik dobel)
 // Resepnya per varian ada di variants.js (field `sound`).
 export class Sound {
-  constructor() { this.ac = null; this.on = true; this.volume = 1; }
+  constructor() {
+    this.ac = null; this.on = true; this.volume = 1;
+    this.files = new Map(); this.fileData = new Map(); this.decoding = new Map();
+  }
 
   setVolume(v) {
     this.volume = v;
@@ -39,15 +42,34 @@ export class Sound {
 
     this.noise = noiseBuffer(ac, 2);
     this.cracks = new Map(); // resep -> 4 sampel ctarr
+    for (const [id, data] of this.fileData) this.decode(id, data);
     if (this.pending) this.prepare(this.pending);
   }
+
+  // ---------- suara sendiri (file audio dari user) ----------
+  // data = ArrayBuffer isi file. Didecode sekali, disimpan per id.
+  addFile(id, data) {
+    if (this.files.has(id) || this.fileData.has(id)) return this.decoding.get(id) || Promise.resolve(this.files.get(id));
+    this.fileData.set(id, data);
+    return this.ac ? this.decode(id, data) : Promise.resolve(null);
+  }
+  decode(id, data) {
+    const p = new Promise((ok, bad) => this.ac.decodeAudioData(data.slice(0), ok, bad))
+      .then((buf) => { this.files.set(id, buf); this.fileData.delete(id); this.decoding.delete(id); return buf; })
+      .catch((e) => { console.warn("file suara nggak bisa dibaca", e); this.fileData.delete(id); this.decoding.delete(id); return null; });
+    this.decoding.set(id, p);
+    return p;
+  }
+  file(id) { return this.files.get(id) || null; }
 
   // bikin sampel ctarr duluan biar sentakan pertama nggak telat
   prepare(snd) { if (this.ac && snd) this.samples(snd); }
 
   samples(snd) {
-    if (!this.cracks.has(snd)) this.cracks.set(snd, [0, 1, 2, 3].map(() => crackBuffer(this.ac, snd)));
-    const list = this.cracks.get(snd);
+    // kuncinya bentuk suaranya aja, jadi geser slider gema/nada nggak bikin sampel baru
+    const key = `${snd.nDur}|${snd.snap}|${snd.tail}|${snd.tailLevel}`;
+    if (!this.cracks.has(key)) this.cracks.set(key, [0, 1, 2, 3].map(() => crackBuffer(this.ac, snd)));
+    const list = this.cracks.get(key);
     return list[(Math.random() * list.length) | 0];
   }
 
@@ -59,7 +81,7 @@ export class Sound {
     const { ac } = this, t = ac.currentTime;
     const a = Math.min(1.25, 0.75 + power * 0.6) * (snd.gain ?? 1);
     const out = this.panner(pan);
-    const rate = snd.rate * (0.95 + Math.random() * 0.1);
+    const rate = snd.rate * (snd.pitch ?? 1) * (0.95 + Math.random() * 0.1);
 
     // gema jauh (lembah / arena), dibikin per crack terus dilepas lagi
     let send = null;
@@ -74,14 +96,32 @@ export class Sound {
       setTimeout(() => { d.disconnect(); fb.disconnect(); }, (time / (1 - feedback)) * 4000 + 500);
     }
 
-    const play = (at, gain) => {
-      const s = ac.createBufferSource();
-      s.buffer = this.samples(snd);
-      s.playbackRate.value = rate;
+    const route = (s, gain) => {
       const g = ac.createGain(); g.gain.value = gain;
       const wet = ac.createGain(); wet.gain.value = snd.wet;
       s.connect(g); g.connect(out); g.connect(wet); wet.connect(this.verb);
       if (send) g.connect(send);
+      return g;
+    };
+
+    // suara sendiri: mainin potongan file-nya (awal-akhir yang dipilih di editor)
+    const fb = snd.file && this.files.get(snd.file.id);
+    if (fb) {
+      const s = ac.createBufferSource();
+      s.buffer = fb;
+      s.playbackRate.value = (snd.file.rate ?? 1) * (snd.pitch ?? 1);
+      const start = clamp(snd.file.start ?? 0, 0, fb.duration);
+      const end = clamp(snd.file.end ?? fb.duration, start + 0.01, fb.duration);
+      route(s, a * (snd.file.gain ?? 1));
+      s.start(t, start, end - start);
+      return;
+    }
+
+    const play = (at, gain) => {
+      const s = ac.createBufferSource();
+      s.buffer = this.samples(snd);
+      s.playbackRate.value = rate;
+      route(s, gain);
       s.start(at);
     };
     play(t, a);
@@ -104,6 +144,23 @@ export class Sound {
     if (snd.extra === "flame") this.sweep(t + 0.01, out, a * 0.5, "lowpass", 380, 2800, 0.32, 0.7);
     if (snd.extra === "slap") this.sweep(t, out, a * 0.8, "lowpass", 2200, 900, 0.045, 0.7);
     if (snd.extra === "zap") this.zap(t, out, a);
+    if (snd.extra === "laser") this.laser(t, out, a);
+  }
+
+  // dengung plasma: nada turun cepet + desis tinggi
+  laser(t, out, a) {
+    const { ac } = this;
+    [[1900, 180, 0.16, "sine", 0.3], [950, 120, 0.2, "square", 0.06]].forEach(([f0, f1, dur, type, lv]) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(lv * a, t + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(out); g.connect(this.verb);
+      o.start(t); o.stop(t + dur + 0.02);
+    });
+    this.sweep(t, out, a * 0.25, "highpass", 7000, 3000, 0.08, 0.7);
   }
 
   // noise yang filternya digeser: srak (sapu lidi), fwoosh (api), plak (sabuk)
