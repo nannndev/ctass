@@ -64,7 +64,10 @@ export function createStage(o) {
   cv.addEventListener("pointermove", move);
   cv.addEventListener("pointerdown", (e) => { o.sound.init(); move(e); cv.setPointerCapture?.(e.pointerId); });
 
-  function pick(k) { if (!VARIANTS[k]) return; key = k; v = VARIANTS[k]; build(); }
+  function pick(k) { if (!VARIANTS[k]) return; key = k; v = VARIANTS[k]; build(); warm(); }
+  // pakai pecut yang udah dicustom (lihat settings.js)
+  function use(variant, k = key) { key = k; v = variant; build(); warm(); }
+  function warm() { o.sound.pending = v.sound; o.sound.prepare?.(v.sound); }
 
   function onCrack(mach) {
     const t = whip.tip();
@@ -116,6 +119,27 @@ export function createStage(o) {
         break;
       case "star": // bintang kecil tajam cemeti
         add({ k: "star", spikes: 8, len: 18 + mach * 8, rot: rnd(0, 1), rate: 3.6 });
+        break;
+      case "sticks": // patahan lidi beterbangan
+        for (let i = 0; i < 12; i++) {
+          const a = heading + rnd(-1.4, 1.4), sp = rnd(160, 420);
+          add({ k: "stick", vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 80, rot: rnd(0, 6), vr: rnd(-18, 18), len: rnd(8, 18), rate: rnd(0.9, 1.4) });
+        }
+        add({ k: "ring", r: 4, speed: 300, width: 1, color: "200,169,106", rate: 2.6 });
+        break;
+      case "zap": // kilatan listrik kabel charger
+        add({ k: "flash", r: 40 + mach * 20, rate: 5, tint: "124,199,255" });
+        for (let i = 0; i < 5; i++) add({ k: "bolt", a: rnd(0, Math.PI * 2), len: rnd(35, 80) * Math.min(1.5, mach), rate: rnd(4, 6) });
+        break;
+      case "impact": // ledakan ala komik
+        add({ k: "burst", r: 16, grow: 160, spikes: 12, rot: rnd(0, 1), rate: 3.2 });
+        break;
+      case "fire": // semburan bara
+        add({ k: "flash", r: 60 + mach * 30, rate: 3.5, tint: "255,122,46" });
+        for (let i = 0; i < 24; i++) {
+          const a = rnd(0, Math.PI * 2), sp = rnd(60, 280);
+          add({ k: "ember", vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, size: rnd(2, 5), rate: rnd(1.2, 2.2) });
+        }
         break;
     }
   }
@@ -225,29 +249,79 @@ export function createStage(o) {
 
   function drawRope() {
     const { x, y, n } = whip;
-    if (v.glow) { cx.shadowColor = "#ffd36b"; cx.shadowBlur = 14 + Math.min(30, machShown * 18); }
+    if (v.strands) return drawStrands();
+    if (v.glow) {
+      cx.shadowColor = typeof v.glow === "string" ? v.glow : "#ffd36b";
+      cx.shadowBlur = 14 + Math.min(30, machShown * 18);
+    }
     cx.strokeStyle = v.rope;
+    cx.lineCap = v.flat ? "butt" : "round";
     for (let i = 0; i < n - 1; i++) {
       cx.lineWidth = v.w0 + (v.w1 - v.w0) * Math.pow(i / (n - 1), 0.7);
       cx.beginPath(); cx.moveTo(x[i], y[i]); cx.lineTo(x[i + 1], y[i + 1]); cx.stroke();
     }
+    cx.lineCap = "round";
     cx.shadowBlur = 0;
-    // anyaman
-    cx.strokeStyle = "rgba(0,0,0,0.28)"; cx.lineWidth = 1;
-    for (let i = 1; i < n - 3; i += 2) {
-      const dx = x[i + 1] - x[i], dy = y[i + 1] - y[i], l = Math.hypot(dx, dy) || 1;
-      const w = (v.w0 + (v.w1 - v.w0) * (i / (n - 1))) * 0.5;
-      cx.beginPath(); cx.moveTo(x[i] - (dy / l) * w, y[i] + (dx / l) * w);
-      cx.lineTo(x[i] + (dy / l) * w + dx * 0.4, y[i] - (dx / l) * w + dy * 0.4); cx.stroke();
+    if (v.flat) {
+      // jahitan tengah sabuk
+      cx.strokeStyle = "rgba(236,232,225,0.35)"; cx.lineWidth = 1; cx.setLineDash([3, 4]);
+      cx.beginPath(); cx.moveTo(x[0], y[0]);
+      for (let i = 1; i < n; i++) cx.lineTo(x[i], y[i]);
+      cx.stroke(); cx.setLineDash([]);
+    } else if (!v.plug) {
+      // anyaman
+      cx.strokeStyle = "rgba(0,0,0,0.28)"; cx.lineWidth = 1;
+      for (let i = 1; i < n - 3; i += 2) {
+        const dx = x[i + 1] - x[i], dy = y[i + 1] - y[i], l = Math.hypot(dx, dy) || 1;
+        const w = (v.w0 + (v.w1 - v.w0) * (i / (n - 1))) * 0.5;
+        cx.beginPath(); cx.moveTo(x[i] - (dy / l) * w, y[i] + (dx / l) * w);
+        cx.lineTo(x[i] + (dy / l) * w + dx * 0.4, y[i] - (dx / l) * w + dy * 0.4); cx.stroke();
+      }
     }
-    // cracker di ujung
     const t = n - 1, dx = x[t] - x[t - 1], dy = y[t] - y[t - 1], l = Math.hypot(dx, dy) || 1;
+    const ux = dx / l, uy = dy / l;
+    if (v.plug) return drawTip(x[t], y[t], ux, uy, "plug");
+    if (v.buckle) return drawTip(x[t], y[t], ux, uy, "buckle");
+    // cracker di ujung
     cx.strokeStyle = v.glow ? "#fff3c4" : "#efe6d6"; cx.lineWidth = 1.2;
     for (let k = -1; k <= 1; k++) {
       cx.beginPath(); cx.moveTo(x[t], y[t]);
-      cx.lineTo(x[t] + (dx / l) * 14 + (-dy / l) * k * 3, y[t] + (dy / l) * 14 + (dx / l) * k * 3 + 3);
+      cx.lineTo(x[t] + ux * 14 + -uy * k * 3, y[t] + uy * 14 + ux * k * 3 + 3);
       cx.stroke();
     }
+    if (v.fire && !reduced && machShown > 0.35 && Math.random() < 0.7) {
+      fx.push({ k: "ember", x: x[t], y: y[t], vx: (Math.random() - 0.5) * 60, vy: -40 - Math.random() * 60, size: 1.5 + Math.random() * 2.5, life: 1, rate: 2.5 });
+    }
+  }
+
+  // sapu lidi: beberapa lidi yang makin ke ujung makin mekar
+  function drawStrands() {
+    const { x, y, n } = whip, m = v.strands, spread = v.spread * S * v.len;
+    cx.strokeStyle = v.rope; cx.lineWidth = v.w0;
+    for (let k = 0; k < m; k++) {
+      const side = (k - (m - 1) / 2) / ((m - 1) / 2);
+      cx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const j = Math.min(n - 1, Math.max(1, i)), dx = x[j] - x[j - 1], dy = y[j] - y[j - 1], l = Math.hypot(dx, dy) || 1;
+        const f = i / (n - 1), off = side * spread * f * f + side * 2;
+        const px = x[i] - (dy / l) * off, py = y[i] + (dx / l) * off;
+        i ? cx.lineTo(px, py) : cx.moveTo(px, py);
+      }
+      cx.lineWidth = k % 2 ? v.w1 + 0.4 : v.w0;
+      cx.stroke();
+    }
+  }
+
+  function drawTip(px, py, ux, uy, kind) {
+    cx.save(); cx.translate(px, py); cx.rotate(Math.atan2(uy, ux));
+    if (kind === "plug") {
+      cx.fillStyle = "#e9e9e6"; roundRect(0, -4, 13, 8, 2); cx.fill();
+      cx.fillStyle = "#a9a9a6"; cx.fillRect(13, -2.5, 6, 5);
+    } else {
+      cx.strokeStyle = "#c9a54a"; cx.lineWidth = 2.2; roundRect(-2, -8, 14, 16, 2); cx.stroke();
+      cx.beginPath(); cx.moveTo(5, -8); cx.lineTo(5, 8); cx.stroke();
+    }
+    cx.restore();
   }
 
   function drawFx(dt) {
@@ -286,7 +360,8 @@ export function createStage(o) {
         }
         case "flash": {
           const g = cx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          g.addColorStop(0, `rgba(255,236,170,${L * 0.55})`); g.addColorStop(1, "rgba(255,214,107,0)");
+          const tint = p.tint || "255,236,170";
+          g.addColorStop(0, `rgba(${tint},${L * 0.55})`); g.addColorStop(1, `rgba(${tint},0)`);
           cx.fillStyle = g; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI * 2); cx.fill();
           break;
         }
@@ -299,6 +374,40 @@ export function createStage(o) {
           }
           break;
         }
+        case "stick":
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 800 * dt; p.rot += p.vr * dt;
+          cx.strokeStyle = `rgba(200,169,106,${Math.min(1, L * 1.5)})`; cx.lineWidth = 1.5;
+          cx.beginPath(); cx.moveTo(p.x - Math.cos(p.rot) * p.len / 2, p.y - Math.sin(p.rot) * p.len / 2);
+          cx.lineTo(p.x + Math.cos(p.rot) * p.len / 2, p.y + Math.sin(p.rot) * p.len / 2); cx.stroke();
+          break;
+        case "bolt": {
+          cx.strokeStyle = `rgba(160,215,255,${L})`; cx.lineWidth = 1.6;
+          cx.shadowColor = "#7cc7ff"; cx.shadowBlur = 10;
+          cx.beginPath(); cx.moveTo(p.x, p.y);
+          for (let k = 1; k <= 6; k++) {
+            const d = (p.len * k) / 6, j = (Math.random() - 0.5) * 14;
+            cx.lineTo(p.x + Math.cos(p.a) * d - Math.sin(p.a) * j, p.y + Math.sin(p.a) * d + Math.cos(p.a) * j);
+          }
+          cx.stroke(); cx.shadowBlur = 0;
+          break;
+        }
+        case "burst": {
+          p.r += p.grow * dt;
+          cx.beginPath();
+          for (let k = 0; k < p.spikes * 2; k++) {
+            const a = p.rot + (k / (p.spikes * 2)) * Math.PI * 2, r = k % 2 ? p.r * 0.55 : p.r;
+            cx.lineTo(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r);
+          }
+          cx.closePath();
+          cx.fillStyle = `rgba(242,194,58,${L * 0.85})`; cx.fill();
+          cx.strokeStyle = `rgba(20,16,10,${L})`; cx.lineWidth = 2; cx.stroke();
+          break;
+        }
+        case "ember":
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vy -= 120 * dt; p.vx *= 0.97;
+          cx.fillStyle = `rgba(255,${Math.round(120 + 100 * L)},40,${L})`;
+          cx.beginPath(); cx.arc(p.x, p.y, p.size * L + 0.5, 0, Math.PI * 2); cx.fill();
+          break;
         case "text":
           p.y -= dt * 60;
           cx.font = `400 ${Math.round((18 + S * 0.02) * p.size)}px ${FONT_DISPLAY}`;
@@ -352,7 +461,7 @@ export function createStage(o) {
   requestAnimationFrame(frame);
 
   return {
-    score, session, pick, resize,
+    score, session, pick, use, resize,
     get variant() { return key; },
     reset() { score.crack = score.hit = score.best = 0; o.onScore?.(score); },
     rearm() { ptr.seen = false; resize(); },

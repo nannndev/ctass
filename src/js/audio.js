@@ -11,18 +11,24 @@
 //   6. gema jauh + lapisan khas tiap varian (rumbai, denting, tsik dobel)
 // Resepnya per varian ada di variants.js (field `sound`).
 export class Sound {
-  constructor() { this.ac = null; this.on = true; }
+  constructor() { this.ac = null; this.on = true; this.volume = 1; }
+
+  setVolume(v) {
+    this.volume = v;
+    if (this.master) this.master.gain.setTargetAtTime(v, this.ac.currentTime, 0.02);
+  }
 
   init() {
     if (this.ac) { if (this.ac.state === "suspended") this.ac.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     const ac = (this.ac = new AC());
+    this.offline = typeof OfflineAudioContext !== "undefined" && ac instanceof OfflineAudioContext;
 
     const comp = ac.createDynamicsCompressor();
     comp.threshold.value = -8; comp.knee.value = 6; comp.ratio.value = 8;
     comp.attack.value = 0.001; comp.release.value = 0.12;
-    this.master = ac.createGain(); this.master.gain.value = 1;
+    this.master = ac.createGain(); this.master.gain.value = this.volume;
     this.master.connect(comp); comp.connect(ac.destination);
 
     // reverb ruangan dari impulse response sintetis
@@ -33,7 +39,11 @@ export class Sound {
 
     this.noise = noiseBuffer(ac, 2);
     this.cracks = new Map(); // resep -> 4 sampel ctarr
+    if (this.pending) this.prepare(this.pending);
   }
+
+  // bikin sampel ctarr duluan biar sentakan pertama nggak telat
+  prepare(snd) { if (this.ac && snd) this.samples(snd); }
 
   samples(snd) {
     if (!this.cracks.has(snd)) this.cracks.set(snd, [0, 1, 2, 3].map(() => crackBuffer(this.ac, snd)));
@@ -44,6 +54,8 @@ export class Sound {
   // power = seberapa jauh lewat Mach 1, snd = resep suara varian, pan = -1 (kiri) .. 1 (kanan)
   crack(power, snd, pan = 0) {
     if (!this.ac || !this.on) return;
+    // WebView kadang nidurin audio (jendela disembunyiin, laptop sleep): bangunin lagi
+    if (this.ac.state === "suspended" && !this.offline) this.ac.resume();
     const { ac } = this, t = ac.currentTime;
     const a = Math.min(1.25, 0.75 + power * 0.6) * (snd.gain ?? 1);
     const out = this.panner(pan);
@@ -88,6 +100,39 @@ export class Sound {
 
     if (snd.extra === "rustle") this.rustle(t + 0.008, out, a);
     if (snd.extra === "chime") this.chime(t + 0.004, out, a);
+    if (snd.extra === "swish") this.sweep(t, out, a * 0.55, "bandpass", 3600, 1100, 0.17, 1.2);
+    if (snd.extra === "flame") this.sweep(t + 0.01, out, a * 0.5, "lowpass", 380, 2800, 0.32, 0.7);
+    if (snd.extra === "slap") this.sweep(t, out, a * 0.8, "lowpass", 2200, 900, 0.045, 0.7);
+    if (snd.extra === "zap") this.zap(t, out, a);
+  }
+
+  // noise yang filternya digeser: srak (sapu lidi), fwoosh (api), plak (sabuk)
+  sweep(t, out, a, type, f0, f1, dur, q) {
+    const { ac } = this;
+    const n = ac.createBufferSource(); n.buffer = this.noise;
+    const f = ac.createBiquadFilter(); f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(a, t + Math.min(0.012, dur / 4));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(f); f.connect(g); g.connect(out); g.connect(this.verb);
+    n.start(t, Math.random()); n.stop(t + dur + 0.02);
+  }
+
+  // dengung listrik kabel charger
+  zap(t, out, a) {
+    const { ac } = this;
+    const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = "sawtooth";
+    o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(55, t + 0.16);
+    f.type = "bandpass"; f.frequency.value = 1400; f.Q.value = 1.5;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.35 * a, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    o.connect(f); f.connect(g); g.connect(out);
+    o.start(t); o.stop(t + 0.2);
+    this.sweep(t, out, a * 0.3, "highpass", 6000, 4000, 0.05, 0.7);
   }
 
   // desir rumbai jaranan yang ikut kibas

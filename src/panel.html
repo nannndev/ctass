@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ctas</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">Ctas<small>pecut buat AI</small></div>
+    <button class="btn" id="start" type="button">Mulai mecut <kbd id="key">⌘⇧X</kbd></button>
+  </header>
+
+  <section class="preview" aria-label="Coba pecut">
+    <canvas id="stage" aria-label="Coba ayun pecut di sini"></canvas>
+    <p class="hint" id="hint">Coba ayun di sini, terus sentak.</p>
+    <div class="hud"><span id="count">0 ctarr</span><div class="bar"><i id="bar"></i></div></div>
+  </section>
+
+  <main>
+    <section>
+      <h2>Pecut</h2>
+      <div class="tiles" id="tiles" role="radiogroup" aria-label="Pilih pecut"></div>
+    </section>
+
+    <section>
+      <div class="row-head"><h2>Atur <span id="curName">Jaranan</span></h2><button class="link" id="resetOne" type="button">Balikin default</button></div>
+      <div class="grid">
+        <label class="field"><span>Panjang <output id="oLen"></output></span><input type="range" id="len"></label>
+        <label class="field"><span>Kekakuan <output id="oBend"></output></span><input type="range" id="bend"></label>
+        <label class="field"><span>Berat <output id="oGrav"></output></span><input type="range" id="grav"></label>
+        <div class="colors">
+          <label class="color"><input type="color" id="rope"><span>Tali</span></label>
+          <label class="color"><input type="color" id="grip"><span>Gagang</span></label>
+        </div>
+        <label class="field"><span>Suara</span><select id="sound"></select></label>
+        <label class="field"><span>Efek</span><select id="fx"></select></label>
+        <label class="field wide"><span>Tulisan pas ctarr</span><input type="text" id="word" maxlength="16" placeholder="CTARR!"></label>
+      </div>
+    </section>
+
+    <section>
+      <h2>Umum</h2>
+      <div class="grid">
+        <label class="field"><span>Gampang bunyi <output id="oSens"></output></span><input type="range" id="sensitivity"></label>
+        <label class="field"><span>Volume <output id="oVol"></output></span><input type="range" id="volume"></label>
+      </div>
+      <label class="toggle"><input type="checkbox" id="nag"><span><b>Ketik omelan ke AI pas udahan</b>Omelan diketik ke jendela yang lagi aktif.<em class="mac-only"> Di Mac, bakal minta izin Accessibility sekali.</em></span></label>
+      <label class="toggle"><input type="checkbox" id="autosend"><span><b>Langsung kirim</b>Sekalian tekan Enter abis ngetik omelan.</span></label>
+    </section>
+
+    <p class="foot">Jendela ini boleh ditutup, Ctas tetap jalan di <span id="trayWord">menu bar</span>. Mulai / udahan kapan aja pakai <b id="key2">⌘⇧X</b>.</p>
+  </main>
+
+  <script type="module" src="js/panel.js"></script>
+</body>
+</html>

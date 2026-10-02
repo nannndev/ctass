@@ -456,11 +456,12 @@ dependencies = [
 
 [[package]]
 name = "ctas"
-version = "0.1.6"
+version = "0.2.0"
 dependencies = [
  "core-foundation",
  "core-graphics",
  "serde",
+ "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-global-shortcut",

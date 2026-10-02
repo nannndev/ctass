@@ -1,6 +1,7 @@
 import { VARIANTS } from "./variants.js";
 import { Sound } from "./audio.js";
 import { createStage } from "./stage.js";
+import { normalize, effective } from "./settings.js";
 
 const TAURI = window.__TAURI__;
 const OVERLAY = !!TAURI; // di app desktop: jendela transparan di atas layar
@@ -44,9 +45,16 @@ Object.keys(VARIANTS).forEach((k, i) => {
   b.onclick = () => { sound.init(); pick(k); };
   chips.appendChild(b);
 });
+let settings = normalize({});
+function applySettings(s) {
+  settings = normalize(s);
+  const v = effective(settings);
+  stage.use(v, settings.variant);
+  sound.setVolume(settings.volume);
+  $("pillName").textContent = v.name;
+}
 function pick(k) {
-  stage.pick(k);
-  $("pillName").textContent = VARIANTS[k].name;
+  applySettings({ ...settings, variant: k });
   chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.id === "v-" + k)));
   try { localStorage.setItem("ctas.variant", k); } catch {}
 }
@@ -108,12 +116,19 @@ if (OVERLAY) {
     ensureSound();
   });
   TAURI.event.listen("ctas://cursor", (e) => stage.pointer(e.payload[0], e.payload[1]));
-  TAURI.event.listen("ctas://variant", (e) => { pick(e.payload); flashPill(1600); });
+  TAURI.event.listen("ctas://settings", (e) => applySettings(e.payload));
   TAURI.event.listen("ctas://request-dismiss", dismiss);
 }
 
 // ---------- Mulai ----------
-let saved = "jaranan"; // di overlay ikut menu bar, yang default-nya Jaranan
-if (!OVERLAY) try { const s = localStorage.getItem("ctas.variant"); if (s && VARIANTS[s]) saved = s; } catch {}
-pick(saved);
+// app desktop: pengaturan dari jendela Ctas (disimpan Rust). Browser: localStorage.
+if (OVERLAY) {
+  applySettings(await TAURI.core.invoke("get_settings").catch(() => ({})));
+} else {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem("ctas.settings") || "{}"); } catch {}
+  try { const k = localStorage.getItem("ctas.variant"); if (k && VARIANTS[k]) saved.variant = k; } catch {}
+  applySettings(saved);
+}
+pick(settings.variant);
 window.__ctas = { get score() { return stage.score; } };

@@ -2,6 +2,7 @@
 import { VARIANTS } from "/engine/variants.js";
 import { Sound } from "/engine/audio.js";
 import { createStage } from "/engine/stage.js";
+import { drawSwatch } from "/engine/swatch.js";
 
 const $ = (id) => document.getElementById(id);
 const sound = new Sound();
@@ -13,6 +14,10 @@ const BLURB = {
   bullwhip: "Paling panjang, paling susah. Paling puas juga.",
   samandiman: "Versi sakti. Ada percikannya.",
   cemeti: "Tipis, kaku, bunyinya nyaring.",
+  sapulidi: "Senjata andalan emak. Srak!",
+  kabel: "Kabel charger yang udah nggak kepake. Nyetrum dikit.",
+  sabuk: "Ikat pinggang bapak. Lu tau rasanya.",
+  api: "Cambuk berapi. Ada bara yang ngikutin ujungnya.",
 };
 
 let bubbleTimer = 0;
@@ -76,25 +81,6 @@ addEventListener("keydown", (e) => {
   if (n >= 1 && n <= keys.length && !e.metaKey && !e.ctrlKey) pick(keys[n - 1]);
 });
 pick("jaranan");
-
-// gambar kecil tiap pecut di kartu: gagang + tali melengkung, warnanya sesuai varian
-function drawSwatch(c, v) {
-  const dpr = Math.min(devicePixelRatio || 1, 2), w = c.clientWidth || 220, h = c.clientHeight || 74;
-  c.width = w * dpr; c.height = h * dpr;
-  const g = c.getContext("2d"); g.scale(dpr, dpr); g.lineCap = "round";
-  const hx = 14, hy = h - 14, ex = 14 + v.handle * 150, ey = h - 14 - v.handle * 90;
-  g.strokeStyle = v.grip; g.lineWidth = 9; g.beginPath(); g.moveTo(hx, hy); g.lineTo(ex, ey); g.stroke();
-  const len = (w - ex - 10) * Math.min(1, v.len / 0.78), N = 40;
-  if (v.glow) { g.shadowColor = "#ffd36b"; g.shadowBlur = 10; }
-  g.strokeStyle = v.rope;
-  let px = ex, py = ey;
-  for (let i = 1; i <= N; i++) {
-    const t = i / N, x = ex + t * len, y = ey - Math.sin(t * Math.PI) * 26 + t * t * 30;
-    g.lineWidth = v.w0 + (v.w1 - v.w0) * t;
-    g.beginPath(); g.moveTo(px, py); g.lineTo(x, y); g.stroke();
-    px = x; py = y;
-  }
-}
 
 // ---------- Contoh omelan, diketik ulang waktu kelihatan ----------
 const typed = $("typed");
