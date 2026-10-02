@@ -20,6 +20,14 @@ export function createStage(o) {
   const css = getComputedStyle(document.documentElement);
   const FONT_DISPLAY = css.getPropertyValue("--display") || "sans-serif";
   const FONT_MONO = css.getPropertyValue("--mono") || "monospace";
+  // warna panggung ngikut tema halaman (fallback = tema default)
+  const tok = (name, fb) => css.getPropertyValue(name).trim() || fb;
+  const C = {
+    stage1: tok("--stage-1", "#1a1a1d"), stage2: tok("--stage-2", "#0b0b0c"), floor: tok("--stage-line", "rgba(236,232,225,0.06)"),
+    robot: tok("--robot", "#1d1d21"), robotLine: tok("--robot-line", "#8c877e"), screen: tok("--robot-screen", "#0b0b0c"),
+    eye: tok("--robot-eye", "#e9dcc0"), accent: tok("--accent", "#d4b98c"), ember: tok("--ember", "#e2775a"),
+    ring: tok("--ring", "236,232,225"),
+  };
 
   let W = 0, H = 0, S = 0;
   let key = "jaranan", v = VARIANTS[key], whip;
@@ -57,7 +65,7 @@ export function createStage(o) {
   function onCrack(mach) {
     const t = whip.tip();
     score.crack++; session.crack++; score.best = Math.max(score.best, mach); o.onScore?.(score);
-    o.sound.crack(mach - 1, v.pitch);
+    o.sound.crack(mach - 1, v.pitch, (t.x / W) * 2 - 1);
     shake = reduced ? 0 : 6 + Math.min(10, (mach - 1) * 8);
     fx.push({ k: "ring", x: t.x, y: t.y, r: 4, life: 1 });
     fx.push({ k: "text", x: t.x, y: t.y - 10, life: 1, s: mach > 1.4 ? "CTARR!!" : "CTARR!" });
@@ -68,7 +76,7 @@ export function createStage(o) {
   }
   function onHit(cracked) {
     score.hit++; session.hit++; o.onScore?.(score);
-    ai.wobble = 1; ai.mood = 1; o.sound.thud();
+    ai.wobble = 1; ai.mood = 1; o.sound.thud((ai.x / W) * 2 - 1);
     o.onSay?.(AI_LINES[Math.floor(Math.random() * AI_LINES.length)], ai.x, ai.y - ai.h * 0.62);
     if (!cracked) fx.push({ k: "text", x: ai.x, y: ai.y - ai.h / 2, life: 1, s: "PLAK!" });
   }
@@ -111,7 +119,7 @@ export function createStage(o) {
     prevAbove = above;
     if (mach > 0.45 && hitCool <= 0 && tipInAI()) { onHit(cracked); hitCool = 0.6; }
 
-    o.sound.whoosh(mach, v.pitch);
+    o.sound.whoosh(mach, v.pitch, (whip.tip().x / W) * 2 - 1);
     o.onMach?.(mach, machShown);
     draw(dt);
     if (running) requestAnimationFrame(frame);
@@ -124,9 +132,9 @@ export function createStage(o) {
       cx.clearRect(0, 0, W, H);
     } else {
       const gr = cx.createRadialGradient(W * 0.5, H * 0.55, S * 0.1, W * 0.5, H * 0.55, Math.max(W, H) * 0.8);
-      gr.addColorStop(0, "#2a2018"); gr.addColorStop(1, "#120e0b");
+      gr.addColorStop(0, C.stage1); gr.addColorStop(1, C.stage2);
       cx.fillStyle = gr; cx.fillRect(0, 0, W, H);
-      cx.strokeStyle = "rgba(168,149,124,0.08)"; cx.lineWidth = 1;
+      cx.strokeStyle = C.floor; cx.lineWidth = 1;
       for (let i = 0; i < 6; i++) { const y = H * 0.78 + i * i * 6; cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
     }
     if (shake > 0) {
@@ -200,7 +208,7 @@ export function createStage(o) {
       if (p.life <= 0) { fx.splice(i, 1); continue; }
       if (p.k === "ring") {
         p.r += dt * 520;
-        cx.strokeStyle = `rgba(255,236,200,${p.life * 0.8})`; cx.lineWidth = 2;
+        cx.strokeStyle = `rgba(${C.ring},${p.life * 0.7})`; cx.lineWidth = 1.5;
         cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI * 2); cx.stroke();
       } else if (p.k === "spark") {
         p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 600 * dt;
@@ -208,8 +216,9 @@ export function createStage(o) {
       } else {
         p.y -= dt * 60;
         cx.font = `400 ${Math.round(18 + S * 0.02)}px ${FONT_DISPLAY}`;
-        cx.textAlign = "center"; cx.fillStyle = `rgba(255,107,61,${p.life})`;
+        cx.textAlign = "center"; cx.globalAlpha = p.life; cx.fillStyle = C.ember;
         cx.fillText(p.s, p.x, p.y);
+        cx.globalAlpha = 1;
       }
     }
   }
@@ -222,14 +231,14 @@ export function createStage(o) {
     const { w, h } = ai;
     cx.save();
     cx.translate(ai.x + wob, ai.y + Math.sin(now / 700) * 4); cx.rotate(wob * 0.01);
-    cx.strokeStyle = "#a8957c"; cx.lineWidth = 3;
+    cx.strokeStyle = C.robotLine; cx.lineWidth = 2;
     cx.beginPath(); cx.moveTo(0, -h / 2); cx.lineTo(0, -h / 2 - 16); cx.stroke();
-    cx.fillStyle = angry ? "#ff6b3d" : "#e8a23a";
+    cx.fillStyle = angry ? C.ember : C.accent;
     cx.beginPath(); cx.arc(0, -h / 2 - 19, 5, 0, Math.PI * 2); cx.fill();
-    cx.fillStyle = "#3a2c21"; cx.strokeStyle = "#a8957c"; cx.lineWidth = 2;
+    cx.fillStyle = C.robot; cx.strokeStyle = C.robotLine; cx.lineWidth = 1.5;
     roundRect(-w / 2, -h / 2, w, h, 16); cx.fill(); cx.stroke();
-    cx.fillStyle = "#120e0b"; roundRect(-w / 2 + 10, -h / 2 + 10, w - 20, h - 30, 10); cx.fill();
-    const eye = angry ? "#ff6b3d" : "#8fe3c2", ey = -h * 0.12, ex = w * 0.18;
+    cx.fillStyle = C.screen; roundRect(-w / 2 + 10, -h / 2 + 10, w - 20, h - 30, 10); cx.fill();
+    const eye = angry ? C.ember : C.eye, ey = -h * 0.12, ex = w * 0.18;
     cx.fillStyle = cx.strokeStyle = eye;
     if (angry) {
       cx.lineWidth = 3;
@@ -242,7 +251,7 @@ export function createStage(o) {
     if (angry) cx.arc(0, h * 0.16, 9, Math.PI * 1.1, Math.PI * 1.9);
     else cx.arc(0, h * 0.06, 9, Math.PI * 0.15, Math.PI * 0.85);
     cx.stroke();
-    cx.fillStyle = "#a8957c"; cx.font = `500 11px ${FONT_MONO}`; cx.textAlign = "center";
+    cx.fillStyle = C.robotLine; cx.font = `500 11px ${FONT_MONO}`; cx.textAlign = "center";
     cx.fillText(angry ? "lagi kerja!!" : "mikir…", 0, h / 2 - 7);
     cx.restore();
   }

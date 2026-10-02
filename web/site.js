@@ -8,11 +8,11 @@ const sound = new Sound();
 const demo = document.querySelector(".demo");
 
 const BLURB = {
-  jaranan: "Pecut kuda lumping, ada rumbai merah-kuning-hijau di gagangnya. Paling seimbang buat pemula.",
-  sapi: "Pendek, tebal, berat. Paling gampang bunyi, suaranya rendah dan nendang.",
-  bullwhip: "Paling panjang. Susah dikuasai, tapi sekali ctarr kerasa sampai ke server.",
-  samandiman: "Pecut sakti dari cerita Reog. Nyala emas dan keluar percikan tiap ctarr.",
-  cemeti: "Ramping dan kaku. Bunyinya paling nyaring di antara semuanya.",
+  jaranan: "Pecut kuda lumping, lengkap sama rumbainya.",
+  sapi: "Pendek dan berat. Gampang bunyi.",
+  bullwhip: "Paling panjang, paling susah. Paling puas juga.",
+  samandiman: "Versi sakti. Ada percikannya.",
+  cemeti: "Tipis, kaku, bunyinya nyaring.",
 };
 
 let bubbleTimer = 0;
@@ -54,12 +54,7 @@ Object.entries(VARIANTS).forEach(([k, v]) => {
     <canvas aria-hidden="true"></canvas>
     <h3>${v.name}</h3>
     <p>${BLURB[k] ?? ""}</p>
-    <dl>
-      <dt>Segmen</dt><dd>${v.segs}</dd>
-      <dt>Kekakuan</dt><dd>${meter(v.bend / 0.24)}</dd>
-      <dt>Nada</dt><dd>${meter(v.pitch / 1.6)}</dd>
-    </dl>
-    <button class="chip" data-k="${k}">Coba ${v.name}</button>`;
+    <button class="chip" data-k="${k}">Coba</button>`;
   card.querySelector("button").onclick = () => {
     sound.init(); pick(k);
     demo.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
@@ -67,10 +62,6 @@ Object.entries(VARIANTS).forEach(([k, v]) => {
   cards.appendChild(card);
   drawSwatch(card.querySelector("canvas"), v);
 });
-function meter(f) {
-  const n = Math.max(1, Math.round(f * 5));
-  return "■".repeat(n) + "□".repeat(5 - n);
-}
 function pick(k) {
   stage.pick(k);
   document.querySelectorAll(".chip[data-k]").forEach((c) => {
@@ -79,7 +70,7 @@ function pick(k) {
 }
 $("sound").onclick = () => {
   sound.init(); sound.on = !sound.on;
-  $("sound").textContent = "Suara: " + (sound.on ? "on" : "off");
+  $("sound").textContent = "Suara " + (sound.on ? "on" : "off");
   $("sound").setAttribute("aria-pressed", String(sound.on));
 };
 addEventListener("keydown", (e) => {
@@ -109,7 +100,7 @@ function drawSwatch(c, v) {
 
 // ---------- Contoh omelan, diketik ulang waktu kelihatan ----------
 const typed = $("typed");
-const NAG = "[Ctas] Kamu barusan dipecut 7 kali, 2 kali kena muka. CEPETAN! Jangan halu, jangan ngeles, langsung kerjain.";
+const NAG = "[Ctas] Kamu barusan dipecut 7 kali, 2 kali kena muka. Cepetan dong, jangan halu, langsung kerjain.";
 typed.textContent = NAG; // lengkap dulu biar kebaca tanpa animasi
 if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
   let done = false;
