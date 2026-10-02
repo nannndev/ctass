@@ -13,10 +13,9 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
 - **Bunyi CTARR kalau ujungnya tembus "Mach 1".** Pecut asli bunyi karena ujungnya
   lebih cepat dari suara. Di sini kecepatan ujung diukur tiap sub-step, dan bunyinya
   makin keras kalau makin kenceng.
-- **Suara disintesis pakai Web Audio**, nggak ada file rekaman: letupan, dentuman,
-  klik, gema, plus "wush" pas diayun.
+- **Suara disintesis pakai Web Audio**, nggak ada file rekaman. Ayun pelan nggak bunyi,
+  cuma pas ujungnya tembus Mach 1 keluar ctarr.
 - **5 varian** (tombol 1–5): Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti.
-- **Robot AI** yang bisa disabet, lengkap sama omelan baliknya.
 
 ## Pakai
 
@@ -67,7 +66,7 @@ Struktur:
 src/                 frontend (HTML/CSS/JS polos, tanpa bundler)
   js/physics.js      simulasi tali Verlet
   js/audio.js        sintesis suara
-  js/variants.js     parameter tiap varian + omelan si AI
+  js/variants.js     parameter tiap varian
   js/stage.js        render, input, deteksi ctarr (dipakai app & landing)
   js/main.js         UI app + jembatan ke Tauri
 web/                 landing page (Vercel)

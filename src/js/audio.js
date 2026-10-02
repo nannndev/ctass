@@ -32,25 +32,6 @@ export class Sound {
     this.noise = noiseBuffer(ac, 2);
     this.cracks = [0, 1, 2, 3].map(() => crackBuffer(ac));
 
-    // "wush" kontinu, ngikut kecepatan ujung
-    const src = ac.createBufferSource(); src.buffer = this.noise; src.loop = true;
-    const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 350;
-    this.whooshFilt = ac.createBiquadFilter(); this.whooshFilt.type = "bandpass"; this.whooshFilt.Q.value = 0.9;
-    this.whooshGain = ac.createGain(); this.whooshGain.gain.value = 0;
-    this.whooshPan = ac.createStereoPanner ? ac.createStereoPanner() : ac.createGain();
-    src.connect(hp); hp.connect(this.whooshFilt); this.whooshFilt.connect(this.whooshGain);
-    this.whooshGain.connect(this.whooshPan); this.whooshPan.connect(this.master);
-    src.start();
-  }
-
-  whoosh(mach, pitch, pan = 0) {
-    if (!this.ac) return;
-    const t = this.ac.currentTime;
-    const m = Math.min(1.2, mach);
-    const w = this.on ? Math.min(0.5, Math.max(0, m - 0.15) ** 1.6 * 0.6) : 0;
-    this.whooshGain.gain.setTargetAtTime(w, t, 0.02);
-    this.whooshFilt.frequency.setTargetAtTime(500 + m * 2600 * pitch, t, 0.03);
-    this.whooshPan.pan?.setTargetAtTime(clamp(pan, -0.8, 0.8), t, 0.05);
   }
 
   // power = seberapa jauh lewat Mach 1, pan = -1 (kiri) .. 1 (kanan)

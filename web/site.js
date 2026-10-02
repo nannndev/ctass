@@ -19,11 +19,9 @@ let bubbleTimer = 0;
 const stage = createStage({
   canvas: $("stage"),
   sound,
-  aiScale: 0.2,
   onFirstMove: () => { $("hint").style.opacity = "0"; },
   onScore: (s) => {
     $("sCrack").textContent = s.crack;
-    $("sHit").textContent = s.hit;
     $("sBest").textContent = s.best.toFixed(1);
   },
   onMach: (mach, shown) => {
