@@ -68,20 +68,61 @@ export function createStage(o) {
   function onCrack(mach) {
     const t = whip.tip();
     score.crack++; session.crack++; score.best = Math.max(score.best, mach); o.onScore?.(score);
-    o.sound.crack(mach - 1, v.pitch, (t.x / W) * 2 - 1);
-    shake = reduced ? 0 : 6 + Math.min(10, (mach - 1) * 8);
-    fx.push({ k: "ring", x: t.x, y: t.y, r: 4, life: 1 });
-    fx.push({ k: "text", x: t.x, y: t.y - 10, life: 1, s: mach > 1.4 ? "CTARR!!" : "CTARR!" });
-    if (v.glow && !reduced) for (let i = 0; i < 18; i++) {
-      const a = Math.random() * Math.PI * 2, sp = 120 + Math.random() * 380;
-      fx.push({ k: "spark", x: t.x, y: t.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1 });
+    o.sound.crack(mach - 1, v.sound, (t.x / W) * 2 - 1);
+    shake = reduced ? 0 : (6 + Math.min(10, (mach - 1) * 8)) * (v.shake ?? 1);
+    const big = mach > 1.4;
+    fx.push({ k: "text", x: t.x, y: t.y - 12, life: 1, rate: 1.4, s: big && v.word.endsWith("!") ? v.word + "!" : v.word, color: v.color, size: v.fx === "star" ? 0.75 : v.fx === "dust" ? 1.25 : 1 });
+    if (reduced) { fx.push({ k: "ring", x: t.x, y: t.y, r: 4, speed: 400, width: 1.5, color: C.ring, life: 1, rate: 2.2 }); return; }
+    burst(v.fx, t, mach);
+  }
+
+  // efek visual khas tiap pecut
+  function burst(kind, t, mach) {
+    const n = whip.n - 1, dx = whip.x[n] - whip.x[n - 1], dy = whip.y[n] - whip.y[n - 1];
+    const heading = Math.atan2(dy, dx), rnd = (a, b) => a + Math.random() * (b - a);
+    const add = (p) => fx.push(Object.assign({ x: t.x, y: t.y, life: 1, rate: 2.2 }, p));
+    switch (kind) {
+      case "confetti": // serpihan rumbai merah-kuning-hijau
+        add({ k: "ring", r: 4, speed: 480, width: 1.5, color: C.ring });
+        for (let i = 0; i < 22; i++) {
+          const a = rnd(0, Math.PI * 2), sp = rnd(120, 420);
+          add({ k: "bit", vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120, rot: rnd(0, 6), vr: rnd(-14, 14), w: rnd(3, 6), h: rnd(6, 11),
+            color: ["#d63a2a", "#f2c23a", "#2f8f4e"][i % 3], rate: rnd(0.8, 1.2) });
+        }
+        break;
+      case "dust": // kepulan debu cambuk sapi
+        add({ k: "ring", r: 6, speed: 300, width: 3, color: "201,162,122", rate: 2.6 });
+        for (let i = 0; i < 14; i++) {
+          const a = rnd(0, Math.PI * 2), sp = rnd(30, 140);
+          add({ k: "dust", vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 20, r: rnd(6, 14), grow: rnd(30, 70), rate: rnd(0.9, 1.4) });
+        }
+        break;
+      case "shock": // gelombang kejut dobel + garis kecepatan bullwhip
+        add({ k: "ring", r: 2, speed: 900, width: 2, color: C.ring, rate: 3 });
+        add({ k: "ring", r: 2, speed: 560, width: 1, color: C.ring, rate: 2.4 });
+        for (let i = 0; i < 9; i++) {
+          const a = heading + rnd(-0.5, 0.5);
+          add({ k: "line", a, d: rnd(6, 20), len: rnd(30, 90) * Math.min(1.6, mach), speed: rnd(500, 900), rate: rnd(3, 4.5) });
+        }
+        break;
+      case "magic": // kilatan emas + percikan Samandiman
+        add({ k: "flash", r: 70 + mach * 40, rate: 3.2 });
+        add({ k: "ring", r: 4, speed: 360, width: 2, color: "244,201,93", rate: 1.6 });
+        for (let i = 0; i < 26; i++) {
+          const a = rnd(0, Math.PI * 2), sp = rnd(120, 460);
+          add({ k: "spark", vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, size: rnd(2, 4), rate: rnd(1.2, 2) });
+        }
+        break;
+      case "star": // bintang kecil tajam cemeti
+        add({ k: "star", spikes: 8, len: 18 + mach * 8, rot: rnd(0, 1), rate: 3.6 });
+        break;
     }
   }
   function onHit(cracked) {
     score.hit++; session.hit++; o.onScore?.(score);
     ai.wobble = 1; ai.mood = 1; o.sound.thud((ai.x / W) * 2 - 1);
     o.onSay?.(AI_LINES[Math.floor(Math.random() * AI_LINES.length)], ai.x, ai.y - ai.h * 0.62);
-    if (!cracked) fx.push({ k: "text", x: ai.x, y: ai.y - ai.h / 2, life: 1, s: "PLAK!" });
+    if (!cracked) fx.push({ k: "text", x: ai.x, y: ai.y - ai.h / 2, life: 1, rate: 1.4, s: "PLAK!", color: C.ember, size: 1 });
   }
   function tipInAI() {
     for (let i = whip.n - 4; i < whip.n; i++) {
@@ -208,21 +249,59 @@ export function createStage(o) {
   function drawFx(dt) {
     for (let i = fx.length - 1; i >= 0; i--) {
       const p = fx[i];
-      p.life -= dt * (p.k === "text" ? 1.4 : 2.2);
+      p.life -= dt * p.rate;
       if (p.life <= 0) { fx.splice(i, 1); continue; }
-      if (p.k === "ring") {
-        p.r += dt * 520;
-        cx.strokeStyle = `rgba(${C.ring},${p.life * 0.7})`; cx.lineWidth = 1.5;
-        cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI * 2); cx.stroke();
-      } else if (p.k === "spark") {
-        p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 600 * dt;
-        cx.fillStyle = `rgba(255,214,107,${p.life})`; cx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
-      } else {
-        p.y -= dt * 60;
-        cx.font = `400 ${Math.round(18 + S * 0.02)}px ${FONT_DISPLAY}`;
-        cx.textAlign = "center"; cx.globalAlpha = p.life; cx.fillStyle = C.ember;
-        cx.fillText(p.s, p.x, p.y);
-        cx.globalAlpha = 1;
+      const L = p.life;
+      switch (p.k) {
+        case "ring":
+          p.r += dt * p.speed;
+          cx.strokeStyle = `rgba(${p.color},${L * 0.7})`; cx.lineWidth = p.width;
+          cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI * 2); cx.stroke();
+          break;
+        case "spark":
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 600 * dt;
+          cx.fillStyle = `rgba(255,214,107,${L})`; cx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+          break;
+        case "bit":
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 700 * dt; p.vx *= 0.985; p.rot += p.vr * dt;
+          cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot); cx.globalAlpha = Math.min(1, L * 1.5);
+          cx.fillStyle = p.color; cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          cx.restore();
+          break;
+        case "dust":
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy *= 0.96; p.r += p.grow * dt;
+          cx.fillStyle = `rgba(150,124,96,${L * 0.28})`;
+          cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI * 2); cx.fill();
+          break;
+        case "line": {
+          p.d += p.speed * dt;
+          const x0 = p.x + Math.cos(p.a) * p.d, y0 = p.y + Math.sin(p.a) * p.d;
+          cx.strokeStyle = `rgba(${C.ring},${L * 0.8})`; cx.lineWidth = 1.2;
+          cx.beginPath(); cx.moveTo(x0, y0); cx.lineTo(x0 + Math.cos(p.a) * p.len * L, y0 + Math.sin(p.a) * p.len * L); cx.stroke();
+          break;
+        }
+        case "flash": {
+          const g = cx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+          g.addColorStop(0, `rgba(255,236,170,${L * 0.55})`); g.addColorStop(1, "rgba(255,214,107,0)");
+          cx.fillStyle = g; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI * 2); cx.fill();
+          break;
+        }
+        case "star": {
+          const len = p.len * (1.2 - L * 0.4);
+          cx.strokeStyle = `rgba(${C.ring},${L})`; cx.lineWidth = 1;
+          for (let k = 0; k < p.spikes; k++) {
+            const a = p.rot + (k / p.spikes) * Math.PI * 2, l = k % 2 ? len * 0.5 : len;
+            cx.beginPath(); cx.moveTo(p.x + Math.cos(a) * 3, p.y + Math.sin(a) * 3); cx.lineTo(p.x + Math.cos(a) * l, p.y + Math.sin(a) * l); cx.stroke();
+          }
+          break;
+        }
+        case "text":
+          p.y -= dt * 60;
+          cx.font = `400 ${Math.round((18 + S * 0.02) * p.size)}px ${FONT_DISPLAY}`;
+          cx.textAlign = "center"; cx.globalAlpha = L; cx.fillStyle = p.color;
+          cx.fillText(p.s, p.x, p.y);
+          cx.globalAlpha = 1;
+          break;
       }
     }
   }

@@ -8,6 +8,8 @@
 //   3. ekor desis ~20 ms    -> "rr" sisa udara
 //   4. reverb ruangan       -> biar nggak kedengeran kayak klik doang
 //   5. dentum rendah        -> badan, makin berat pecutnya makin kerasa
+//   6. gema jauh + lapisan khas tiap varian (rumbai, denting, tsik dobel)
+// Resepnya per varian ada di variants.js (field `sound`).
 export class Sound {
   constructor() { this.ac = null; this.on = true; }
 
@@ -26,37 +28,94 @@ export class Sound {
     // reverb ruangan dari impulse response sintetis
     this.verb = ac.createConvolver();
     this.verb.buffer = roomImpulse(ac, 1.1, 0.2);
-    this.wet = ac.createGain(); this.wet.gain.value = 0.32;
+    this.wet = ac.createGain(); this.wet.gain.value = 1;
     this.verb.connect(this.wet); this.wet.connect(this.master);
 
     this.noise = noiseBuffer(ac, 2);
-    this.cracks = [0, 1, 2, 3].map(() => crackBuffer(ac));
-
+    this.cracks = new Map(); // resep -> 4 sampel ctarr
   }
 
-  // power = seberapa jauh lewat Mach 1, pan = -1 (kiri) .. 1 (kanan)
-  crack(power, pitch, pan = 0) {
+  samples(snd) {
+    if (!this.cracks.has(snd)) this.cracks.set(snd, [0, 1, 2, 3].map(() => crackBuffer(this.ac, snd)));
+    const list = this.cracks.get(snd);
+    return list[(Math.random() * list.length) | 0];
+  }
+
+  // power = seberapa jauh lewat Mach 1, snd = resep suara varian, pan = -1 (kiri) .. 1 (kanan)
+  crack(power, snd, pan = 0) {
     if (!this.ac || !this.on) return;
     const { ac } = this, t = ac.currentTime;
-    const a = Math.min(1.25, 0.75 + power * 0.6);
+    const a = Math.min(1.25, 0.75 + power * 0.6) * (snd.gain ?? 1);
     const out = this.panner(pan);
+    const rate = snd.rate * (0.95 + Math.random() * 0.1);
 
-    const s = ac.createBufferSource();
-    s.buffer = this.cracks[(Math.random() * this.cracks.length) | 0];
-    s.playbackRate.value = pitch * (0.94 + Math.random() * 0.12);
-    const g = ac.createGain(); g.gain.value = a * (0.7 + 0.5 * pitch); // nada tinggi lebih tipis, jadi dikompensasi
-    s.connect(g); g.connect(out); g.connect(this.verb);
-    s.start(t);
+    // gema jauh (lembah / arena), dibikin per crack terus dilepas lagi
+    let send = null;
+    if (snd.echo) {
+      const [time, feedback, level] = snd.echo;
+      const d = ac.createDelay(1.5); d.delayTime.value = time;
+      const fb = ac.createGain(); fb.gain.value = feedback;
+      const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600;
+      const lv = ac.createGain(); lv.gain.value = level;
+      d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(lv); lv.connect(out);
+      send = d;
+      setTimeout(() => { d.disconnect(); fb.disconnect(); }, (time / (1 - feedback)) * 4000 + 500);
+    }
 
-    // dentum: pecut berat (pitch rendah) lebih kerasa badannya
+    const play = (at, gain) => {
+      const s = ac.createBufferSource();
+      s.buffer = this.samples(snd);
+      s.playbackRate.value = rate;
+      const g = ac.createGain(); g.gain.value = gain;
+      const wet = ac.createGain(); wet.gain.value = snd.wet;
+      s.connect(g); g.connect(out); g.connect(wet); wet.connect(this.verb);
+      if (send) g.connect(send);
+      s.start(at);
+    };
+    play(t, a);
+    if (snd.extra === "double") play(t + 0.014 + Math.random() * 0.006, a * 0.6);
+
+    // dentum
+    const [f0, f1, dur, bodyGain] = snd.body;
     const body = ac.createOscillator(), bg = ac.createGain();
     body.type = "sine";
-    body.frequency.setValueAtTime(160 * pitch, t);
-    body.frequency.exponentialRampToValueAtTime(55 * pitch, t + 0.06);
-    bg.gain.setValueAtTime(a * (0.55 / pitch), t);
-    bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    body.frequency.setValueAtTime(f0, t);
+    body.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.75);
+    bg.gain.setValueAtTime(a * bodyGain, t);
+    bg.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     body.connect(bg); bg.connect(out);
-    body.start(t); body.stop(t + 0.1);
+    body.start(t); body.stop(t + dur + 0.02);
+
+    if (snd.extra === "rustle") this.rustle(t + 0.008, out, a);
+    if (snd.extra === "chime") this.chime(t + 0.004, out, a);
+  }
+
+  // desir rumbai jaranan yang ikut kibas
+  rustle(t, out, a) {
+    const { ac } = this;
+    const n = ac.createBufferSource(); n.buffer = this.noise;
+    const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 4200; f.Q.value = 0.7;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22 * a, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    n.connect(f); f.connect(g); g.connect(out);
+    n.start(t, Math.random()); n.stop(t + 0.18);
+  }
+
+  // denting gaib Samandiman: beberapa nada nggak harmonis yang memudar pelan
+  chime(t, out, a) {
+    const { ac } = this;
+    [1318, 1976, 2637, 3520].forEach((f, i) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "sine"; o.frequency.value = f * (0.985 + Math.random() * 0.03);
+      const tt = t + i * 0.018, len = 0.9 + Math.random() * 0.6;
+      g.gain.setValueAtTime(0.0001, tt);
+      g.gain.exponentialRampToValueAtTime(0.09 * a, tt + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, tt + len);
+      o.connect(g); g.connect(out); g.connect(this.verb);
+      o.start(tt); o.stop(tt + len + 0.05);
+    });
   }
 
   // kena si AI: tamparan + "aduh" kecil
@@ -101,19 +160,18 @@ function noiseBuffer(ac, seconds) {
   return b;
 }
 
-// Satu sampel ctarr. Tiap panggilan sedikit beda biar nggak monoton.
-function crackBuffer(ac) {
-  const sr = ac.sampleRate, len = Math.floor(sr * 0.14);
+// Satu sampel ctarr sesuai resep varian. Tiap panggilan sedikit beda biar nggak monoton.
+function crackBuffer(ac, snd) {
+  const sr = ac.sampleRate, len = Math.floor(sr * Math.max(0.14, snd.tail * 6));
   const b = ac.createBuffer(1, len, sr), d = b.getChannelData(0);
-  const nDur = 0.0009 + Math.random() * 0.0006;  // N-wave ~1 ms
-  const snap = 0.0022 + Math.random() * 0.001;   // letupan
-  const tail = 0.016 + Math.random() * 0.008;    // desis
+  const jit = () => 0.8 + Math.random() * 0.4;
+  const nDur = snd.nDur * jit(), snap = snd.snap * jit(), tail = snd.tail * jit();
   let lp = 0;
   for (let i = 0; i < len; i++) {
     const t = i / sr, r = Math.random() * 2 - 1;
     const n = t < nDur ? 1 - (2 * t) / nDur : 0;
     lp += 0.45 * (r - lp); // desis agak dilembutin
-    d[i] = n + r * Math.exp(-t / snap) * 0.85 + lp * Math.exp(-t / tail) * 0.35;
+    d[i] = n + r * Math.exp(-t / snap) * 0.85 + lp * Math.exp(-t / tail) * snd.tailLevel;
   }
   // buang DC biar nggak "dug" aneh di speaker, terus normalisasi
   let prevX = 0, y = 0, peak = 0;

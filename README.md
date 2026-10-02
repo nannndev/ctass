@@ -15,7 +15,12 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
   makin keras kalau makin kenceng.
 - **Suara disintesis pakai Web Audio**, nggak ada file rekaman. Ayun pelan nggak bunyi,
   cuma pas ujungnya tembus Mach 1 keluar ctarr.
-- **5 varian** (tombol 1–5): Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti.
+- **5 pecut, beda suara & efek:**
+  - Jaranan: ctarr klasik + desir rumbai, serpihan merah-kuning-hijau
+  - Cambuk sapi: "dhuar" berat dan rendah, kepulan debu, layar goyang paling keras
+  - Bullwhip: snap paling tajam + gema lembah, gelombang kejut & garis kecepatan
+  - Samandiman: crack + denting gaib, kilatan & percikan emas
+  - Cemeti: "tsik-tsik" tipis dan nyaring, bintang kecil
 
 ## Pakai
 
@@ -108,7 +113,8 @@ Tambah entri di `src/js/variants.js`. Parameter yang paling ngaruh:
 - `bend`: kekakuan (makin gede makin kaku)
 - `damp`: redaman (makin deket 1 makin lama goyangnya)
 - `threshold`: kecepatan ujung (px/s) yang dihitung sebagai Mach 1
-- `pitch`: nada suara ctarr
+- `sound`: resep suara (panjang sonic boom, desis, dentum, gema, lapisan khas)
+- `fx`, `word`, `color`, `shake`: efek visual pas ctarr
 
 ## Roadmap
 
