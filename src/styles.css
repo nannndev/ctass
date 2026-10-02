@@ -76,3 +76,25 @@ body.overlay .hint { background: var(--panel); padding: 16px 18px; border-radius
 
 @media (max-width: 560px) { .tools { margin-left: 0; } .brand { font-size: 22px; } .stat b { font-size: 20px; } }
 @media (prefers-reduced-motion: reduce) { .hint, .bubble { transition: none; } }
+
+/* ---------- Mode overlay (app desktop): bersih, cuma pecut ---------- */
+body.overlay .rail, body.overlay .gauge, body.overlay .hint, body.overlay .bubble { display: none; }
+body.overlay #stage { cursor: default; }
+.pill {
+  position: fixed; left: 50%; bottom: 48px; transform: translateX(-50%);
+  display: none; align-items: center; gap: 10px; white-space: nowrap;
+  padding: 9px 16px; border-radius: 999px; pointer-events: none;
+  background: rgba(17, 17, 19, 0.78); border: 1px solid var(--line);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  font: 500 12px var(--body); color: var(--muted); font-variant-numeric: tabular-nums;
+  transition: opacity 0.6s;
+}
+body.overlay .pill { display: inline-flex; }
+.pill #pillName { color: var(--fg); font-family: var(--display); font-style: italic; font-size: 15px; }
+.pill .sep { width: 3px; height: 3px; border-radius: 50%; background: var(--line); }
+.pill.fade { opacity: 0; }
+.unlock {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  padding: 14px 20px; border-radius: 14px; background: rgba(17, 17, 19, 0.86);
+  border: 1px solid var(--accent); color: var(--fg); font: 500 14px var(--body);
+}
