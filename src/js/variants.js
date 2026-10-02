@@ -11,6 +11,8 @@
 //   gain   pengali volume (nada tinggi kedengeran lebih tipis)
 //
 // fx: efek visual khas pas ctarr, word = tulisan yang muncul, shake = kuatnya layar goyang
+// Bentuk khusus: strands (jumlah lidi), plug (colokan di ujung), flat + buckle (sabuk),
+// glow (warna nyala), fire (bara ngikutin ujung)
 export const VARIANTS = {
   jaranan: {
     name: "Jaranan", segs: 34, len: 0.60, handle: 0.17, bend: 0.10, damp: 0.994, grav: 950, w0: 6, w1: 1.4,
@@ -32,7 +34,7 @@ export const VARIANTS = {
   },
   samandiman: {
     name: "Samandiman", segs: 38, len: 0.68, handle: 0.15, bend: 0.09, damp: 0.996, grav: 700, w0: 7, w1: 1.5,
-    rope: "#f4c95d", grip: "#7a5a14", tassel: true, glow: true, threshold: 5200,
+    rope: "#f4c95d", grip: "#7a5a14", tassel: true, glow: "#ffd36b", threshold: 5200,
     sound: { nDur: 0.001, snap: 0.0025, tail: 0.02, tailLevel: 0.3, rate: 1.05, body: [150, 50, 0.09, 0.45], wet: 0.55, echo: [0.2, 0.32, 0.25], extra: "chime", gain: 1.3 },
     fx: "magic", word: "CTARR!", color: "#f4c95d", shake: 1.1,
   },
@@ -41,6 +43,30 @@ export const VARIANTS = {
     rope: "#e2d2ae", grip: "#5b4a2e", tassel: false, glow: false, threshold: 4800,
     sound: { nDur: 0.0005, snap: 0.0011, tail: 0.007, tailLevel: 0.18, rate: 1.55, body: [320, 130, 0.03, 0.18], wet: 0.12, echo: null, extra: "double", gain: 1.9 },
     fx: "star", word: "tsik!", color: "#ece8e1", shake: 0.35,
+  },
+  sapulidi: {
+    name: "Sapu lidi", segs: 18, len: 0.40, handle: 0.20, bend: 0.32, damp: 0.986, grav: 1300, w0: 2, w1: 1,
+    rope: "#c8a96a", grip: "#6b4f2a", strands: 7, spread: 0.1, threshold: 3600,
+    sound: { nDur: 0.0016, snap: 0.006, tail: 0.05, tailLevel: 0.75, rate: 0.9, body: [140, 60, 0.06, 0.25], wet: 0.15, echo: null, extra: "swish", gain: 1.4 },
+    fx: "sticks", word: "SRAK!", color: "#c8a96a", shake: 0.8,
+  },
+  kabel: {
+    name: "Kabel charger", segs: 30, len: 0.55, handle: 0.07, bend: 0.22, damp: 0.993, grav: 1000, w0: 3.2, w1: 3.2,
+    rope: "#f2f2f0", grip: "#e6e6e3", plug: true, threshold: 4400,
+    sound: { nDur: 0.0004, snap: 0.0008, tail: 0.004, tailLevel: 0.15, rate: 1.8, body: [260, 120, 0.03, 0.15], wet: 0.1, echo: null, extra: "zap", gain: 1.6 },
+    fx: "zap", word: "ZZT!", color: "#7cc7ff", shake: 0.6,
+  },
+  sabuk: {
+    name: "Ikat pinggang", segs: 20, len: 0.38, handle: 0.10, bend: 0.30, damp: 0.988, grav: 1300, w0: 9, w1: 9,
+    rope: "#3a2a1e", grip: "#2a1d14", flat: true, buckle: true, threshold: 3900,
+    sound: { nDur: 0.0018, snap: 0.003, tail: 0.015, tailLevel: 0.4, rate: 0.85, body: [180, 60, 0.1, 0.9], wet: 0.18, echo: null, extra: "slap" },
+    fx: "impact", word: "PLAK!", color: "#f2c23a", shake: 1.5,
+  },
+  api: {
+    name: "Cambuk api", segs: 40, len: 0.70, handle: 0.14, bend: 0.08, damp: 0.995, grav: 750, w0: 7, w1: 1.3,
+    rope: "#ff7a2e", grip: "#3b1a0c", glow: "#ff6a1a", fire: true, threshold: 5000,
+    sound: { nDur: 0.0009, snap: 0.0022, tail: 0.025, tailLevel: 0.35, rate: 1, body: [150, 45, 0.1, 0.55], wet: 0.35, echo: [0.16, 0.25, 0.2], extra: "flame", gain: 1.2 },
+    fx: "fire", word: "BWOSH!", color: "#ff7a2e", shake: 1.2,
   },
 };
 

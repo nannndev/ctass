@@ -15,29 +15,34 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
   makin keras kalau makin kenceng.
 - **Suara disintesis pakai Web Audio**, nggak ada file rekaman. Ayun pelan nggak bunyi,
   cuma pas ujungnya tembus Mach 1 keluar ctarr.
-- **5 pecut, beda suara & efek:**
-  - Jaranan: ctarr klasik + desir rumbai, serpihan merah-kuning-hijau
-  - Cambuk sapi: "dhuar" berat dan rendah, kepulan debu, layar goyang paling keras
-  - Bullwhip: snap paling tajam + gema lembah, gelombang kejut & garis kecepatan
-  - Samandiman: crack + denting gaib, kilatan & percikan emas
-  - Cemeti: "tsik-tsik" tipis dan nyaring, bintang kecil
+- **9 pecut, beda suara & efek:** Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti,
+  Sapu lidi (srak!), Kabel charger (zzt!), Ikat pinggang (plak!), Cambuk api (bwosh!)
+- **Bisa dicustom** di jendela Ctas: panjang, kekakuan, berat, warna tali & gagang,
+  campur suara & efek dari pecut lain, tulisan pas ctarr, gampang/susahnya bunyi, volume.
+  Ada preview buat nyobain langsung, dan pengaturannya disimpan.
 
 ## Pakai
 
+Pas dibuka, muncul **jendela Ctas**: pilih pecut, custom, cobain di preview, terus klik
+**Mulai mecut**. Jendelanya boleh ditutup, Ctas tetap jalan di menu bar (Mac) / system tray
+(Windows, Linux). Klik ikonnya buat buka jendela Ctas lagi.
+
 | Aksi | Caranya |
 | --- | --- |
-| Mulai / udahan mecut | ⌘⇧X di Mac, Ctrl+Alt+X di Windows/Linux, atau ikon Ctas di menu bar / tray |
-| Ganti pecut | Menu bar → Pecut |
+| Mulai / udahan mecut | ⌘⇧X di Mac, Ctrl+Alt+X di Windows/Linux |
+| Ganti & custom pecut | Jendela Ctas (angka 1–9 juga bisa) |
 | Ctarr | Ayun mouse terus balik arah mendadak |
 
 Overlay-nya tembus klik dan nggak ngambil fokus, jadi selama mecut lu tetap bisa klik dan
 ngetik kayak biasa. Pecutnya cuma nempel di kursor.
 
-Di menu bar ada dua pilihan, dua-duanya default mati:
+Di jendela Ctas ada dua pilihan omelan, dua-duanya default mati:
 
-- **Ketik omelan ke AI pas udahan**: omelan diketik ke jendela yang lagi aktif. Waktu
-  dinyalain, macOS minta izin **Accessibility** buat Ctas (sekali aja).
-- **Langsung kirim (tekan Enter)**
+- **Ketik omelan ke AI pas udahan**: omelan diketik ke jendela yang lagi aktif. Di Mac,
+  waktu dinyalain, macOS minta izin **Accessibility** buat Ctas (sekali aja).
+- **Langsung kirim**: sekalian tekan Enter.
+
+Kalau ctarr-nya susah keluar, geser **Gampang bunyi** ke kanan.
 
 ## Install
 
@@ -86,7 +91,9 @@ src/                 frontend (HTML/CSS/JS polos, tanpa bundler)
   js/audio.js        sintesis suara
   js/variants.js     parameter tiap varian
   js/stage.js        render, input, deteksi ctarr (dipakai app & landing)
-  js/main.js         UI app + jembatan ke Tauri
+  js/main.js         overlay + jembatan ke Tauri
+  js/panel.js        jendela Ctas (pilih & custom pecut)
+  js/settings.js     pengaturan + gabungin custom ke pecut
 web/                 landing page (Vercel)
 src-tauri/           shell desktop (Tauri 2)
   src/lib.rs         overlay, shortcut global, menu bar
