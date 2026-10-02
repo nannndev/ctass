@@ -3,7 +3,7 @@ import { Sound } from "./audio.js";
 import { createStage } from "./stage.js";
 import { normalize, effective } from "./settings.js";
 import { t, whipName } from "./i18n.js";
-import { ensureSound } from "./sounds.js";
+import { ensureSound as loadCustomSound } from "./sounds.js";
 
 const TAURI = window.__TAURI__;
 const IS_MAC = /Mac/i.test(navigator.userAgent);
@@ -64,7 +64,7 @@ function applySettings(s) {
   if (stage.is3D !== (settings.view === "3d")) stage.set3D(settings.view === "3d");
   stage.setTheme(settings.theme);
   document.documentElement.dataset.theme = settings.theme;
-  ensureSound(sound, v.sound);
+  loadCustomSound(sound, v.sound);
   sound.setVolume(settings.volume);
   const L = settings.lang;
   document.documentElement.lang = L;
