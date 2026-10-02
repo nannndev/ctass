@@ -112,3 +112,18 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObse
     const t = setInterval(() => { typed.textContent = NAG.slice(0, ++i); if (i >= NAG.length) clearInterval(t); }, 28);
   }, { threshold: 0.6 }).observe(typed);
 }
+
+// ---------- Tombol copy perintah install ----------
+const copyBtn = $("copyCmd");
+copyBtn?.addEventListener("click", async () => {
+  const text = $("cmd").textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = "Ke-copy";
+  } catch {
+    const r = document.createRange(); r.selectNodeContents($("cmd"));
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    copyBtn.textContent = "Tekan ⌘C";
+  }
+  setTimeout(() => (copyBtn.textContent = "Copy"), 1800);
+});

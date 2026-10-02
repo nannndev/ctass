@@ -197,3 +197,27 @@ details p { color: var(--muted); padding-bottom: 22px; max-width: 56ch; }
 .foot a { margin-left: auto; color: var(--muted); }
 
 code { font: 400 0.9em var(--mono); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
+
+/* ---------- Cara install ---------- */
+.install { padding-block: clamp(72px, 10vw, 120px) 0; }
+.install-steps { list-style: none; counter-reset: step; padding: 0; margin: 36px 0 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; max-width: 760px; }
+.install-steps li { counter-increment: step; position: relative; padding: 22px 0 22px 56px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.install-steps li:last-child { border-bottom: 1px solid var(--line); }
+.install-steps li::before {
+  content: counter(step); position: absolute; left: 0; top: 20px;
+  width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid var(--line); font: italic 400 18px var(--display); color: var(--accent);
+}
+.install-steps h3 { font: 500 16px var(--body); }
+.install-steps p { color: var(--muted); font-size: 15px; }
+.install-steps p.small { font-size: 13px; }
+.install-steps strong, .install-alt strong { color: var(--fg); font-weight: 500; }
+.install-steps kbd { min-width: 28px; height: 26px; font-size: 12px; margin-right: 2px; padding: 0 6px; vertical-align: middle; }
+.cmd {
+  display: flex; align-items: center; gap: 10px; margin-block: 4px;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 10px 10px 16px;
+}
+.cmd code { flex: 1; min-width: 0; background: none; border: 0; padding: 0; font-size: 14px; color: var(--accent); overflow-x: auto; white-space: nowrap; }
+.cmd .chip { flex: none; color: var(--fg); }
+.install-alt { color: var(--muted); font-size: 14px; margin-top: 20px; max-width: 62ch; }
+@media (max-width: 520px) { .cmd { align-items: start; } .cmd code { white-space: normal; overflow-wrap: anywhere; } }

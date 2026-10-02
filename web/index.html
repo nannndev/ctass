@@ -20,6 +20,7 @@
     <nav aria-label="Navigasi">
       <a href="#varian">Varian</a>
       <a href="#cara">Cara pakai</a>
+      <a href="#install">Install</a>
       <a href="#faq">FAQ</a>
     </nav>
     <a class="btn btn-sm" href="#download">Download</a>
@@ -110,10 +111,36 @@
         </div>
       </div>
       <ul class="notes">
-        <li>App-nya belum di-sign Apple. Kalau macOS nolak, buka System Settings → Privacy &amp; Security → <em>Open Anyway</em>. Kalau dibilang "rusak", jalanin <code>xattr -cr /Applications/Ctas.app</code> di Terminal.</li>
+        <li>App-nya belum di-sign Apple, jadi pas pertama dibuka macOS bakal nolak. Ikutin <a href="#install">cara install</a> di bawah, cuma sekali kok.</li>
         <li>Izin Accessibility cuma diminta kalau lu nyalain fitur omelan.</li>
         <li>Windows sama Linux nyusul. Sementara, main <a href="/play/">versi browser</a> dulu.</li>
       </ul>
+    </section>
+
+    <section class="install" id="install">
+      <p class="eyebrow">Cara install</p>
+      <h2>Kalau macOS bilang "rusak"</h2>
+      <p class="section-lede">Tenang, app-nya nggak rusak. macOS cuma ngeblok app yang belum di-sign Apple. Cukup sekali ini aja:</p>
+      <ol class="install-steps">
+        <li>
+          <h3>Pindahin ke Applications</h3>
+          <p>Buka <code>Ctas-macOS.dmg</code>, terus drag <strong>Ctas</strong> ke folder <strong>Applications</strong>.</p>
+        </li>
+        <li>
+          <h3>Jalanin perintah ini di Terminal</h3>
+          <p>Buka Terminal (⌘ Space, ketik "Terminal"), paste, terus Enter.</p>
+          <div class="cmd">
+            <code id="cmd">xattr -cr /Applications/Ctas.app</code>
+            <button class="chip" id="copyCmd" type="button">Copy</button>
+          </div>
+          <p class="small">Perintah ini cuma ngapus tanda "didownload dari internet" yang bikin macOS ngeblok.</p>
+        </li>
+        <li>
+          <h3>Buka Ctas</h3>
+          <p>Buka dari Applications. Ikonnya nongol di menu bar atas, bukan di Dock. Pecutnya langsung muncul, tekan <kbd>⌘</kbd><kbd>⇧</kbd><kbd>X</kbd> buat udahan.</p>
+        </li>
+      </ol>
+      <p class="install-alt">Masih ditolak? Buka <strong>System Settings → Privacy &amp; Security</strong>, scroll ke bawah, klik <strong>Open Anyway</strong> di bagian Ctas.</p>
     </section>
 
     <section class="faq" id="faq">
@@ -130,6 +157,10 @@
       <details>
         <summary>Bisa buat AI apa aja?</summary>
         <p>Apa aja yang ada kolom chat-nya. Claude, ChatGPT, Cursor, terminal juga bisa.</p>
+      </details>
+      <details>
+        <summary>Kok dibilang "Ctas is damaged and can't be opened"?</summary>
+        <p>Itu karena app-nya belum di-sign Apple, bukan beneran rusak. Jalanin <code>xattr -cr /Applications/Ctas.app</code> di Terminal, terus buka lagi. Detailnya ada di <a href="#install">cara install</a>.</p>
       </details>
       <details>
         <summary>Aman?</summary>
