@@ -195,3 +195,5 @@ details p { color: var(--muted); padding-bottom: 22px; max-width: 56ch; }
 }
 .foot .wordmark { font-size: 22px; }
 .foot a { margin-left: auto; color: var(--muted); }
+
+code { font: 400 0.9em var(--mono); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
