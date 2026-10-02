@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ctas · pecut buat AI</title>
-  <meta name="description" content="Pecut virtual buat Mac. Ayun, sentak, ctarr, terus omelan lu keketik di chat AI.">
+  <meta name="description" content="Pecut virtual buat Mac, Windows, sama Linux. Ayun, sentak, ctarr, terus omelan lu keketik di chat AI.">
   <meta property="og:title" content="Ctas · pecut buat AI">
   <meta property="og:description" content="AI-nya lelet? Pecut aja.">
   <meta name="theme-color" content="#0b0b0c">
@@ -28,11 +28,11 @@
 
   <main id="top">
     <section class="hero">
-      <p class="eyebrow">Buat macOS · gratis</p>
+      <p class="eyebrow">Mac · Windows · Linux · gratis</p>
       <h1>AI-nya lelet?<br><em>Pecut aja.</em></h1>
       <p class="lede">Pecut virtual buat jendela AI lu. Ayun, sentak, ctarr. Abis itu omelan lu langsung keketik di chat-nya.</p>
       <div class="cta">
-        <a class="btn" href="https://github.com/nannndev/ctass/releases/latest/download/Ctas-macOS.dmg">Download buat Mac</a>
+        <a class="btn" id="heroDl" href="#download">Download</a>
         <a class="btn btn-ghost" href="#demo">Cobain dulu</a>
       </div>
     </section>
@@ -82,7 +82,7 @@
       <ol class="steps">
         <li>
           <div class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>X</kbd></div>
-          <p>Pecutnya nempel di kursor. Layar tetap bisa diklik kayak biasa.</p>
+          <p>Pecutnya nempel di kursor. Layar tetap bisa diklik kayak biasa. Di Windows/Linux pakai <strong>Ctrl+Alt+X</strong>.</p>
         </li>
         <li>
           <div class="keys"><kbd>sentak</kbd></div>
@@ -102,17 +102,20 @@
     <section class="download" id="download">
       <div>
         <p class="eyebrow">Download</p>
-        <h2>Ctas buat Mac</h2>
-        <p class="section-lede">Gratis. Jalan di Apple Silicon sama Intel, macOS 11 ke atas.</p>
-        <div class="cta">
-          <a class="btn" href="https://github.com/nannndev/ctass/releases/latest/download/Ctas-macOS.dmg">Download .dmg</a>
-          <a class="btn btn-ghost" href="https://github.com/nannndev/ctass">GitHub</a>
+        <h2>Download Ctas</h2>
+        <p class="section-lede">Gratis. Pilih sesuai OS lu.</p>
+        <div class="cta dl" id="dlButtons">
+          <a class="btn btn-ghost" data-os="mac" href="https://github.com/nannndev/ctass/releases/latest/download/Ctas-macOS.dmg">macOS <span>.dmg</span></a>
+          <a class="btn btn-ghost" data-os="win" href="https://github.com/nannndev/ctass/releases/latest/download/Ctas-Windows-setup.exe">Windows <span>.exe</span></a>
+          <a class="btn btn-ghost" data-os="linux" href="https://github.com/nannndev/ctass/releases/latest/download/Ctas-Linux.AppImage">Linux <span>.AppImage</span></a>
         </div>
+        <p class="dl-meta">macOS 11+ (Apple Silicon &amp; Intel) · Windows 10/11 · Linux x64 (<a href="https://github.com/nannndev/ctass/releases/latest/download/Ctas-Linux.deb">.deb</a>) · <a href="https://github.com/nannndev/ctass">GitHub</a></p>
       </div>
       <ul class="notes">
-        <li>App-nya belum di-sign Apple, jadi pas pertama dibuka macOS bakal nolak. Ikutin <a href="#install">cara install</a> di bawah, cuma sekali kok.</li>
+        <li><strong>macOS:</strong> app-nya belum di-sign Apple, jadi pas pertama dibuka bakal ditolak. Ikutin <a href="#install">cara install</a> di bawah, cuma sekali kok.</li>
+        <li><strong>Windows:</strong> kalau muncul layar biru SmartScreen, klik <em>More info</em> → <em>Run anyway</em>.</li>
+        <li><strong>Linux:</strong> butuh X11. Di Wayland, pecutnya belum bisa ngikutin kursor.</li>
         <li>Izin Accessibility cuma diminta kalau lu nyalain fitur omelan.</li>
-        <li>Windows sama Linux nyusul. Sementara, main <a href="/play/">versi browser</a> dulu.</li>
       </ul>
     </section>
 
@@ -130,7 +133,7 @@
           <p>Buka Terminal (⌘ Space, ketik "Terminal"), paste, terus Enter.</p>
           <div class="cmd">
             <code id="cmd">xattr -cr /Applications/Ctas.app</code>
-            <button class="chip" id="copyCmd" type="button">Copy</button>
+            <button class="chip" id="copyCmd" data-copy="cmd" type="button">Copy</button>
           </div>
           <p class="small">Perintah ini cuma ngapus tanda "didownload dari internet" yang bikin macOS ngeblok.</p>
         </li>
@@ -140,6 +143,19 @@
         </li>
       </ol>
       <p class="install-alt">Masih ditolak? Buka <strong>System Settings → Privacy &amp; Security</strong>, scroll ke bawah, klik <strong>Open Anyway</strong> di bagian Ctas.</p>
+
+      <div class="install-other">
+        <div>
+          <h3>Windows</h3>
+          <p>Jalanin <code>Ctas-Windows-setup.exe</code>. Kalau muncul SmartScreen ("Windows protected your PC"), klik <strong>More info</strong> → <strong>Run anyway</strong>. Ikon Ctas ada di system tray pojok kanan bawah. Mulai/udahan pakai <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>X</kbd>.</p>
+        </div>
+        <div>
+          <h3>Linux</h3>
+          <p>Bikin AppImage-nya bisa dijalanin, terus buka:</p>
+          <div class="cmd"><code id="cmdLinux">chmod +x Ctas-Linux.AppImage &amp;&amp; ./Ctas-Linux.AppImage</code><button class="chip" data-copy="cmdLinux" type="button">Copy</button></div>
+          <p>Atau install <code>.deb</code>-nya. Fitur ketik omelan butuh <code>xdotool</code> (<code>sudo apt install xdotool</code>).</p>
+        </div>
+      </div>
     </section>
 
     <section class="faq" id="faq">

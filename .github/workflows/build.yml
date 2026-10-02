@@ -1,0 +1,103 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
+            build: npm run build:mac
+            # nama tetap, biar link download di landing page nggak pernah berubah
+            collect: cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg out/Ctas-macOS.dmg
+          - name: Windows
+            os: windows-latest
+            rust_targets: ""
+            build: npx tauri build --bundles nsis
+            collect: cp src-tauri/target/release/bundle/nsis/*-setup.exe out/Ctas-Windows-setup.exe
+          - name: Linux
+            os: ubuntu-22.04
+            rust_targets: ""
+            build: npx tauri build --bundles appimage,deb
+            collect: |
+              cp src-tauri/target/release/bundle/appimage/*.AppImage out/Ctas-Linux.AppImage
+              cp src-tauri/target/release/bundle/deb/*.deb out/Ctas-Linux.deb
+
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_targets }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - run: npm ci
+
+      - name: Test
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Build
+        run: ${{ matrix.build }}
+
+      - name: Collect
+        shell: bash
+        run: |
+          mkdir -p out
+          ${{ matrix.collect }}
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ctas-${{ matrix.name }}
+          path: out/*
+
+  # tiap push ke main / tag: bikin (atau update) release sesuai versi di tauri.conf.json
+  release:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Read version
+        id: ver
+        run: echo "tag=v$(node -p "require('./src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: Ctas ${{ steps.ver.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          files: out/*
+          make_latest: true
+          generate_release_notes: true

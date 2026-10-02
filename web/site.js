@@ -112,16 +112,28 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObse
 }
 
 // ---------- Tombol copy perintah install ----------
-const copyBtn = $("copyCmd");
-copyBtn?.addEventListener("click", async () => {
-  const text = $("cmd").textContent;
-  try {
-    await navigator.clipboard.writeText(text);
-    copyBtn.textContent = "Ke-copy";
-  } catch {
-    const r = document.createRange(); r.selectNodeContents($("cmd"));
-    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-    copyBtn.textContent = "Tekan ⌘C";
-  }
-  setTimeout(() => (copyBtn.textContent = "Copy"), 1800);
+document.querySelectorAll("[data-copy]").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    const el = $(btn.dataset.copy);
+    try {
+      await navigator.clipboard.writeText(el.textContent);
+      btn.textContent = "Ke-copy";
+    } catch {
+      const r = document.createRange(); r.selectNodeContents(el);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      btn.textContent = /Mac/i.test(navigator.userAgent) ? "Tekan ⌘C" : "Tekan Ctrl+C";
+    }
+    setTimeout(() => (btn.textContent = "Copy"), 1800);
+  });
 });
+
+// ---------- Tombol download ngikutin OS pengunjung ----------
+const ua = navigator.userAgent;
+const OS = /Windows/i.test(ua) ? "win" : /Mac/i.test(ua) && !/iPhone|iPad/i.test(ua) ? "mac" : /Linux/i.test(ua) && !/Android/i.test(ua) ? "linux" : null;
+const LABEL = { mac: "Download buat Mac", win: "Download buat Windows", linux: "Download buat Linux" };
+if (OS) {
+  const mine = document.querySelector(`#dlButtons [data-os="${OS}"]`);
+  mine.classList.add("is-you");
+  $("heroDl").href = mine.href;
+  $("heroDl").textContent = LABEL[OS];
+}

@@ -1,11 +1,11 @@
 //! Ctas: overlay transparan di atas layar buat mecut AI.
 //!
 //! Alurnya:
-//! 1. Tekan ⌘⇧X (Ctrl+Shift+X di Windows/Linux). Overlay muncul nutupin layar, tapi
+//! 1. Tekan ⌘⇧X (Ctrl+Alt+X di Windows/Linux). Overlay muncul nutupin layar, tapi
 //!    tembus klik dan nggak ngambil fokus: lu tetap bisa klik & ngetik kayak biasa,
 //!    pecutnya cuma nempel di kursor.
 //! 2. Sentak mouse buat ctarr.
-//! 3. Tekan ⌘⇧X lagi buat udahan. Kalau fitur omelan nyala, omelan diketik ke
+//! 3. Tekan shortcut yang sama buat udahan. Kalau fitur omelan nyala, omelan diketik ke
 //!    jendela yang lagi aktif (jendela AI lu).
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -132,8 +132,9 @@ pub fn run() {
             }
 
             // shortcut global
-            let mods = if cfg!(target_os = "macos") { Modifiers::SUPER } else { Modifiers::CONTROL };
-            let shortcut = Shortcut::new(Some(mods | Modifiers::SHIFT), Code::KeyX);
+            // Ctrl+Shift+X di Windows/Linux kepake buat Extensions di VS Code & kawan-kawan
+            let mods = if cfg!(target_os = "macos") { Modifiers::SUPER | Modifiers::SHIFT } else { Modifiers::CONTROL | Modifiers::ALT };
+            let shortcut = Shortcut::new(Some(mods), Code::KeyX);
             app.handle().plugin(
                 tauri_plugin_global_shortcut::Builder::new()
                     .with_handler(move |app, s, e| {
@@ -146,7 +147,7 @@ pub fn run() {
             app.global_shortcut().register(shortcut)?;
 
             // ikon di menu bar
-            let key_hint = if cfg!(target_os = "macos") { "⌘⇧X" } else { "Ctrl+Shift+X" };
+            let key_hint = if cfg!(target_os = "macos") { "⌘⇧X" } else { "Ctrl+Alt+X" };
             let start = MenuItem::with_id(app, "toggle", format!("Mulai / udahan mecut   {key_hint}"), true, None::<&str>)?;
             let variant_items = VARIANTS
                 .iter()
