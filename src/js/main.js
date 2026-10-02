@@ -68,6 +68,8 @@ addEventListener("keydown", (e) => {
 addEventListener("resize", () => stage.resize());
 
 // ---------- Jembatan ke app desktop ----------
+const IS_MAC = /Mac/i.test(navigator.userAgent);
+if (!IS_MAC) $("pillKey").textContent = "Ctrl+Alt+X buat udahan";
 let pillTimer = 0;
 function flashPill(ms = 2600) {
   $("pill").classList.remove("fade");

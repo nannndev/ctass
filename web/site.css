@@ -221,3 +221,20 @@ code { font: 400 0.9em var(--mono); color: var(--fg); background: var(--surface)
 .cmd .chip { flex: none; color: var(--fg); }
 .install-alt { color: var(--muted); font-size: 14px; margin-top: 20px; max-width: 62ch; }
 @media (max-width: 520px) { .cmd { align-items: start; } .cmd code { white-space: normal; overflow-wrap: anywhere; } }
+
+/* ---------- Download per OS ---------- */
+.dl .btn span { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+.dl .btn.is-you { background: var(--fg); color: #0b0b0c; border-color: var(--fg); }
+.dl .btn.is-you span { color: #4a4740; }
+.dl .btn.is-you:hover { background: var(--accent); border-color: var(--accent); }
+.dl-meta { margin-top: 16px; font-size: 13px; color: var(--muted); }
+.dl-meta a { color: var(--muted); }
+.notes strong { color: var(--fg); font-weight: 500; }
+
+.install-other { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; margin-top: 48px; max-width: 900px; }
+.install-other > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; align-content: start; padding-top: 20px; border-top: 1px solid var(--line); min-width: 0; }
+.install-other h3 { font: italic 400 26px/1.1 var(--display); }
+.install-other p { color: var(--muted); font-size: 15px; }
+.install-other strong { color: var(--fg); font-weight: 500; }
+.install-other kbd { min-width: 28px; height: 26px; font-size: 12px; margin-right: 2px; padding: 0 6px; vertical-align: middle; }
+@media (max-width: 760px) { .install-other { grid-template-columns: minmax(0, 1fr); } }

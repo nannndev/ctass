@@ -2,7 +2,9 @@
 //!
 //! Overlay Ctas nggak pernah ngambil fokus, jadi jendela AI tetap aktif selama dipecut.
 //! Pas udahan, omelan tinggal "diketik" ke sana pakai event keyboard sistem.
-//! macOS: butuh izin Accessibility, dan izin itu cuma diminta waktu fitur ini dinyalain.
+//! - macOS: CGEvent, butuh izin Accessibility (cuma diminta waktu fitur ini dinyalain)
+//! - Windows: SendInput
+//! - Linux: xdotool (X11)
 
 pub fn message(cracks: u32, hits: u32) -> String {
     let n = cracks.max(hits);
@@ -72,7 +74,59 @@ mod imp {
     }
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "windows")]
+mod imp {
+    use std::mem::size_of;
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
+        SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VK_RETURN,
+    };
+
+    fn input(vk: u16, scan: u16, flags: u32) -> INPUT {
+        INPUT {
+            r#type: INPUT_KEYBOARD,
+            Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: vk, wScan: scan, dwFlags: flags, time: 0, dwExtraInfo: 0 } },
+        }
+    }
+
+    /// Windows nggak butuh izin khusus buat SendInput.
+    pub fn permitted(_prompt: bool) -> bool {
+        true
+    }
+
+    pub fn send(text: &str, autosend: bool) {
+        let mut inputs = Vec::new();
+        for unit in text.encode_utf16() {
+            inputs.push(input(0, unit, KEYEVENTF_UNICODE));
+            inputs.push(input(0, unit, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP));
+        }
+        if autosend {
+            inputs.push(input(VK_RETURN, 0, 0));
+            inputs.push(input(VK_RETURN, 0, KEYEVENTF_KEYUP));
+        }
+        unsafe {
+            SendInput(inputs.len() as u32, inputs.as_ptr(), size_of::<INPUT>() as i32);
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+mod imp {
+    use std::process::Command;
+
+    /// Linux (X11) pakai `xdotool`. Di Wayland belum bisa ngetik ke app lain.
+    pub fn permitted(_prompt: bool) -> bool {
+        Command::new("xdotool").arg("version").output().map(|o| o.status.success()).unwrap_or(false)
+    }
+
+    pub fn send(text: &str, autosend: bool) {
+        let _ = Command::new("xdotool").args(["type", "--delay", "4", "--", text]).status();
+        if autosend {
+            let _ = Command::new("xdotool").args(["key", "Return"]).status();
+        }
+    }
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 mod imp {
     pub fn permitted(_prompt: bool) -> bool {
         false

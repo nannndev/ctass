@@ -2,7 +2,7 @@
 
 Pecut realistis buat mecut AI biar rajin. Ayun mouse, sentak, **CTARR!**
 
-Ctas itu overlay transparan di atas layar Mac. Pas AI lu lelet, halu, atau ngeles,
+Ctas itu overlay transparan di atas layar (macOS, Windows, Linux). Pas AI lu lelet, halu, atau ngeles,
 tekan **⌘⇧X**, pecut sepuasnya, terus tekan **Esc**. Omelan lu langsung diketik
 ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
 
@@ -21,7 +21,7 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
 
 | Aksi | Caranya |
 | --- | --- |
-| Mulai / udahan mecut | ⌘⇧X, atau ikon Ctas di menu bar |
+| Mulai / udahan mecut | ⌘⇧X di Mac, Ctrl+Alt+X di Windows/Linux, atau ikon Ctas di menu bar / tray |
 | Ganti pecut | Menu bar → Pecut |
 | Ctarr | Ayun mouse terus balik arah mendadak |
 
@@ -36,9 +36,15 @@ Di menu bar ada dua pilihan, dua-duanya default mati:
 
 ## Install
 
-Download `.dmg` terbaru: https://github.com/nannndev/ctass/releases/latest/download/Ctas-macOS.dmg
+Ambil dari [release terbaru](https://github.com/nannndev/ctass/releases/latest):
 
-App-nya belum di-sign Apple, jadi macOS bakal nolak waktu pertama dibuka:
+| OS | File |
+| --- | --- |
+| macOS 11+ (Apple Silicon & Intel) | `Ctas-macOS.dmg` |
+| Windows 10/11 | `Ctas-Windows-setup.exe` |
+| Linux x64 | `Ctas-Linux.AppImage` atau `Ctas-Linux.deb` |
+
+**macOS.** App-nya belum di-sign Apple, jadi macOS bakal nolak waktu pertama dibuka:
 
 1. Drag Ctas ke **Applications**.
 2. Kalau muncul "Ctas is damaged" / "rusak", jalanin di Terminal:
@@ -49,6 +55,12 @@ App-nya belum di-sign Apple, jadi macOS bakal nolak waktu pertama dibuka:
 
 Ctas nggak muncul di Dock. Ikonnya ada di menu bar, dan overlay pecutnya langsung muncul sekali waktu app dibuka.
 
+**Windows.** Kalau muncul SmartScreen ("Windows protected your PC"), klik **More info → Run anyway**.
+Ikonnya ada di system tray.
+
+**Linux.** `chmod +x Ctas-Linux.AppImage && ./Ctas-Linux.AppImage`, atau install `.deb`-nya.
+Butuh X11: di Wayland pecutnya belum bisa ngikutin kursor. Fitur ketik omelan butuh `xdotool`.
+
 ## Develop
 
 Butuh Node 22+ dan Rust stable.
@@ -58,6 +70,7 @@ npm install
 npm run dev        # app desktop, hot reload
 npm run web        # landing page + demo di http://localhost:3000
 npm run build:mac  # .app + .dmg universal (Apple Silicon + Intel)
+npm run build      # build buat OS yang lagi dipake
 ```
 
 Struktur:
@@ -72,7 +85,7 @@ src/                 frontend (HTML/CSS/JS polos, tanpa bundler)
 web/                 landing page (Vercel)
 src-tauri/           shell desktop (Tauri 2)
   src/lib.rs         overlay, shortcut global, menu bar
-  src/nag.rs         ngetik omelan ke app lain (macOS, CGEvent)
+  src/nag.rs         ngetik omelan ke app lain (CGEvent / SendInput / xdotool)
 ```
 
 ### Rilis
@@ -99,7 +112,8 @@ Tambah entri di `src/js/variants.js`. Parameter yang paling ngaruh:
 
 ## Roadmap
 
-- [ ] Windows & Linux (shell-nya udah jalan, tinggal fitur ngetik omelan)
+- [x] Windows & Linux
+- [ ] Wayland
 - [ ] Varian lain: sapu lidi, sandal jepit, kabel charger
 - [ ] Rekam suara pecut asli sebagai opsi
 - [ ] Haptic trackpad pas CTARR
