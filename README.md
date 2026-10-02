@@ -19,7 +19,8 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
   Sapu lidi (srak!), Kabel charger (zzt!), Ikat pinggang (plak!), Cambuk api (bwosh!)
 - **Bisa dicustom** di jendela Ctas: panjang, kekakuan, berat, warna tali & gagang,
   campur suara & efek dari pecut lain, tulisan pas ctarr, gampang/susahnya bunyi, volume.
-  Ada preview buat nyobain langsung, dan pengaturannya disimpan.
+  Ada preview buat nyobain langsung, dan pengaturannya disimpan. Tulisan pas ctarr bisa dimatiin.
+- **Dua bahasa:** Indonesia & English (landing page, app, sampai omelannya).
 
 ## Pakai
 
@@ -32,7 +33,8 @@ Pas dibuka, muncul **jendela Ctas**: pilih pecut, custom, cobain di preview, ter
 | Mulai / udahan mecut | ⌘⇧X di Mac, Ctrl+Alt+X di Windows/Linux |
 | Ganti & custom pecut | Jendela Ctas (angka 1–9 juga bisa) |
 | Ctarr (mode **Ikut kursor**) | Ayun mouse terus balik arah mendadak |
-| Ctarr (mode **Klik = pecut**) | Klik di mana aja, pecut nyabet titik itu. Double klik = dua kali |
+| Ctarr (mode **Klik = pecut**) | Klik di mana aja, pecut melesat dari pojok, nyabet titik itu, terus balik. Double klik = dua kali |
+| Pindahin pecut (mode klik) | Tekan gagangnya, tahan, seret ke tempat lain |
 
 Overlay-nya tembus klik dan nggak ngambil fokus, jadi selama mecut lu tetap bisa klik dan
 ngetik kayak biasa. Pecutnya cuma nempel di kursor.

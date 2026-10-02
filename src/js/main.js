@@ -2,8 +2,10 @@ import { VARIANTS } from "./variants.js";
 import { Sound } from "./audio.js";
 import { createStage } from "./stage.js";
 import { normalize, effective } from "./settings.js";
+import { t, whipName } from "./i18n.js";
 
 const TAURI = window.__TAURI__;
+const IS_MAC = /Mac/i.test(navigator.userAgent);
 const OVERLAY = !!TAURI; // di app desktop: jendela transparan di atas layar
 document.body.classList.toggle("overlay", OVERLAY);
 
@@ -18,8 +20,13 @@ const stage = createStage({
   cursorDot: !OVERLAY,    // di overlay pakai kursor sistem
   size: OVERLAY ? 0.75 : 1,
   onFirstMove: () => { $("hint").style.opacity = "0"; },
+  onHomeChange: (h) => {
+    settings.home = h;
+    if (OVERLAY) TAURI.core.invoke("save_settings", { settings }).catch(console.error);
+    else try { localStorage.setItem("ctas.settings", JSON.stringify(settings)); } catch {}
+  },
   onScore: (s) => {
-    $("pillCount").textContent = stage.session.crack + " ctarr";
+    $("pillCount").textContent = stage.session.crack + " " + t("ctarr", settings.lang);
     $("sCrack").textContent = s.crack;
     $("sBest").textContent = s.best.toFixed(1);
   },
@@ -50,10 +57,17 @@ function applySettings(s) {
   settings = normalize(s);
   const v = effective(settings);
   stage.use(v, settings.variant);
+  stage.setShowWord(settings.showWord);
+  if (settings.home) stage.setHome(settings.home);
   if (stage.mode !== settings.mode) stage.setMode(settings.mode);
   sound.setVolume(settings.volume);
-  $("pillName").textContent = v.name;
-  $("pillMode").textContent = settings.mode === "click" ? "klik buat nyabet" : "sentak buat ctarr";
+  const L = settings.lang;
+  document.documentElement.lang = L;
+  $("pillName").textContent = whipName(settings.variant, v, L);
+  $("pillMode").textContent = t(settings.mode === "click" ? "modeClick" : "modeFollow", L);
+  $("pillKey").textContent = (IS_MAC ? "⌘⇧X " : "Ctrl+Alt+X ") + t("stop", L);
+  $("pillCount").textContent = stage.session.crack + " " + t("ctarr", L);
+  $("unlock").textContent = t("clickToSound", L);
 }
 function pick(k) {
   applySettings({ ...settings, variant: k });
@@ -78,8 +92,7 @@ addEventListener("keydown", (e) => {
 addEventListener("resize", () => stage.resize());
 
 // ---------- Jembatan ke app desktop ----------
-const IS_MAC = /Mac/i.test(navigator.userAgent);
-if (!IS_MAC) $("pillKey").textContent = "Ctrl+Alt+X buat udahan";
+
 let pillTimer = 0;
 function flashPill(ms = 2600) {
   $("pill").classList.remove("fade");
@@ -112,18 +125,20 @@ if (OVERLAY) {
   });
   TAURI.event.listen("ctas://activated", () => {
     stage.session.crack = stage.session.hit = 0;
-    $("pillCount").textContent = "0 ctarr";
+    $("pillCount").textContent = "0 " + t("ctarr", settings.lang);
     stage.rearm();
     flashPill();
     ensureSound();
   });
   TAURI.event.listen("ctas://cursor", (e) => stage.pointer(e.payload[0], e.payload[1]));
   TAURI.event.listen("ctas://settings", (e) => applySettings(e.payload));
+  // mode klik: tekan = nyabet (atau mulai geser kalau kena gagang), lepas = selesai geser
   TAURI.event.listen("ctas://click", (e) => {
     if (settings.mode !== "click") return;
     const [x, y, n] = e.payload;
-    sound.init(); stage.strike(x, y, n);
+    sound.init(); stage.pressAt(x, y, n);
   });
+  TAURI.event.listen("ctas://release", () => stage.releaseAt());
   TAURI.event.listen("ctas://request-dismiss", dismiss);
 }
 

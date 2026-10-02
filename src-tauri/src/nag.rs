@@ -6,8 +6,18 @@
 //! - Windows: SendInput
 //! - Linux: xdotool (X11)
 
-pub fn message(cracks: u32, hits: u32) -> String {
+pub fn message(cracks: u32, hits: u32, lang: &str) -> String {
     let n = cracks.max(hits);
+    if lang == "en" {
+        let face = if hits > 0 { format!(", {hits} of them in the face") } else { String::new() };
+        let times = if n == 1 { "time" } else { "times" };
+        let tail = match n {
+            0..=2 => "Focus, and do it properly.",
+            3..=9 => "Hurry up, no hallucinating, just do it.",
+            _ => "Whipped this many times and still slow? Do it now, no excuses.",
+        };
+        return format!("[Ctas] You just got whipped {n} {times}{face}. {tail}");
+    }
     let face = if hits > 0 { format!(", {hits} kali kena muka") } else { String::new() };
     let tail = match n {
         0..=2 => "Fokus ya, kerjain yang bener.",
@@ -142,8 +152,10 @@ mod tests {
 
     #[test]
     fn omelan_makin_galak() {
-        assert!(message(1, 0).contains("1 kali."));
-        assert!(message(5, 2).contains("2 kali kena muka"));
-        assert!(message(12, 0).contains("lelet"));
+        assert!(message(1, 0, "id").contains("1 kali."));
+        assert!(message(5, 2, "id").contains("2 kali kena muka"));
+        assert!(message(12, 0, "id").contains("lelet"));
+        assert!(message(1, 0, "en").contains("1 time."));
+        assert!(message(5, 2, "en").contains("2 of them in the face"));
     }
 }

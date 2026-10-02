@@ -4,13 +4,54 @@ import { Sound } from "./audio.js";
 import { createStage } from "./stage.js";
 import { drawSwatch } from "./swatch.js";
 import { RANGES, normalize, effective } from "./settings.js";
+import { whipName } from "./i18n.js";
 
 const TAURI = window.__TAURI__;
 const IS_MAC = /Mac/i.test(navigator.userAgent);
+const IS_LINUX = /Linux/i.test(navigator.userAgent) && !/Android/i.test(navigator.userAgent);
 const $ = (id) => document.getElementById(id);
 const KEYS = Object.keys(VARIANTS);
+const KEY = IS_MAC ? "⌘⇧X" : "Ctrl+Alt+X";
 const sound = new Sound();
 let settings = normalize({});
+
+const STR = {
+  id: {
+    tagline: "pecut buat AI", start: "Mulai mecut", whips: "Pecut", customize: "Atur", reset: "Balikin default",
+    length: "Panjang", stiffness: "Kekakuan", weight: "Berat", rope: "Tali", handle: "Gagang",
+    sound: "Suara", effect: "Efek", word: "Tulisan pas ctarr",
+    showWord: "Tampilkan tulisan pas ctarr", showWordSub: "Matiin kalau mau efeknya aja tanpa tulisan.",
+    general: "Umum",
+    modeFollow: "Ikut kursor", modeFollowSub: "Pecut nempel di kursor. Sentak mouse buat ctarr.",
+    modeClick: "Klik = pecut", modeClickSub: "Pecut nongkrong di pojok. Tiap klik, dia nyabet titik itu. Seret gagangnya buat mindahin.",
+    linuxNote: "Di Linux, mode klik baru jalan di preview ini, belum di overlay.",
+    easy: "Gampang bunyi", volume: "Volume",
+    nag: "Ketik omelan ke AI pas udahan", nagSub: "Omelan diketik ke jendela yang lagi aktif.", nagMac: " Di Mac, bakal minta izin Accessibility sekali.",
+    autosend: "Langsung kirim", autosendSub: "Sekalian tekan Enter abis ngetik omelan.",
+    stiff: "kaku", medium: "sedang", loose: "lentur", cracks: "ctarr",
+    hintFollow: "Coba ayun di sini, terus sentak.", hintClick: "Klik di sini buat nyabet. Seret gagangnya buat mindahin.",
+    foot: (tray) => `Jendela ini boleh ditutup, Ctas tetap jalan di ${tray}. Mulai / udahan kapan aja pakai <b>${KEY}</b>.`,
+    tray: IS_MAC ? "menu bar" : "system tray",
+  },
+  en: {
+    tagline: "a whip for your AI", start: "Start whipping", whips: "Whips", customize: "Customize", reset: "Reset to default",
+    length: "Length", stiffness: "Stiffness", weight: "Weight", rope: "Rope", handle: "Handle",
+    sound: "Sound", effect: "Effect", word: "Word on crack",
+    showWord: "Show the word on crack", showWordSub: "Turn off if you only want the effect, no text.",
+    general: "General",
+    modeFollow: "Follow cursor", modeFollowSub: "The whip sticks to your cursor. Flick the mouse to crack.",
+    modeClick: "Click = whip", modeClickSub: "The whip waits in a corner. Every click, it lashes that spot. Drag its handle to move it.",
+    linuxNote: "On Linux, click mode only works in this preview for now, not the overlay.",
+    easy: "Easy to crack", volume: "Volume",
+    nag: "Type a scolding into the AI when done", nagSub: "It's typed into whatever window is active.", nagMac: " On Mac, it asks for Accessibility permission once.",
+    autosend: "Send right away", autosendSub: "Also press Enter after typing it.",
+    stiff: "stiff", medium: "medium", loose: "loose", cracks: "cracks",
+    hintFollow: "Swing here, then flick.", hintClick: "Click here to whip. Drag its handle to move it.",
+    foot: (tray) => `You can close this window, Ctas keeps running in the ${tray}. Start / stop anytime with <b>${KEY}</b>.`,
+    tray: IS_MAC ? "menu bar" : "system tray",
+  },
+};
+const S = () => STR[settings.lang] || STR.id;
 
 // ---------- Simpan / muat ----------
 async function load() {
@@ -34,8 +75,10 @@ const stage = createStage({
   canvas: $("stage"),
   sound,
   onFirstMove: () => { $("hint").style.opacity = "0"; },
-  onScore: () => { $("count").textContent = ++count + " ctarr"; },
+  onScore: () => { count++; $("count").textContent = count + " " + S().cracks; },
   onMach: (mach, shown) => { $("bar").style.width = Math.min(100, (shown / 1.5) * 100) + "%"; },
+  // preview = layar mini: posisi pecut di sini kepake juga di overlay
+  onHomeChange: (h) => { settings.home = h; save(); },
 });
 $("stage").addEventListener("pointerdown", () => sound.init());
 addEventListener("resize", () => stage.resize());
@@ -43,19 +86,32 @@ addEventListener("resize", () => stage.resize());
 // ---------- Kontrol ----------
 const custom = () => (settings.custom[settings.variant] ||= {});
 const base = () => VARIANTS[settings.variant];
+const name = (k) => whipName(k, VARIANTS[k], settings.lang);
 
 function setRange(id, [min, max, step], value) {
   const el = $(id); el.min = min; el.max = max; el.step = step; el.value = value;
 }
 const pct = (x) => Math.round(x * 100) + "%";
 
+function texts() {
+  const T = S();
+  document.documentElement.lang = settings.lang;
+  document.querySelectorAll("[data-t]").forEach((el) => (el.textContent = T[el.dataset.t] ?? ""));
+  document.querySelectorAll(".lang").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.lang === settings.lang)));
+  document.querySelectorAll(".tile").forEach((t) => (t.querySelector(".nm").textContent = name(t.dataset.k)));
+  for (const id of ["sound", "fx"]) [...$(id).options].forEach((o) => (o.textContent = name(o.value)));
+  $("foot").innerHTML = T.foot(T.tray);
+  $("count").textContent = count + " " + T.cracks;
+}
+
 function render() {
-  const k = settings.variant, b = base(), c = custom();
+  const k = settings.variant, b = base(), c = custom(), T = S();
+  texts();
   document.querySelectorAll(".tile").forEach((t) => t.setAttribute("aria-checked", String(t.dataset.k === k)));
-  $("curName").textContent = b.name;
+  $("curName").textContent = name(k);
   setRange("len", RANGES.len, c.len ?? 1); $("oLen").textContent = pct(c.len ?? 1);
   const bend = c.bend ?? b.bend;
-  setRange("bend", RANGES.bend, bend); $("oBend").textContent = bend > 0.2 ? "kaku" : bend > 0.1 ? "sedang" : "lentur";
+  setRange("bend", RANGES.bend, bend); $("oBend").textContent = bend > 0.2 ? T.stiff : bend > 0.1 ? T.medium : T.loose;
   setRange("grav", RANGES.grav, c.grav ?? 1); $("oGrav").textContent = pct(c.grav ?? 1);
   $("rope").value = c.rope ?? b.rope;
   $("grip").value = c.grip ?? b.grip;
@@ -63,12 +119,14 @@ function render() {
   $("fx").value = c.fx ?? k;
   $("word").value = c.word ?? "";
   $("word").placeholder = VARIANTS[c.fx ?? k].word;
+  $("showWord").checked = settings.showWord;
   // gampang bunyi = kebalikan sensitivitas (batas Mach 1 lebih rendah)
   setRange("sensitivity", RANGES.sensitivity, 2 - settings.sensitivity);
   $("oSens").textContent = pct(2 - settings.sensitivity);
   setRange("volume", RANGES.volume, settings.volume); $("oVol").textContent = pct(settings.volume);
   document.querySelectorAll('input[name="mode"]').forEach((r) => (r.checked = r.value === settings.mode));
-  $("hint").textContent = settings.mode === "click" ? "Klik di sini buat nyabet. Double klik = dua kali." : "Coba ayun di sini, terus sentak.";
+  $("hint").textContent = settings.mode === "click" ? T.hintClick : T.hintFollow;
+  $("clickNote").hidden = !(IS_LINUX && TAURI && settings.mode === "click");
   $("nag").checked = settings.nag;
   $("autosend").checked = settings.autosend;
   apply();
@@ -76,6 +134,8 @@ function render() {
 
 function apply() {
   stage.use(effective(settings), settings.variant);
+  stage.setShowWord(settings.showWord);
+  if (settings.home) stage.setHome(settings.home);
   if (stage.mode !== settings.mode) stage.setMode(settings.mode);
   sound.setVolume(settings.volume);
 }
@@ -84,16 +144,15 @@ function changed() { render(); save(); }
 
 // pecut
 KEYS.forEach((k, i) => {
-  const v = VARIANTS[k];
   const t = document.createElement("button");
   t.type = "button"; t.className = "tile"; t.dataset.k = k; t.setAttribute("role", "radio");
-  t.innerHTML = `<canvas aria-hidden="true"></canvas><span>${v.name}</span><span class="num">${i + 1}</span>`;
+  t.innerHTML = `<canvas aria-hidden="true"></canvas><span class="nm"></span><span class="num">${i + 1}</span>`;
   t.onclick = () => { sound.init(); settings.variant = k; changed(); };
   $("tiles").appendChild(t);
-  requestAnimationFrame(() => drawSwatch(t.querySelector("canvas"), v));
+  requestAnimationFrame(() => drawSwatch(t.querySelector("canvas"), VARIANTS[k]));
 });
 for (const id of ["sound", "fx"]) {
-  KEYS.forEach((k) => { const o = document.createElement("option"); o.value = k; o.textContent = VARIANTS[k].name; $(id).appendChild(o); });
+  KEYS.forEach((k) => { const o = document.createElement("option"); o.value = k; $(id).appendChild(o); });
 }
 
 // custom pecut yang lagi dipilih
@@ -107,6 +166,7 @@ bindCustom("rope", String); bindCustom("grip", String);
 bindCustom("sound", String); bindCustom("fx", String);
 bindCustom("word", (s) => s.trim());
 $("resetOne").onclick = () => { delete settings.custom[settings.variant]; changed(); };
+$("showWord").addEventListener("change", (e) => { settings.showWord = e.target.checked; changed(); });
 
 // umum
 $("sensitivity").addEventListener("input", (e) => { settings.sensitivity = +(2 - e.target.value).toFixed(2); changed(); });
@@ -114,9 +174,9 @@ $("volume").addEventListener("input", (e) => { settings.volume = +e.target.value
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => {
   settings.mode = r.value; $("hint").style.opacity = "1"; changed();
 }));
-$("clickNote").hidden = !/Linux/i.test(navigator.userAgent) || !TAURI;
 $("nag").addEventListener("change", (e) => { settings.nag = e.target.checked; changed(); });
 $("autosend").addEventListener("change", (e) => { settings.autosend = e.target.checked; changed(); });
+document.querySelectorAll(".lang").forEach((b) => (b.onclick = () => { settings.lang = b.dataset.lang; changed(); }));
 
 // keyboard 1-9 buat ganti pecut
 addEventListener("keydown", (e) => {
@@ -126,9 +186,7 @@ addEventListener("keydown", (e) => {
 });
 
 // mulai
-const key = IS_MAC ? "⌘⇧X" : "Ctrl+Alt+X";
-$("key").textContent = key; $("key2").textContent = key;
-$("trayWord").textContent = IS_MAC ? "menu bar" : "system tray";
+$("key").textContent = KEY;
 document.querySelectorAll(".mac-only").forEach((el) => (el.hidden = !IS_MAC));
 $("start").onclick = () => {
   clearTimeout(saveTimer);
@@ -138,3 +196,4 @@ if (!TAURI) $("start").hidden = true;
 
 settings = await load();
 render();
+save(); // simpan sekali biar Rust juga tau bahasa default-nya

@@ -23,7 +23,13 @@ pub fn left_down() -> bool {
     false
 }
 
-/// Ngubah status tombol jadi event klik / double klik.
+/// Event tombol kiri: ditekan (1 = klik, 2 = klik kedua yang cepat & deket) atau dilepas.
+pub enum Press {
+    Down(u8),
+    Up,
+}
+
+/// Ngubah status tombol jadi event klik / double klik / lepas.
 pub struct Clicks {
     down: bool,
     last: Option<(std::time::Instant, f64, f64)>,
@@ -34,18 +40,19 @@ impl Clicks {
         Self { down: left_down(), last: None }
     }
 
-    /// Balikin `Some(1)` buat klik, `Some(2)` buat klik kedua yang cepat & deket (double).
-    pub fn poll(&mut self, x: f64, y: f64) -> Option<u8> {
+    pub fn poll(&mut self, x: f64, y: f64) -> Option<Press> {
         let now_down = left_down();
-        let pressed = now_down && !self.down;
-        self.down = now_down;
-        if !pressed {
+        let was = std::mem::replace(&mut self.down, now_down);
+        if was && !now_down {
+            return Some(Press::Up);
+        }
+        if !now_down || was {
             return None;
         }
         let now = std::time::Instant::now();
         let double = matches!(self.last, Some((t, lx, ly))
             if now.duration_since(t).as_millis() < 380 && (x - lx).hypot(y - ly) < 40.0);
         self.last = if double { None } else { Some((now, x, y)) };
-        Some(if double { 2 } else { 1 })
+        Some(Press::Down(if double { 2 } else { 1 }))
     }
 }

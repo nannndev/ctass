@@ -15,6 +15,7 @@ use std::time::Duration;
 
 use serde_json::{json, Value};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::Wry;
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, State, WindowEvent};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
@@ -27,6 +28,29 @@ struct Ctas {
     settings: Mutex<Value>,
     /// Thread pembaca posisi kursor lagi jalan.
     tracking: Arc<AtomicBool>,
+    /// Item menu tray, biar teksnya bisa ganti bahasa.
+    tray_items: Mutex<Vec<MenuItem<Wry>>>,
+}
+
+fn setting_lang(app: &AppHandle) -> String {
+    let lang = app.state::<Ctas>().settings.lock().unwrap().get("lang").and_then(Value::as_str).map(str::to_owned);
+    lang.filter(|l| l == "en" || l == "id").unwrap_or_else(|| "id".into())
+}
+
+fn tray_texts(lang: &str) -> [String; 3] {
+    let key = if cfg!(target_os = "macos") { "⌘⇧X" } else { "Ctrl+Alt+X" };
+    if lang == "en" {
+        ["Open Ctas (pick & tweak whips)".into(), format!("Start / stop whipping   {key}"), "Quit".into()]
+    } else {
+        ["Buka Ctas (pilih & atur pecut)".into(), format!("Mulai / udahan mecut   {key}"), "Keluar".into()]
+    }
+}
+
+fn update_tray(app: &AppHandle) {
+    let texts = tray_texts(&setting_lang(app));
+    for (item, text) in app.state::<Ctas>().tray_items.lock().unwrap().iter().zip(texts) {
+        let _ = item.set_text(text);
+    }
 }
 
 fn setting_bool(app: &AppHandle, key: &str) -> bool {
@@ -108,8 +132,10 @@ fn track_cursor(app: &AppHandle) {
                     let _ = w.emit("ctas://cursor", (x, y));
                 }
                 // mode klik: klik / double klik di mana aja = pecut nyabet ke situ
-                if let Some(n) = clicks.poll(x, y) {
-                    let _ = w.emit("ctas://click", (x, y, n));
+                match clicks.poll(x, y) {
+                    Some(mouse::Press::Down(n)) => { let _ = w.emit("ctas://click", (x, y, n)); }
+                    Some(mouse::Press::Up) => { let _ = w.emit("ctas://release", (x, y)); }
+                    None => {}
                 }
             }
             std::thread::sleep(Duration::from_millis(6));
@@ -131,7 +157,7 @@ fn dismiss(app: AppHandle, state: State<'_, Ctas>, cracks: u32, hits: u32) {
         return;
     }
     let autosend = setting_bool(&app, "autosend");
-    let text = nag::message(cracks, hits);
+    let text = nag::message(cracks, hits, &setting_lang(&app));
     std::thread::spawn(move || {
         std::thread::sleep(Duration::from_millis(120)); // kasih waktu overlay ilang dulu
         nag::send(&text, autosend);
@@ -166,6 +192,7 @@ fn save_settings(app: AppHandle, state: State<'_, Ctas>, settings: Value) {
         nag::permitted(true); // izin Accessibility (macOS) baru diminta di sini
     }
     let _ = app.emit("ctas://settings", settings);
+    update_tray(&app);
 }
 
 /// Tombol "Mulai mecut" di jendela Ctas: sembunyiin jendelanya dulu biar fokus balik
@@ -183,7 +210,7 @@ fn start(app: AppHandle) {
 
 pub fn run() {
     tauri::Builder::default()
-        .manage(Ctas { settings: Mutex::new(json!({})), tracking: Arc::new(AtomicBool::new(false)) })
+        .manage(Ctas { settings: Mutex::new(json!({})), tracking: Arc::new(AtomicBool::new(false)), tray_items: Mutex::new(Vec::new()) })
         .invoke_handler(tauri::generate_handler![dismiss, set_passthrough, get_settings, save_settings, start])
         .on_window_event(|window, event| {
             // nutup jendela Ctas = sembunyiin aja, app tetap jalan di menu bar / tray
@@ -220,10 +247,11 @@ pub fn run() {
             app.global_shortcut().register(shortcut)?;
 
             // ikon di menu bar / system tray
-            let key_hint = if cfg!(target_os = "macos") { "⌘⇧X" } else { "Ctrl+Alt+X" };
-            let open = MenuItem::with_id(app, "open", "Buka Ctas (pilih & atur pecut)", true, None::<&str>)?;
-            let start = MenuItem::with_id(app, "toggle", format!("Mulai / udahan mecut   {key_hint}"), true, None::<&str>)?;
-            let quit = MenuItem::with_id(app, "quit", "Keluar", true, None::<&str>)?;
+            let [t_open, t_start, t_quit] = tray_texts(&setting_lang(app.handle()));
+            let open = MenuItem::with_id(app, "open", t_open, true, None::<&str>)?;
+            let start = MenuItem::with_id(app, "toggle", t_start, true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", t_quit, true, None::<&str>)?;
+            *app.state::<Ctas>().tray_items.lock().unwrap() = vec![open.clone(), start.clone(), quit.clone()];
             let menu = Menu::with_items(app, &[&open, &start, &PredefinedMenuItem::separator(app)?, &quit])?;
             let mut tray = TrayIconBuilder::with_id("ctas")
                 .tooltip("Ctas")
