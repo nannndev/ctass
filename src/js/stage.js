@@ -104,6 +104,22 @@ export function createStage(o) {
   });
   cv.addEventListener("pointerup", () => releaseAt());
 
+  // Scroll = tali digulung ke gagang (scroll ke bawah) / diulur lagi (ke atas).
+  // Udah mentok? scroll-nya diterusin ke halaman. Lepas sebentar, talinya keulur sendiri.
+  const COIL_MAX = 0.72;
+  let coil = 0, coilT = 0, coilAt = -1e9, coilSpin = 0;
+  function wheel(e) {
+    const d = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+    const next = Math.min(COIL_MAX, Math.max(0, coilT + d * 0.0016));
+    if (next === coilT) return; // mentok: biarin halaman yang scroll
+    e.preventDefault();
+    coilT = next; coilAt = performance.now();
+  }
+  if (o.wheel ?? true) cv.addEventListener("wheel", wheel, { passive: false });
+
+  // diem kelamaan = pecutnya goyang pelan kayak ketiup angin
+  let still = 0, clock = 0;
+
   // Sabetan otomatis: dari posisi sekarang (biasanya rumah) melesat ke samping target,
   // narik dikit, nyentak ke arah target (ctarr dipaksa pas di target), terus balik pulang.
   function strike(x, y, n = 1) {
@@ -231,13 +247,25 @@ export function createStage(o) {
   function frame(now) {
     const dt = Math.min(0.033, (now - last) / 1000 || 0.016); last = now;
     if (auto) driveAuto(dt);
+    clock += dt;
+
+    // gulungan: dikejar halus. Selama lagi digulung/diulur nggak boleh ctarr.
+    if (now - coilAt > 1600) coilT = Math.max(0, coilT - dt * 0.35);
+    const dc = (coilT - coil) * Math.min(1, dt * 12);
+    coil += dc; coilSpin += dc * 40;
+    whip.k = 1 - coil;
+    if (Math.abs(coilT - coil) > 0.004) crackCool = Math.max(crackCool, 0.2);
 
     // arah gagang ikut arah ayunan tangan. Kalau diam, gagang tegak dan miring dikit
     // ke sisi terakhir lu ngayun (kiri atau kanan), jadi bisa nyabet ke dua arah.
     ptr.vx += ((ptr.x - ptr.px) / dt - ptr.vx) * 0.35;
     ptr.vy += ((ptr.y - ptr.py) / dt - ptr.vy) * 0.35;
     if (Math.abs(ptr.vx) > 250) side += (Math.sign(ptr.vx) - side) * 0.2;
-    const rx = 0.4 * side, ry = -Math.sqrt(1 - rx * rx);
+    const moving = Math.abs(ptr.vx) + Math.abs(ptr.vy) > 12 || auto || dragging;
+    still = moving ? 0 : still + dt;
+    const sway = reduced || !(o.idle ?? true) ? 0 : Math.min(1, Math.max(0, (still - 1.5) / 2));
+    whip.wind = sway * S * (1.1 * Math.sin(clock * 0.9) + 0.5 * Math.sin(clock * 2.3 + 1));
+    const rx = 0.4 * side + sway * (0.16 * Math.sin(clock * 1.4) + 0.06 * Math.sin(clock * 3.1)), ry = -Math.sqrt(1 - rx * rx);
     let tx = rx * 260 + ptr.vx * 0.6, ty = ry * 260 + ptr.vy * 0.6;
     const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
     const ox = dir.x, oy = dir.y;
@@ -286,6 +314,7 @@ export function createStage(o) {
     }
     if (showAI) drawAI(dt);
     drawHandle();
+    if (coil > 0.01) drawCoil();
     drawRope();
     if (mode === "click" && !auto) drawHomeRing();
     drawFx(dt);
@@ -325,6 +354,29 @@ export function createStage(o) {
         cx.stroke();
       });
     }
+  }
+
+  // gulungan tali di ujung gagang, makin banyak digulung makin tebel
+  function drawCoil() {
+    const hx = whip.x[0], hy = whip.y[0], w = Math.max(2, v.strands ? v.w0 + 1 : v.w0);
+    const a0 = Math.atan2(hy - ptr.y, hx - ptr.x), turns = 0.6 + coil * 5;
+    const r0 = Math.max(5, S * 0.012), step = w * 1.15;
+    const ca = Math.cos(a0), sa = Math.sin(a0);
+    cx.save(); cx.lineCap = "round";
+    for (const pass of [0, 1]) {
+      cx.beginPath();
+      for (let a = 0; a <= turns * Math.PI * 2; a += 0.2) {
+        const r = r0 + (step * a) / (Math.PI * 2), q = a + coilSpin;
+        // elips miring ngikut gagang, biar kesannya ngelilit
+        const ex = Math.cos(q) * r * 0.55, ey = Math.sin(q) * r;
+        const px = hx + ex * ca - ey * sa, py = hy + ex * sa + ey * ca;
+        a ? cx.lineTo(px, py) : cx.moveTo(px, py);
+      }
+      cx.strokeStyle = pass ? v.rope : "rgba(0,0,0,0.45)";
+      cx.lineWidth = pass ? w : w + 2;
+      cx.stroke();
+    }
+    cx.restore();
   }
 
   function drawRope() {
@@ -490,7 +542,7 @@ export function createStage(o) {
           break;
         case "text":
           p.y -= dt * 60;
-          cx.font = `400 ${Math.round((18 + S * 0.02) * p.size)}px ${FONT_DISPLAY}`;
+          cx.font = `700 ${Math.round((18 + S * 0.02) * p.size)}px ${FONT_DISPLAY}`;
           cx.textAlign = "center"; cx.globalAlpha = L; cx.fillStyle = p.color;
           cx.fillText(p.s, p.x, p.y);
           cx.globalAlpha = 1;

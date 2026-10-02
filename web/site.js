@@ -10,7 +10,7 @@ const $ = (id) => document.getElementById(id);
 const sound = new Sound();
 const demo = document.querySelector(".demo");
 const IS_MAC = /Mac/i.test(navigator.userAgent);
-const TRANSLATE = "nav a, a.btn, .eyebrow, h1, h2, h3, main p, main li:not(.steps li), summary, figcaption, dt, .demo-hint, .foot span";
+const TRANSLATE = "nav a, a.btn, .eyebrow, h1, h2, h3, main p, main li:not(.steps li), figcaption, dt, .demo-hint, .foot span";
 
 let lang = "id";
 try { lang = localStorage.getItem("ctas.lang") || detectLang(); } catch { lang = detectLang(); }

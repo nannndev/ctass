@@ -10,6 +10,8 @@ export class Whip {
     this.y = new Float32Array(this.n);
     this.px = new Float32Array(this.n);
     this.py = new Float32Array(this.n);
+    this.k = 1;    // faktor panjang tali (< 1 = sebagian lagi digulung)
+    this.wind = 0; // angin sepoi-sepoi pas diem (px/s², ke samping)
     const hx = base.x + dir.x * this.handleLen, hy = base.y + dir.y * this.handleLen;
     for (let i = 0; i < this.n; i++) {
       this.x[i] = this.px[i] = hx + i * this.seg * 0.15 * Math.sign(dir.x || 1);
@@ -20,13 +22,13 @@ export class Whip {
   // Satu sub-step. (bx,by) = pangkal gagang (tangan), (hx,hy) = ujung gagang.
   // Balikin kecepatan ujung pecut dalam px/s.
   step(dt, bx, by, hx, hy) {
-    const { x, y, px, py, n, seg, v } = this;
-    const g = v.grav * dt * dt, d = v.damp;
+    const { x, y, px, py, n, v } = this, seg = this.seg * this.k;
+    const g = v.grav * dt * dt, d = v.damp, w = this.wind * dt * dt;
     x[0] = px[0] = hx; y[0] = py[0] = hy;
     for (let i = 1; i < n; i++) {
       const vx = (x[i] - px[i]) * d, vy = (y[i] - py[i]) * d;
       px[i] = x[i]; py[i] = y[i];
-      x[i] += vx; y[i] += vy + g;
+      x[i] += vx + w * (i / n); y[i] += vy + g;
     }
     const bendRest = seg * 2, rootRest = this.handleLen + seg;
     for (let k = 0; k < 10; k++) {
