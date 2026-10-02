@@ -90,3 +90,9 @@ select, input[type="text"] { width: 100%; background: var(--bg-2); border: 1px s
 .toggle em { font-style: normal; }
 .foot { color: var(--muted); font-size: 12px; margin: 20px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
 .foot b { color: var(--fg); font-weight: 500; }
+
+.langs { display: flex; gap: 2px; margin-left: auto; border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
+.lang { background: none; border: 0; color: var(--muted); border-radius: 999px; padding: 4px 9px; font: 500 11px var(--mono); cursor: pointer; }
+.lang[aria-checked="true"] { background: var(--surface); color: var(--fg); }
+.top .btn { margin-left: 0; }
+.accent { color: var(--accent); }

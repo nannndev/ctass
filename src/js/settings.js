@@ -1,10 +1,14 @@
 // Pengaturan Ctas: pecut yang dipilih + custom per pecut.
 // Disimpan Rust di file (app desktop) atau localStorage (versi browser).
 import { VARIANTS } from "./variants.js";
+import { detectLang } from "./i18n.js";
 
 export const DEFAULTS = {
   variant: "jaranan",
   mode: "follow",  // "follow" = pecut nempel di kursor, "click" = klik buat nyabet titik itu
+  home: null,      // mode klik: posisi pecut nongkrong { x, y } dalam pecahan layar (null = pojok kanan)
+  showWord: true,  // tampilkan tulisan pas ctarr
+  lang: null,      // "id" / "en" (null = ikut bahasa sistem)
   sensitivity: 1, // pengali batas Mach 1. Kecil = lebih gampang bunyi
   volume: 1,
   nag: false,
@@ -25,6 +29,9 @@ export function normalize(raw) {
   const s = { ...DEFAULTS, ...(raw && typeof raw === "object" ? raw : {}) };
   if (!VARIANTS[s.variant]) s.variant = DEFAULTS.variant;
   if (s.mode !== "click") s.mode = "follow";
+  if (s.lang !== "id" && s.lang !== "en") s.lang = detectLang();
+  if (!s.home || !isFinite(s.home.x) || !isFinite(s.home.y)) s.home = null;
+  s.showWord = s.showWord !== false;
   if (!s.custom || typeof s.custom !== "object") s.custom = {};
   return s;
 }

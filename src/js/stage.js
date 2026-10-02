@@ -51,68 +51,94 @@ export function createStage(o) {
     ai.w = Math.max(72, S * (o.aiScale ?? 0.17)); ai.h = ai.w * 0.86;
     ai.x = W > 700 ? W * 0.8 : W * 0.74; ai.y = H * 0.48;
     if (!ptr.seen) { ptr.x = ptr.px = W * 0.3; ptr.y = ptr.py = H * 0.62; }
+    if (mode === "click" && !auto && !dragging) { goHome(); return; }
     build();
   }
   const showAI = o.showAI ?? false;
   function build() { whip = new Whip(v, S * (o.size ?? 1), ptr, dir); }
 
-  // mode "follow" = pecut nempel di kursor. Mode "click" = pecut sembunyi, tiap klik
-  // (atau double klik) pecut muncul dan otomatis nyabet titik yang diklik.
-  let mode = "follow", auto = null, vis = 1, hideIn = 0;
+  function pick(k) { if (!VARIANTS[k]) return; key = k; v = VARIANTS[k]; build(); warm(); }
+  // pakai pecut yang udah dicustom (lihat settings.js)
+  function use(variant, k = key) { key = k; v = variant; build(); warm(); }
+  function warm() { o.sound.pending = v.sound; o.sound.prepare?.(v.sound); }
+
+  // mode "follow" = pecut nempel di kursor.
+  // mode "click"  = pecut nongkrong di "rumah"-nya (default pojok kanan, bisa digeser:
+  //   tekan gagangnya terus seret). Tiap klik di tempat lain, pecut melesat dari rumah,
+  //   nyabet titik yang diklik, terus balik lagi. Double klik = dua sabetan.
+  let mode = "follow", auto = null, dragging = false;
+  let home = { x: o.home?.x ?? 0.88, y: o.home?.y ?? 0.62 };
+  let showWord = o.showWord ?? true;
+  const homePt = () => [Math.min(W - 24, Math.max(24, home.x * W)), Math.min(H - 24, Math.max(24, home.y * H))];
   const local = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  function goHome() {
+    const [hx, hy] = homePt();
+    ptr.x = ptr.px = hx; ptr.y = ptr.py = hy; ptr.vx = ptr.vy = 0; ptr.seen = true;
+    dir.x = 0.4 * side; dir.y = -0.92; build();
+  }
+  // tekan di deket gagang = mulai geser rumah; tekan di tempat lain = nyabet
+  function pressAt(x, y, n = 1) {
+    if (mode !== "click") return;
+    o.onFirstMove?.(); // sembunyiin petunjuk
+    if (!auto && Math.hypot(x - ptr.x, y - ptr.y) < 34) { dragging = true; return; }
+    strike(x, y, n);
+  }
+  function dragTo(x, y) { if (dragging) { ptr.x = x; ptr.y = y; } }
+  function releaseAt() {
+    if (!dragging) return;
+    dragging = false;
+    home = { x: ptr.x / W, y: ptr.y / H };
+    o.onHomeChange?.(home);
+  }
   function move(e) {
-    if (mode === "click") return;
+    if (mode === "click") { dragTo(...local(e)); return; }
     [ptr.x, ptr.y] = local(e);
     if (!ptr.seen) { ptr.seen = true; o.onFirstMove?.(); }
   }
   cv.addEventListener("pointermove", move);
   cv.addEventListener("pointerdown", (e) => {
     o.sound.init();
-    if (mode === "click") { const [x, y] = local(e); strike(x, y, e.detail >= 2 ? 2 : 1); return; }
-    move(e); cv.setPointerCapture?.(e.pointerId);
+    cv.setPointerCapture?.(e.pointerId);
+    if (mode === "click") { const [x, y] = local(e); pressAt(x, y, e.detail >= 2 ? 2 : 1); return; }
+    move(e);
   });
+  cv.addEventListener("pointerup", () => releaseAt());
 
-  // Rencana sabetan otomatis: gagang berdiri di samping target (ke arah tengah layar),
-  // narik ke belakang, terus nyentak ke arah target. Ctarr-nya dipaksa pas di target.
+  // Sabetan otomatis: dari posisi sekarang (biasanya rumah) melesat ke samping target,
+  // narik dikit, nyentak ke arah target (ctarr dipaksa pas di target), terus balik pulang.
   function strike(x, y, n = 1) {
     if (!ptr.seen) { ptr.seen = true; o.onFirstMove?.(); }
-    // lagi nyabet dan belum kena: klik berikutnya (double klik) nunggu giliran
-    if (auto && !auto.fired) { auto.next = { x, y, n }; return; }
+    if (auto && !auto.fired) { auto.next = { x, y, n }; return; } // double klik: tunggu giliran
     const L = v.len * S * (o.size ?? 1) + whip.handleLen;
     const s = x < W * 0.5 ? 1 : -1;
-    const clampX = (q) => Math.min(W - 20, Math.max(20, q)), clampY = (q) => Math.min(H - 20, Math.max(20, q));
-    const hx = clampX(x + s * 0.5 * L), hy = clampY(y + 0.4 * L);
+    const cl = (q, m) => Math.min(m - 20, Math.max(20, q));
+    const hx = cl(x + s * 0.5 * L, W), hy = cl(y + 0.4 * L, H);
     let dx = x - hx, dy = y - hy; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
-    const plan = { t: 0, x, y, n, fired: false,
-      from: [ptr.x, ptr.y], wind: [hx - dx * 0.22 * L - dy * 0.08 * L * s, hy - dy * 0.22 * L + dx * 0.08 * L * s], end: [hx + dx * 0.3 * L, hy + dy * 0.3 * L] };
-    if (vis < 0.1 || !auto) {
-      // pecut belum kelihatan: munculin langsung di posisi gagang
-      ptr.x = ptr.px = hx; ptr.y = ptr.py = hy; ptr.vx = ptr.vy = 0;
-      dir.x = s * 0.4; dir.y = -0.92; side = s;
-      build(); plan.from = [hx, hy];
-    }
-    auto = plan; hideIn = 0;
+    auto = { t: 0, x, y, n, fired: false, from: [ptr.x, ptr.y],
+      wind: [hx - dx * 0.22 * L - dy * 0.08 * L * s, hy - dy * 0.22 * L + dx * 0.08 * L * s],
+      end: [hx + dx * 0.3 * L, hy + dy * 0.3 * L] };
+    // jarak jauh = melesat sedikit lebih lama
+    const far = Math.hypot(auto.wind[0] - ptr.x, auto.wind[1] - ptr.y);
+    auto.travel = Math.min(0.2, 0.08 + far / 6000);
   }
   function driveAuto(dt) {
     const a = auto; a.t += dt;
+    const T = a.travel, SNAP = 0.1, HOLD = 0.22, BACK = 0.36;
     const lerp = (p, q, f) => [p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f];
+    const ease = (f) => (f < 0.5 ? 2 * f * f : 1 - 2 * (1 - f) * (1 - f));
     let pos;
-    if (a.t < 0.14) { const f = a.t / 0.14; pos = lerp(a.from, a.wind, 1 - (1 - f) * (1 - f)); }
-    else if (a.t < 0.24) { const f = (a.t - 0.14) / 0.1; pos = lerp(a.wind, a.end, f * f); }
-    else pos = a.end;
+    if (a.t < T) pos = lerp(a.from, a.wind, ease(a.t / T));
+    else if (a.t < T + SNAP) { const f = (a.t - T) / SNAP; pos = lerp(a.wind, a.end, f * f); }
+    else if (a.t < T + SNAP + HOLD) pos = a.end;
+    else pos = lerp(a.end, homePt(), ease(Math.min(1, (a.t - T - SNAP - HOLD) / BACK)));
     [ptr.x, ptr.y] = pos;
-    if (!a.fired && a.t >= 0.22) {
+    if (!a.fired && a.t >= T + SNAP * 0.8) {
       a.fired = true; crackCool = 0.3;
       onCrack(a.n >= 2 ? 1.7 : 1.3, { x: a.x, y: a.y });
     }
-    if (a.next && a.fired && a.t > 0.3) { const q = a.next; a.next = null; auto = { ...a, fired: true }; strike(q.x, q.y, q.n); return; }
-    if (a.t > 0.85) { auto = null; hideIn = 0.5; }
+    if (a.next && a.fired && a.t > T + SNAP + 0.06) { const q = a.next; auto = null; strike(q.x, q.y, q.n); return; }
+    if (a.t > T + SNAP + HOLD + BACK) auto = null;
   }
-
-  function pick(k) { if (!VARIANTS[k]) return; key = k; v = VARIANTS[k]; build(); warm(); }
-  // pakai pecut yang udah dicustom (lihat settings.js)
-  function use(variant, k = key) { key = k; v = variant; build(); warm(); }
-  function warm() { o.sound.pending = v.sound; o.sound.prepare?.(v.sound); }
 
   function onCrack(mach, at) {
     const t = at || whip.tip();
@@ -120,7 +146,7 @@ export function createStage(o) {
     o.sound.crack(mach - 1, v.sound, (t.x / W) * 2 - 1);
     shake = reduced ? 0 : (6 + Math.min(10, (mach - 1) * 8)) * (v.shake ?? 1);
     const big = mach > 1.4;
-    fx.push({ k: "text", x: t.x, y: t.y - 12, life: 1, rate: 1.4, s: big && v.word.endsWith("!") ? v.word + "!" : v.word, color: v.color, size: v.fx === "star" ? 0.75 : v.fx === "dust" ? 1.25 : 1 });
+    if (showWord) fx.push({ k: "text", x: t.x, y: t.y - 12, life: 1, rate: 1.4, s: big && v.word.endsWith("!") ? v.word + "!" : v.word, color: v.color, size: v.fx === "star" ? 0.75 : v.fx === "dust" ? 1.25 : 1 });
     if (reduced) { fx.push({ k: "ring", x: t.x, y: t.y, r: 4, speed: 400, width: 1.5, color: C.ring, life: 1, rate: 2.2 }); return; }
     burst(v.fx, t, mach);
   }
@@ -205,11 +231,6 @@ export function createStage(o) {
   function frame(now) {
     const dt = Math.min(0.033, (now - last) / 1000 || 0.016); last = now;
     if (auto) driveAuto(dt);
-    if (mode === "click") {
-      if (!auto && hideIn > 0) hideIn -= dt;
-      const want = auto || hideIn > 0 ? 1 : 0;
-      vis += (want - vis) * Math.min(1, dt * (want ? 18 : 6));
-    } else vis = 1;
 
     // arah gagang ikut arah ayunan tangan. Kalau diam, gagang tegak dan miring dikit
     // ke sisi terakhir lu ngayun (kiri atau kanan), jadi bisa nyabet ke dua arah.
@@ -264,18 +285,22 @@ export function createStage(o) {
       shake *= 0.82; if (shake < 0.3) shake = 0;
     }
     if (showAI) drawAI(dt);
-    if (vis > 0.02) {
-      cx.globalAlpha = vis;
-      drawHandle();
-      drawRope();
-      cx.globalAlpha = 1;
-    }
+    drawHandle();
+    drawRope();
+    if (mode === "click" && !auto) drawHomeRing();
     drawFx(dt);
     cx.restore();
     if ((o.cursorDot ?? true) && mode === "follow") {
       cx.fillStyle = "rgba(243,231,211,0.9)";
       cx.beginPath(); cx.arc(ptr.x, ptr.y, 4, 0, Math.PI * 2); cx.fill();
     }
+  }
+
+  // lingkaran tipis di gagang: tanda pecut bisa digeser
+  function drawHomeRing() {
+    const pulse = dragging ? 1 : 0.35 + Math.sin(performance.now() / 600) * 0.15;
+    cx.strokeStyle = `rgba(${C.ring},${pulse})`; cx.lineWidth = 1; cx.setLineDash([3, 4]);
+    cx.beginPath(); cx.arc(ptr.x, ptr.y, 16, 0, Math.PI * 2); cx.stroke(); cx.setLineDash([]);
   }
 
   function drawHandle() {
@@ -521,11 +546,13 @@ export function createStage(o) {
     reset() { score.crack = score.hit = score.best = 0; o.onScore?.(score); },
     rearm() { ptr.seen = false; resize(); },
     // posisi kursor dari luar (overlay tembus klik nggak dapet event mouse)
-    setMode(m) { mode = m === "click" ? "click" : "follow"; auto = null; vis = mode === "click" ? 0 : 1; if (mode === "follow") build(); },
-    strike,
+    setMode(m) { mode = m === "click" ? "click" : "follow"; auto = null; dragging = false; if (mode === "click") goHome(); else build(); },
+    setHome(h) { if (h && isFinite(h.x) && isFinite(h.y)) { home = { x: h.x, y: h.y }; if (mode === "click" && !auto && !dragging) goHome(); } },
+    setShowWord(b) { showWord = !!b; },
+    strike, pressAt, releaseAt,
     get mode() { return mode; },
     pointer(x, y) {
-      if (mode === "click") return;
+      if (mode === "click") { dragTo(x, y); return; }
       ptr.x = x; ptr.y = y;
       if (!ptr.seen) { ptr.seen = true; ptr.px = x; ptr.py = y; build(); o.onFirstMove?.(); }
     },

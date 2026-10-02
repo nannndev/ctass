@@ -51,7 +51,9 @@ main > section { width: min(var(--wrap), calc(100% - 32px)); margin-inline: auto
 .nav nav { display: flex; gap: 24px; margin-left: auto; }
 .nav nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
 .nav nav a:hover { color: var(--fg); }
-@media (max-width: 620px) { .nav nav { display: none; } .nav .btn { margin-left: auto; } }
+.lang { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 6px 10px; font: 500 12px var(--mono); cursor: pointer; }
+.lang:hover { color: var(--fg); border-color: var(--muted); }
+@media (max-width: 620px) { .nav nav { display: none; } .nav .lang { margin-left: auto; } }
 
 /* ---------- Tombol ---------- */
 .btn {
