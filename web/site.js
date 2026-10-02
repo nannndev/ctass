@@ -76,6 +76,16 @@ $("sound").onclick = () => {
   $("sound").textContent = "Suara " + (sound.on ? "on" : "off");
   $("sound").setAttribute("aria-pressed", String(sound.on));
 };
+// mode klik: pecut ngumpet, klik = nyabet titik itu
+$("modeBtn").onclick = () => {
+  sound.init();
+  const click = stage.mode !== "click";
+  stage.setMode(click ? "click" : "follow");
+  $("modeBtn").textContent = "Mode: " + (click ? "klik = pecut" : "ikut kursor");
+  $("modeBtn").setAttribute("aria-pressed", String(click));
+  $("hint").style.opacity = "1";
+  $("hint").innerHTML = click ? "<strong>Klik di mana aja.</strong>Pecutnya nyabet titik itu. Double klik = dua kali." : "<strong>Klik, terus ayun dan sentak.</strong>Ayun pelan nggak bunyi. Harus disentak.";
+};
 addEventListener("keydown", (e) => {
   const keys = Object.keys(VARIANTS), n = Number(e.key);
   if (n >= 1 && n <= keys.length && !e.metaKey && !e.ctrlKey) pick(keys[n - 1]);

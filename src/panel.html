@@ -42,6 +42,11 @@
 
     <section>
       <h2>Umum</h2>
+      <div class="modes" role="radiogroup" aria-label="Cara mecut">
+        <label class="mode"><input type="radio" name="mode" value="follow"><span><b>Ikut kursor</b>Pecut nempel di kursor. Sentak mouse buat ctarr.</span></label>
+        <label class="mode"><input type="radio" name="mode" value="click"><span><b>Klik = pecut</b>Pecut ngumpet. Tiap klik, pecut nyabet titik yang diklik. Double klik = dua kali.</span></label>
+      </div>
+      <p class="note" id="clickNote" hidden>Di Linux, mode klik baru jalan di preview ini, belum di overlay.</p>
       <div class="grid">
         <label class="field"><span>Gampang bunyi <output id="oSens"></output></span><input type="range" id="sensitivity"></label>
         <label class="field"><span>Volume <output id="oVol"></output></span><input type="range" id="volume"></label>

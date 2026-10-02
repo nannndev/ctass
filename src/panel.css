@@ -75,6 +75,13 @@ select, input[type="text"] { width: 100%; background: var(--bg-2); border: 1px s
 .color { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; cursor: pointer; }
 .color input { width: 30px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; cursor: pointer; }
 
+.modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+.mode { display: flex; gap: 8px; align-items: flex-start; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-2); cursor: pointer; min-width: 0; }
+.mode:has(input:checked) { border-color: var(--accent); background: var(--surface); }
+.mode input { accent-color: var(--accent); margin-top: 3px; flex: none; }
+.mode span { color: var(--muted); font-size: 12px; }
+.mode b { display: block; color: var(--fg); font-size: 14px; font-weight: 500; }
+.note { color: var(--muted); font-size: 12px; margin: -6px 0 12px; }
 .toggle { display: flex; gap: 10px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--line); margin-top: 14px; cursor: pointer; }
 .toggle + .toggle { margin-top: 0; }
 .toggle input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; flex: none; }

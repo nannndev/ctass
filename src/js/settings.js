@@ -4,6 +4,7 @@ import { VARIANTS } from "./variants.js";
 
 export const DEFAULTS = {
   variant: "jaranan",
+  mode: "follow",  // "follow" = pecut nempel di kursor, "click" = klik buat nyabet titik itu
   sensitivity: 1, // pengali batas Mach 1. Kecil = lebih gampang bunyi
   volume: 1,
   nag: false,
@@ -23,6 +24,7 @@ export const RANGES = {
 export function normalize(raw) {
   const s = { ...DEFAULTS, ...(raw && typeof raw === "object" ? raw : {}) };
   if (!VARIANTS[s.variant]) s.variant = DEFAULTS.variant;
+  if (s.mode !== "click") s.mode = "follow";
   if (!s.custom || typeof s.custom !== "object") s.custom = {};
   return s;
 }

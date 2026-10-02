@@ -19,6 +19,7 @@ use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, State, WindowEvent};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
+mod mouse;
 mod nag;
 
 struct Ctas {
@@ -97,6 +98,7 @@ fn track_cursor(app: &AppHandle) {
             windows_sys::Win32::Media::timeBeginPeriod(1);
         }
         let mut last = (f64::NAN, f64::NAN);
+        let mut clicks = mouse::Clicks::new();
         while tracking.load(Ordering::SeqCst) {
             if let (Ok(p), Ok(origin), Ok(scale)) = (app.cursor_position(), w.outer_position(), w.scale_factor()) {
                 let x = (p.x - origin.x as f64) / scale;
@@ -104,6 +106,10 @@ fn track_cursor(app: &AppHandle) {
                 if (x, y) != last {
                     last = (x, y);
                     let _ = w.emit("ctas://cursor", (x, y));
+                }
+                // mode klik: klik / double klik di mana aja = pecut nyabet ke situ
+                if let Some(n) = clicks.poll(x, y) {
+                    let _ = w.emit("ctas://click", (x, y, n));
                 }
             }
             std::thread::sleep(Duration::from_millis(6));

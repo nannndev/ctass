@@ -41,7 +41,7 @@
       <canvas id="stage" aria-label="Arena pecut. Gerakin mouse atau jari buat ngayun."></canvas>
       <div class="demo-top">
         <div class="chips" id="variants" role="group" aria-label="Pilih pecut"></div>
-        <button class="chip" id="sound" aria-pressed="true">Suara on</button>
+        <div class="chips"><button class="chip" id="modeBtn" aria-pressed="false" title="Ganti cara mecut">Mode: ikut kursor</button><button class="chip" id="sound" aria-pressed="true">Suara on</button></div>
       </div>
       <div class="demo-hint" id="hint">
         <strong>Klik, terus ayun dan sentak.</strong>
@@ -85,8 +85,8 @@
           <p>Pecutnya nempel di kursor. Layar tetap bisa diklik kayak biasa. Di Windows/Linux pakai <strong>Ctrl+Alt+X</strong>.</p>
         </li>
         <li>
-          <div class="keys"><kbd>sentak</kbd></div>
-          <p>Ayun mouse terus balik arah mendadak. Ctarr.</p>
+          <div class="keys"><kbd>sentak</kbd><kbd>klik</kbd></div>
+          <p>Ayun mouse terus balik arah mendadak. Ctarr. Atau pakai mode klik: tiap klik, pecut nyabet titik itu.</p>
         </li>
         <li>
           <div class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>X</kbd></div>
