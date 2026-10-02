@@ -39,7 +39,16 @@ ke app lain.
 
 Download `.dmg` terbaru: https://github.com/nannndev/ctass/releases/latest/download/Ctas-macOS.dmg
 
-App-nya belum di-sign, jadi buka pertama kali pakai klik kanan → **Open**.
+App-nya belum di-sign Apple, jadi macOS bakal nolak waktu pertama dibuka:
+
+1. Drag Ctas ke **Applications**.
+2. Kalau muncul "Ctas is damaged" / "rusak", jalanin di Terminal:
+   ```sh
+   xattr -cr /Applications/Ctas.app
+   ```
+3. Kalau muncul "can't be opened", buka **System Settings → Privacy & Security** → **Open Anyway**.
+
+Ctas nggak muncul di Dock. Ikonnya ada di menu bar, dan overlay pecutnya langsung muncul sekali waktu app dibuka.
 
 ## Develop
 
