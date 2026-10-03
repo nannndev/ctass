@@ -109,8 +109,9 @@ export function createWhip3D() {
     let halo = null;
     if (glow) {
       const op = kind === "plasma" ? 0.28 : kind === "void" ? 0.14 : kind === "rubber" ? 0.1 : 0.2;
-      // cuma sisi belakang yang digambar: inti tali tetap keliatan, pendarnya jadi kayak aura di pinggir
-      const m = keep(new T.MeshBasicMaterial({ color: glow, transparent: true, opacity: op * 1.6, blending: T.AdditiveBlending, depthWrite: false, side: T.BackSide }));
+      // cuma sisi dalam tabung yang digambar (urutan segitiga Tube ngadep ke dalam), jadi yang keliatan
+      // cuma bagian belakang pendar: inti tali tetap keliatan, pendarnya jadi aura di pinggir
+      const m = keep(new T.MeshBasicMaterial({ color: glow, transparent: true, opacity: op * 1.6, blending: T.AdditiveBlending, depthWrite: false, side: T.FrontSide }));
       halo = new Tube(group, m, 8, 1, 1);
       dispose.push(halo);
     }
