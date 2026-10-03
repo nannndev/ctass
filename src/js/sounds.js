@@ -16,6 +16,8 @@ const SAMPLES = {
   "sample:crack": { url: at("whip-crack.mp3") },
   "sample:snap": { url: at("whip-snap.mp3") },
   "sample:heavy": { url: at("whip-heavy.mp3") },
+  "sample:swingloop": { url: at("swing-loop.wav") }, // suara ayunan (loop cambuk diputer)
+  "sample:swish": { url: at("swing-swish.wav") },    // 10 wush satuan, masing-masing 0,4 detik
 };
 const BUILTIN = { ...PRESETS, ...SAMPLES };
 export const isPreset = (id) => typeof id === "string" && (id.startsWith("preset:") || id.startsWith("sample:"));
@@ -75,6 +77,9 @@ export async function deleteSound(id) {
     else await idb("readwrite", (s) => s.delete(id));
   } catch {}
 }
+
+// muat rekaman buat suara ayunan
+export const loadSwing = (sound) => Promise.all(["sample:swingloop", "sample:swish"].map((id) => ensureSound(sound, { file: { id } })));
 
 // pastiin file suara yang kepake pecut ini udah dimuat ke Sound.
 // Balikin false kalau file-nya udah nggak ada (bunyinya balik ke ctarr bawaan).

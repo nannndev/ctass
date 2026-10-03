@@ -13,6 +13,8 @@ export const DEFAULTS = {
   sensitivity: 1, // pengali batas Mach 1. Kecil = lebih gampang bunyi
   volume: 1,
   theme: "classic", // "classic" (gelap elegan) / "future" (neon futuristik)
+  swing: false,    // suara wush pas tali diayun / diputer
+  swingVol: 0.7,
   custom: {},     // { [key pecut]: { len, bend, grav, rope, grip, sound, fx, word, echo, room, pitch, file } }
                   // sound = key pecut lain, atau "file" = suara sendiri (file: { id, name, start, end, gain })
 };
@@ -28,6 +30,7 @@ export const RANGES = {
   room: [0, 0.9, 0.02],    // banyaknya reverb ruangan
   pitch: [0.5, 1.8, 0.05], // pengali nada
   fgain: [0, 2.5, 0.05],   // volume suara sendiri
+  swingVol: [0, 1.5, 0.05], // volume suara ayunan
 };
 
 export function normalize(raw) {
@@ -39,6 +42,8 @@ export function normalize(raw) {
   s.showWord = s.showWord !== false;
   s.view = s.view === "3d" ? "3d" : "2d";
   s.theme = s.theme === "future" ? "future" : "classic";
+  s.swing = !!s.swing;
+  s.swingVol = isFinite(s.swingVol) ? Math.min(1.5, Math.max(0, +s.swingVol)) : 0.7;
   delete s.nag; delete s.autosend; // fitur omelan udah dihapus
   if (!s.custom || typeof s.custom !== "object") s.custom = {};
   // suara bawaan sempet pakai id lain (v0.3.2), pindahin ke id baru

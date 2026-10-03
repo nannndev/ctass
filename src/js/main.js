@@ -3,7 +3,7 @@ import { Sound } from "./audio.js";
 import { createStage } from "./stage.js";
 import { normalize, effective } from "./settings.js";
 import { t, whipName } from "./i18n.js";
-import { ensureSound as loadCustomSound } from "./sounds.js";
+import { ensureSound as loadCustomSound, loadSwing } from "./sounds.js";
 
 const TAURI = window.__TAURI__;
 const IS_MAC = /Mac/i.test(navigator.userAgent);
@@ -66,6 +66,8 @@ function applySettings(s) {
   document.documentElement.dataset.theme = settings.theme;
   loadCustomSound(sound, v.sound);
   sound.setVolume(settings.volume);
+  sound.setSwing(settings.swing, settings.swingVol);
+  if (settings.swing) loadSwing(sound);
   const L = settings.lang;
   document.documentElement.lang = L;
   $("pillName").textContent = whipName(settings.variant, v, L);
@@ -106,6 +108,7 @@ function flashPill(ms = 2600) {
 function dismiss() {
   if (!OVERLAY) return;
   const { crack, hit } = stage.session;
+  sound.swingStop(true);
   TAURI.core.invoke("dismiss").catch(console.error);
   stage.session.crack = stage.session.hit = 0;
 }
@@ -129,6 +132,7 @@ if (OVERLAY) {
     });
   });
   TAURI.event.listen("ctas://activated", () => {
+    sound.swingMuted = false;
     stage.session.crack = stage.session.hit = 0;
     $("pillCount").textContent = "0 " + t("ctarr", settings.lang);
     stage.rearm();
@@ -161,4 +165,4 @@ if (OVERLAY) {
   applySettings(saved);
 }
 pick(settings.variant);
-window.__ctas = { stage, get score() { return stage.score; } };
+window.__ctas = { stage, sound, get score() { return stage.score; } };

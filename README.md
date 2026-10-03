@@ -16,6 +16,8 @@ tekan **⌘⇧X**, pecut sepuasnya, terus tekan **Esc**. Lumayan buat ngelampias
   pakai rekaman cambuk beneran (nadanya digeser dikit tiap ctarr biar nggak monoton), plus lapisan khasnya
   (desir rumbai, denting, api). Pecut lain disintesis langsung pakai Web Audio. Ayun pelan nggak bunyi,
   harus disentak.
+- **Suara ayunan (bisa dimatiin):** bunyi wush yang ngikutin tali. Diputer makin kenceng, putaran wush-nya
+  makin cepet, keras, dan terang; ayunan mendadak dapet wush tambahan. Diem = sunyi. Nyalain di Umum → Rasa.
 - **17 pecut, beda suara & efek:** Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti,
   Sapu lidi (srak!), Kabel charger (zzt!), Ikat pinggang (plak!), Cambuk api (bwosh!), Cambuk plasma (vzwap!),
   plus 7 futuristik: Hologram (bzzrt!), Logam cair (shhing!), Rantai energi (klangg!), Tesla (krzzak!),
@@ -152,4 +154,6 @@ Kunci publiknya ada di `src-tauri/tauri.conf.json` → `plugins.updater.pubkey`.
 ## Kredit suara
 
 Rekaman cambuk (`src/sounds/whip-*.mp3`) dari [Universfield](https://pixabay.com/users/universfield-28281460/)
-di Pixabay, dipakai sesuai [Pixabay Content License](https://pixabay.com/service/license-summary/).
+di Pixabay. Suara ayunan (`src/sounds/swing-*.wav`) dipotong & dirapihin dari rekaman freesound_community
+di Pixabay (whoop, whoosh for whip zoom, wooshes). Semua dipakai sesuai
+[Pixabay Content License](https://pixabay.com/service/license-summary/).

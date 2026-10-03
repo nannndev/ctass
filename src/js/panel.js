@@ -5,7 +5,7 @@ import { createStage } from "./stage.js";
 import { drawSwatch } from "./swatch.js";
 import { RANGES, normalize, effective } from "./settings.js";
 import { whipName } from "./i18n.js";
-import { saveSound, deleteSound, ensureSound, PRESETS, isPreset } from "./sounds.js";
+import { saveSound, deleteSound, ensureSound, loadSwing, PRESETS, isPreset } from "./sounds.js";
 
 const TAURI = window.__TAURI__;
 const IS_MAC = /Mac/i.test(navigator.userAgent);
@@ -34,6 +34,7 @@ const STR = {
     tooBig: "File kegedean (maks 8 MB). Potong dulu ya.", badFile: "File ini nggak bisa dibaca. Coba mp3 / wav / ogg / m4a.",
     missingFile: "File suaranya udah nggak ada. Pilih lagi ya.",
     themeClassic: "Klasik", themeFuture: "Futuristik",
+    swing: "Suara ayunan", swingSub: "Bunyi wush ngikutin tali: diputer makin kenceng, wush-nya makin cepet & keras. Diem = sunyi.", swingVol: "Volume ayunan",
     sampleOk: "🎙 Pakai rekaman cambuk asli.", sampleLoading: "Lagi muat rekaman cambuk…", sampleFail: "⚠ Rekaman cambuk gagal dimuat, sementara pakai suara sintetis.",
     view2d: "2D", view2dSub: "Paling ringan. Semua pecut.", view3d: "3D", view3dSub: "Pecutnya jadi 3D beneran. Sedikit lebih berat.", view3dFail: "3D nggak didukung di komputer ini, balik ke 2D.",
     modeFollow: "Ikut kursor", modeFollowSub: "Pecut nempel di kursor. Sentak mouse buat ctarr.",
@@ -62,6 +63,7 @@ const STR = {
     tooBig: "That file's too big (max 8 MB). Trim it first.", badFile: "Can't read this file. Try an mp3 / wav / ogg / m4a.",
     missingFile: "That sound file is gone. Pick it again.",
     themeClassic: "Classic", themeFuture: "Futuristic",
+    swing: "Swing sound", swingSub: "A whoosh that follows the rope: the faster you spin it, the faster and louder it gets. Still = silent.", swingVol: "Swing volume",
     sampleOk: "🎙 Using a real whip recording.", sampleLoading: "Loading the whip recording…", sampleFail: "⚠ Couldn't load the whip recording, using the synthesized sound for now.",
     view2d: "2D", view2dSub: "Lightest. Every whip.", view3d: "3D", view3dSub: "Real 3D whips. A bit heavier.", view3dFail: "3D isn't supported on this computer, back to 2D.",
     modeFollow: "Follow cursor", modeFollowSub: "The whip sticks to your cursor. Flick the mouse to crack.",
@@ -155,6 +157,8 @@ function render() {
   setRange("sensitivity", RANGES.sensitivity, 2 - settings.sensitivity);
   $("oSens").textContent = pct(2 - settings.sensitivity);
   setRange("volume", RANGES.volume, settings.volume); $("oVol").textContent = pct(settings.volume);
+  $("swing").checked = settings.swing; $("swingVolRow").hidden = !settings.swing;
+  setRange("swingVol", RANGES.swingVol, settings.swingVol); $("oSwingVol").textContent = pct(settings.swingVol);
   document.querySelectorAll('input[name="mode"]').forEach((r) => (r.checked = r.value === settings.mode));
   document.querySelectorAll('input[name="view"]').forEach((r) => (r.checked = r.value === settings.view));
   document.querySelectorAll('input[name="theme"]').forEach((r) => (r.checked = r.value === settings.theme));
@@ -175,6 +179,8 @@ function apply() {
     });
   }
   sound.setVolume(settings.volume);
+  sound.setSwing(settings.swing, settings.swingVol);
+  if (settings.swing) loadSwing(sound);
   document.documentElement.dataset.theme = settings.theme;
   stage.setTheme(settings.theme);
   const snd = effective(settings).sound, sample = snd.file && snd.file.id.startsWith("sample:");
@@ -224,6 +230,8 @@ $("showWord").addEventListener("change", (e) => { settings.showWord = e.target.c
 
 // umum
 $("sensitivity").addEventListener("input", (e) => { settings.sensitivity = +(2 - e.target.value).toFixed(2); changed(); });
+$("swing").addEventListener("change", (e) => { settings.swing = e.target.checked; sound.init(); changed(); });
+$("swingVol").addEventListener("input", (e) => { settings.swingVol = +e.target.value; changed(); });
 $("volume").addEventListener("input", (e) => { settings.volume = +e.target.value; sound.init(); changed(); });
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => {
   settings.mode = r.value; $("hint").style.opacity = "1"; changed();
