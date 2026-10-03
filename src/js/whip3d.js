@@ -67,8 +67,10 @@ export function createWhip3D() {
     if (parts) { group.clear(); parts.dispose.forEach((d) => d.dispose()); }
     const dispose = [];
     const keep = (x) => (dispose.push(x), x);
-    const kind = v.strands ? "straw" : v.plug ? "plastic" : v.flat ? "leather" : v.core ? "plasma" : "braid";
-    const glow = typeof v.glow === "string" ? v.glow : v.glow ? "#ffd36b" : null;
+    const kind = v.robot ? "robot" : v.chain ? "chain" : v.holo ? "holo" : v.chrome ? "chrome" : v.void ? "void"
+      : v.fiber ? "fiber" : v.arcs ? "rubber" : v.strands ? "straw" : v.plug ? "plastic" : v.flat ? "leather" : v.core ? "plasma" : "braid";
+    const glow = typeof v.glow === "string" ? v.glow : v.glow ? "#ffd36b" : v.arcs || null;
+    const matcap = () => { const t = keep(makeTexture(128, 128)); paintMatcap(t); return t.tex; };
 
     // tali
     let ropeMat;
@@ -82,6 +84,16 @@ export function createWhip3D() {
       ropeMat = new T.MeshStandardMaterial({ color: v.rope, roughness: 0.32, metalness: 0, side: T.DoubleSide });
     } else if (kind === "plasma") {
       ropeMat = new T.MeshStandardMaterial({ color: v.core, emissive: v.rope, emissiveIntensity: 1.4, roughness: 0.2, side: T.DoubleSide });
+    } else if (kind === "holo") {
+      ropeMat = new T.MeshStandardMaterial({ color: v.rope, emissive: v.rope, emissiveIntensity: 0.9, roughness: 0.3, transparent: true, opacity: 0.55, depthWrite: false, side: T.DoubleSide });
+    } else if (kind === "chrome") {
+      ropeMat = new T.MeshMatcapMaterial({ matcap: matcap(), color: v.rope, side: T.DoubleSide });
+    } else if (kind === "void") {
+      ropeMat = new T.MeshStandardMaterial({ color: 0x05030a, roughness: 0.25, metalness: 0.3, emissive: glow, emissiveIntensity: 0.04, side: T.DoubleSide });
+    } else if (kind === "fiber") {
+      ropeMat = new T.MeshStandardMaterial({ color: v.rope, emissive: 0x9fdcff, emissiveIntensity: 0.25, roughness: 0.08, transparent: true, opacity: 0.4, depthWrite: false, side: T.DoubleSide });
+    } else if (kind === "rubber") {
+      ropeMat = new T.MeshStandardMaterial({ color: v.rope, roughness: 0.55, metalness: 0.1, side: T.DoubleSide });
     } else {
       ropeMat = new T.MeshStandardMaterial({ color: v.rope, roughness: 0.75, metalness: 0, side: T.DoubleSide });
     }
@@ -89,14 +101,16 @@ export function createWhip3D() {
     keep(ropeMat);
 
     const tubes = [];
-    const count = v.strands || 1;
+    const count = kind === "chain" || kind === "robot" ? 0 : v.strands || 1;
     for (let k = 0; k < count; k++) tubes.push(new Tube(group, ropeMat, v.strands ? 6 : RAD, v.flat ? 0.24 : 1, kind === "leather" ? 0.12 : 0.34));
     dispose.push(...tubes);
 
     // pendar: tabung lebih gede, tembus pandang, warnanya ditambahin
     let halo = null;
     if (glow) {
-      const m = keep(new T.MeshBasicMaterial({ color: glow, transparent: true, opacity: kind === "plasma" ? 0.28 : 0.2, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
+      const op = kind === "plasma" ? 0.28 : kind === "void" ? 0.14 : kind === "rubber" ? 0.1 : 0.2;
+      // cuma sisi belakang yang digambar: inti tali tetap keliatan, pendarnya jadi kayak aura di pinggir
+      const m = keep(new T.MeshBasicMaterial({ color: glow, transparent: true, opacity: op * 1.6, blending: T.AdditiveBlending, depthWrite: false, side: T.BackSide }));
       halo = new Tube(group, m, 8, 1, 1);
       dispose.push(halo);
     }
@@ -107,7 +121,9 @@ export function createWhip3D() {
 
     // gagang
     let gripMat;
-    if (kind === "plasma") gripMat = new T.MeshStandardMaterial({ color: v.grip, roughness: 0.22, metalness: 0.9 });
+    if (kind === "plasma" || kind === "robot" || kind === "chain") gripMat = new T.MeshStandardMaterial({ color: v.grip, roughness: 0.3, metalness: 0.8 });
+    else if (kind === "chrome") gripMat = new T.MeshMatcapMaterial({ matcap: matcap(), color: v.grip });
+    else if (kind === "rubber") gripMat = new T.MeshStandardMaterial({ color: v.grip, roughness: 0.3, metalness: 0.75 }); // gulungan tembaga
     else if (kind === "plastic") gripMat = new T.MeshStandardMaterial({ color: v.grip, roughness: 0.35 });
     else {
       const tex = keep(makeTexture(32, 64)); paintGrip(tex, v.grip);
@@ -116,8 +132,9 @@ export function createWhip3D() {
     keep(gripMat);
     const handle = new T.Mesh(keep(new T.CylinderGeometry(1, 0.82, 1, 18, 1)), gripMat);
     const knob = new T.Mesh(keep(new T.SphereGeometry(1, 18, 12)), gripMat);
-    const collarMat = keep(kind === "plasma"
-      ? new T.MeshStandardMaterial({ color: v.rope, emissive: v.rope, emissiveIntensity: 1.2 })
+    const neon = kind === "plasma" ? v.rope : kind === "holo" || kind === "void" ? glow : kind === "chain" ? v.chain : kind === "rubber" ? v.arcs : null;
+    const collarMat = keep(neon
+      ? new T.MeshStandardMaterial({ color: neon, emissive: neon, emissiveIntensity: 1.2 })
       : new T.MeshStandardMaterial({ color: 0xb8925c, roughness: 0.3, metalness: 0.7 }));
     const collar = new T.Mesh(keep(new T.CylinderGeometry(1, 1, 1, 18, 1)), collarMat);
     group.add(handle, knob, collar);
@@ -140,13 +157,40 @@ export function createWhip3D() {
       const bar = new T.Mesh(keep(new T.BoxGeometry(2, 14, 2)), metal);
       bar.position.x = 4;
       tip.add(frame, bar);
-    } else if (!v.strands) {
+    } else if (kind === "void") {
+      // cakram cahaya muter + inti hitam
+      tip = new T.Group();
+      const disk = new T.Mesh(keep(new T.TorusGeometry(11, 2.4, 8, 40)), keep(new T.MeshBasicMaterial({ color: glow, transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false })));
+      const rim = new T.Mesh(keep(new T.TorusGeometry(15, 0.9, 6, 40)), keep(new T.MeshBasicMaterial({ color: 0xff9a3c, transparent: true, opacity: 0.8, blending: T.AdditiveBlending, depthWrite: false })));
+      const core = new T.Mesh(keep(new T.SphereGeometry(5.5, 16, 12)), keep(new T.MeshBasicMaterial({ color: 0x000000 })));
+      tip.add(disk, rim, core);
+    } else if (kind === "robot") {
+      // capit dua jari
+      tip = new T.Group();
+      const m = keep(new T.MeshStandardMaterial({ color: 0xc9d1da, roughness: 0.3, metalness: 0.85 }));
+      const g = keep(new T.BoxGeometry(14, 3, 4));
+      for (const sgn of [-1, 1]) { const f = new T.Mesh(g, m); f.position.set(7, sgn * 4, 0); f.rotation.z = sgn * 0.45; tip.add(f); }
+    } else if (!v.strands && kind !== "fiber" && kind !== "chain") {
       tip = new T.Mesh(keep(new T.ConeGeometry(1, 1, 8, 1)), keep(new T.MeshStandardMaterial({ color: kind === "plasma" ? v.core : 0xefe6d6, roughness: 0.8, emissive: kind === "plasma" ? v.rope : 0x000000 })));
     }
     if (tip) group.add(tip);
+
+    // rantai: mata rantai (instanced) + titik energi di tiap sambungan
+    let links = null, joints = null;
+    if (kind === "chain") {
+      links = new T.InstancedMesh(keep(new T.TorusGeometry(1, 0.3, 6, 14)), keep(new T.MeshMatcapMaterial({ matcap: matcap(), color: v.rope })), 160);
+      joints = new T.InstancedMesh(keep(new T.SphereGeometry(1, 8, 6)), keep(new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: T.AdditiveBlending, depthWrite: false })), 80);
+      group.add(links, joints);
+    }
+    // robot: ruas kotak + engsel silinder
+    if (kind === "robot") {
+      links = new T.InstancedMesh(keep(new T.BoxGeometry(1, 1, 1)), keep(new T.MeshStandardMaterial({ color: v.rope, roughness: 0.32, metalness: 0.75 })), 40);
+      joints = new T.InstancedMesh(keep(new T.CylinderGeometry(1, 1, 1, 16)), keep(new T.MeshStandardMaterial({ color: 0x2a2f37, roughness: 0.4, metalness: 0.6 })), 40);
+      group.add(links, joints);
+    }
     for (const o of group.children) o.frustumCulled = false;
 
-    parts = { kind, tubes, halo, tassels, handle, knob, collar, tip, dispose };
+    parts = { kind, tubes, halo, tassels, handle, knob, collar, tip, links, joints, dispose };
   }
 
   const up = new T.Vector3(0, 1, 0), xAxis = new T.Vector3(1, 0, 0), tmp = new T.Vector3();
@@ -164,16 +208,18 @@ export function createWhip3D() {
   const fr = { nx: null, ny: null, nz: null, bx: null, by: null, bz: null };
 
   // whip = Whip dari physics.js, base = pangkal gagang (posisi tangan)
-  function render(whip, base, v, S, clock = 0) {
+  const M4 = new T.Matrix4(), Q = new T.Quaternion(), Q2 = new T.Quaternion(), V = new T.Vector3(), SC = new T.Vector3(), C3 = new T.Color();
+  function render(whip, base, v, S, clock = 0, sinceCrack = 99) {
     if (!W || !H) return canvas;
-    const key = [v.rope, v.grip, v.strands, v.flat, v.plug, v.glow, v.tassel, v.core, v.fire].join("|");
+    const key = [v.rope, v.grip, v.strands, v.flat, v.plug, v.glow, v.tassel, v.core, v.fire, v.holo, v.chrome, v.chain, v.arcs, v.void, v.fiber, v.robot].join("|");
     if (key !== sig) { sig = key; build(v); }
 
     const n = whip.n, M = (n - 1) * SUB + 1;
     smoothLine(whip, M);
     const { px, py, pz } = line;
     const P = parts, w0 = v.w0, w1 = v.w1;
-    const radius = (f) => Math.max(0.55, (w0 + (w1 - w0) * Math.pow(f, 0.7)) * (v.flat ? 0.55 : 0.72));
+    const ripple = v.chrome ? (f) => 1 + 0.22 * Math.sin(f * 18 - clock * 9) : () => 1;
+    const radius = (f) => Math.max(0.55, (w0 + (w1 - w0) * Math.pow(f, 0.7)) * (v.flat ? 0.55 : 0.72) * ripple(f));
 
     if (v.strands) {
       // tiap lidi = garis tengah yang digeser ke samping (di bidang layar) + dikit ke depan/belakang
@@ -192,8 +238,59 @@ export function createWhip3D() {
         const rr = (k % 2 ? w1 + 0.4 : w0) * 0.55;
         tube.update(sx, sy, sz, M, () => rr);
       });
-    } else {
+    } else if (P.tubes[0]) {
       P.tubes[0].update(px, py, pz, M, radius);
+    }
+    if (P.kind === "holo") P.tubes[0].mat.opacity = 0.42 + 0.22 * Math.sin(clock * 23) * Math.sin(clock * 7.3);
+
+    if (P.kind === "chain") {
+      // mata rantai ditaruh tiap `step` px sepanjang garis, gantian diputer 90° biar nyambung
+      const r = w0 * 0.55, step = r * 2.1;
+      let acc = 0, k = 0;
+      for (let i = 1; i < M && k < 160; i++) {
+        const dx = px[i] - px[i - 1], dy = py[i] - py[i - 1], dz = pz[i] - pz[i - 1], d = Math.hypot(dx, dy, dz) || 1e-3;
+        acc += d;
+        while (acc >= step && k < 160) {
+          acc -= step;
+          const f = 1 - acc / d;
+          V.set(px[i - 1] + dx * f, py[i - 1] + dy * f, pz[i - 1] + dz * f);
+          Q.setFromUnitVectors(xAxis, tmp.set(dx / d, dy / d, dz / d));
+          Q2.setFromAxisAngle(tmp, k % 2 ? Math.PI / 2 : 0);
+          Q.premultiply(Q2);
+          SC.set(r * 1.25, r * 0.8, r * 0.8);
+          P.links.setMatrixAt(k++, M4.compose(V, Q, SC));
+        }
+      }
+      P.links.count = k; P.links.instanceMatrix.needsUpdate = true;
+      const wave = sinceCrack * 2.6;
+      for (let i = 0; i < n; i++) {
+        const f = i / (n - 1), pulse = Math.exp(-((f - wave) ** 2) * 30);
+        V.set(whip.x[i], -whip.y[i], whip.z[i]); Q.identity(); SC.setScalar(1.6 + pulse * 2.6);
+        P.joints.setMatrixAt(i, M4.compose(V, Q, SC));
+        P.joints.setColorAt(i, C3.set(v.chain).multiplyScalar(0.45 + pulse * 1.4));
+      }
+      P.joints.count = n; P.joints.instanceMatrix.needsUpdate = true;
+      if (P.joints.instanceColor) P.joints.instanceColor.needsUpdate = true;
+    }
+    if (P.kind === "robot") {
+      // ruas langsung dari titik fisika (nggak dihalusin, biar kaku kayak mesin)
+      for (let i = 0; i < n - 1; i++) {
+        const ax = whip.x[i], ay = -whip.y[i], az = whip.z[i], bx = whip.x[i + 1], by = -whip.y[i + 1], bz = whip.z[i + 1];
+        const dx = bx - ax, dy = by - ay, dz = bz - az, d = Math.hypot(dx, dy, dz) || 1e-3, w = w0 + (w1 - w0) * (i / (n - 1));
+        V.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2);
+        Q.setFromUnitVectors(xAxis, tmp.set(dx / d, dy / d, dz / d));
+        SC.set(d * 0.9, w, w * 0.8);
+        P.links.setMatrixAt(i, M4.compose(V, Q, SC));
+      }
+      for (let i = 0; i < n; i++) {
+        const w = w0 + (w1 - w0) * (i / (n - 1));
+        V.set(whip.x[i], -whip.y[i], whip.z[i]);
+        Q.setFromAxisAngle(xAxis, Math.PI / 2); // poros engsel ngadep kamera
+        SC.set(w * 0.62, w * 1.1, w * 0.62);
+        P.joints.setMatrixAt(i, M4.compose(V, Q, SC));
+      }
+      P.links.count = n - 1; P.joints.count = n;
+      P.links.instanceMatrix.needsUpdate = true; P.joints.instanceMatrix.needsUpdate = true;
     }
     if (P.halo) P.halo.update(px, py, pz, M, (f) => radius(f) * 2.4 + 2);
 
@@ -223,7 +320,10 @@ export function createWhip3D() {
     // ujung: cracker / colokan / gesper, ngikut arah segmen terakhir
     if (P.tip) {
       const t = n - 1, cx = x[t] - x[t - 1], cy = -(y[t] - y[t - 1]), cz = z[t] - z[t - 1], cl = Math.hypot(cx, cy, cz) || 1;
-      if (v.plug || v.buckle) {
+      if (P.kind === "void") {
+        P.tip.position.set(x[t], -y[t], z[t]);
+        P.tip.rotation.set(1.15, 0.2, clock * 2.5);
+      } else if (v.plug || v.buckle || P.kind === "robot") {
         P.tip.position.set(x[t], -y[t], z[t]);
         P.tip.quaternion.setFromUnitVectors(xAxis, tmp.set(cx / cl, cy / cl, cz / cl));
       } else {
@@ -233,14 +333,17 @@ export function createWhip3D() {
 
     // dua kali gambar: bayangan (geser ke kanan bawah, di belakang) terus pecutnya
     renderer.clear();
-    if (P.halo) P.halo.mesh.visible = false;
-    scene.overrideMaterial = shadowMat;
-    group.position.set(S * 0.012, -S * 0.022, -S * 0.08);
-    renderer.render(scene, camera);
-    scene.overrideMaterial = null;
-    group.position.set(0, 0, 0);
-    if (P.halo) P.halo.mesh.visible = true;
-    renderer.clearDepth();
+    if (P.kind !== "holo") { // hologram nggak punya bayangan
+      if (P.halo) P.halo.mesh.visible = false;
+      scene.overrideMaterial = shadowMat;
+      group.position.set(S * 0.012, -S * 0.022, -S * 0.08);
+      renderer.render(scene, camera);
+      scene.overrideMaterial = null;
+      if (P.halo) P.halo.mesh.visible = true;
+      renderer.clearDepth();
+    }
+    // hologram kadang nge-glitch geser dikit
+    group.position.set(P.kind === "holo" && Math.random() < 0.05 ? (Math.random() - 0.5) * 10 : 0, 0, 0);
     renderer.render(scene, camera);
     return canvas;
   }
@@ -354,6 +457,19 @@ function makeTexture(w, h) {
   tex.wrapS = tex.wrapT = T.RepeatWrapping;
   tex.colorSpace = T.SRGBColorSpace;
   return { c, g: c.getContext("2d"), tex, dispose: () => tex.dispose() };
+}
+
+// matcap krom: pantulan langit terang di atas, horizon gelap, lantai terang lagi
+function paintMatcap(t) {
+  const { c, g } = t, w = c.width, h = c.height;
+  const lin = g.createLinearGradient(0, 0, 0, h);
+  lin.addColorStop(0, "#ffffff"); lin.addColorStop(0.32, "#c9d1da"); lin.addColorStop(0.5, "#4b525b");
+  lin.addColorStop(0.6, "#e9eef3"); lin.addColorStop(1, "#2b3036");
+  g.fillStyle = lin; g.beginPath(); g.arc(w / 2, h / 2, w / 2, 0, Math.PI * 2); g.fill();
+  const hi = g.createRadialGradient(w * 0.32, h * 0.28, 0, w * 0.32, h * 0.28, w * 0.28);
+  hi.addColorStop(0, "rgba(255,255,255,0.9)"); hi.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = hi; g.fillRect(0, 0, w, h);
+  t.tex.needsUpdate = true;
 }
 
 // pola kepang: tali kulit dianyam 4 helai, motif tulang ikan

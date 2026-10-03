@@ -42,5 +42,7 @@ export const t = (key, lang) => T[key]?.[lang] ?? T[key]?.id ?? key;
 const NAMES_EN = {
   jaranan: "Jaranan", sapi: "Cattle whip", bullwhip: "Bullwhip", samandiman: "Samandiman", cemeti: "Cemeti",
   sapulidi: "Broom", kabel: "Charger cable", sabuk: "Belt", api: "Fire whip", plasma: "Plasma whip",
+  hologram: "Hologram whip", chrome: "Liquid metal whip", rantai: "Energy chain", tesla: "Tesla whip",
+  blackhole: "Black hole whip", fiber: "Fiber optic", robot: "Robot arm",
 };
 export const whipName = (key, v, lang) => (lang === "en" ? NAMES_EN[key] || v.name : v.name);

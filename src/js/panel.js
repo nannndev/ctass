@@ -190,7 +190,7 @@ function changed() { render(); save(); }
 KEYS.forEach((k, i) => {
   const t = document.createElement("button");
   t.type = "button"; t.className = "tile"; t.dataset.k = k; t.setAttribute("role", "radio");
-  t.innerHTML = `<canvas aria-hidden="true"></canvas><span class="nm"></span><span class="num">${(i + 1) % 10}</span>`;
+  t.innerHTML = `<canvas aria-hidden="true"></canvas><span class="nm"></span><span class="num">${i < 10 ? (i + 1) % 10 : ""}</span>`;
   t.onclick = () => { sound.init(); settings.variant = k; changed(); };
   $("tiles").appendChild(t);
   requestAnimationFrame(() => drawSwatch(t.querySelector("canvas"), VARIANTS[k]));

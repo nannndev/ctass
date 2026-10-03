@@ -203,8 +203,10 @@ export function createStage(o) {
     if (a.next && a.fired && a.t > T + SNAP + 0.06) { const q = a.next; auto = null; whip.attract = null; strike(q.x, q.y, q.n); return; }
     if (a.t > T + SNAP + HOLD + BACK) { auto = null; whip.attract = null; }
   }
+  let lastCrackAt = -99;
   function onCrack(mach, at) {
     const t = at || whip.tip();
+    lastCrackAt = clock;
     score.crack++; session.crack++; score.best = Math.max(score.best, mach); o.onScore?.(score);
     o.sound.crack(mach - 1, v.sound, (t.x / W) * 2 - 1);
     shake = reduced ? 0 : (6 + Math.min(10, (mach - 1) * 8)) * (v.shake ?? 1);
@@ -270,6 +272,53 @@ export function createStage(o) {
         add({ k: "ring", r: 2, speed: 760, width: 2.5, color: "77,227,255", rate: 2.6 });
         add({ k: "ring", r: 2, speed: 430, width: 1.2, color: "234,252,255", rate: 2 });
         for (let i = 0; i < 4; i++) add({ k: "bolt", a: rnd(0, Math.PI * 2), len: rnd(30, 70) * Math.min(1.5, mach), rate: rnd(4, 6) });
+        break;
+      case "glitch": { // pixel pecah warna-warni
+        const cols = ["77,227,255", "255,79,216", "138,125,255"];
+        add({ k: "flash", r: 50 + mach * 20, rate: 5, tint: "138,125,255" });
+        for (let i = 0; i < 22; i++) add({ k: "pixel", x: t.x + rnd(-70, 70), y: t.y + rnd(-45, 45), w: rnd(4, 26), h: rnd(2, 9), color: cols[i % 3], rate: rnd(2, 4) });
+        for (let i = 0; i < 4; i++) add({ k: "pixel", x: t.x + rnd(-20, 20), y: t.y + rnd(-35, 35), w: rnd(90, 220), h: rnd(2, 4), color: cols[i % 3], rate: 5 });
+        break;
+      }
+      case "droplets": // cipratan tetesan krom
+        add({ k: "flash", r: 40 + mach * 20, rate: 5, tint: "235,240,245" });
+        add({ k: "ring", r: 3, speed: 380, width: 1.5, color: "220,228,236", rate: 2.6 });
+        for (let i = 0; i < 16; i++) {
+          const a = rnd(-Math.PI, 0), sp = rnd(140, 420);
+          add({ k: "drop", vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: rnd(1.8, 4.5), rate: rnd(1, 1.6) });
+        }
+        break;
+      case "energy": // ledakan energi amber dari rantai
+        add({ k: "flash", r: 60 + mach * 30, rate: 4, tint: "255,176,46" });
+        add({ k: "ring", r: 3, speed: 520, width: 2.5, color: "255,176,46", rate: 2.4 });
+        add({ k: "ring", r: 3, speed: 300, width: 1, color: "255,236,200", rate: 2 });
+        for (let i = 0; i < 18; i++) {
+          const a = rnd(0, Math.PI * 2), sp = rnd(140, 420);
+          add({ k: "spark", vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, size: rnd(2, 3.5), rate: rnd(1.4, 2.2) });
+        }
+        break;
+      case "lightning": // petir bercabang ke mana-mana
+        add({ k: "flash", r: 90 + mach * 40, rate: 4.5, tint: "159,212,255" });
+        for (let i = 0; i < 9; i++) add({ k: "bolt", a: rnd(0, Math.PI * 2), len: rnd(60, 150) * Math.min(1.5, mach), rate: rnd(3.5, 5.5) });
+        break;
+      case "warp": // gelombang gelap + serpihan kesedot ke tengah
+        add({ k: "void", r: 4, grow: 260, rate: 1.8 });
+        add({ k: "ring", r: 4, speed: 600, width: 2, color: "178,107,255", rate: 2.2 });
+        for (let i = 0; i < 28; i++) add({ k: "suck", a: rnd(0, Math.PI * 2), d: rnd(70, 170), spin: rnd(2, 4), color: i % 3 ? "178,107,255" : "255,154,60", rate: rnd(1.4, 2.2) });
+        break;
+      case "rainbow": // cincin + serpihan warna-warni
+        ["255,122,217", "77,227,255", "255,214,107"].forEach((c, i) => add({ k: "ring", r: 3, speed: 520 - i * 120, width: 2, color: c, rate: 2.4 }));
+        for (let i = 0; i < 24; i++) {
+          const a = rnd(0, Math.PI * 2), sp = rnd(150, 420);
+          add({ k: "bit", vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 100, w: rnd(3, 6), h: rnd(3, 6), rot: rnd(0, 6), vr: rnd(-8, 8), color: `hsl(${(i * 37) % 360},100%,62%)`, rate: rnd(1, 1.6) });
+        }
+        break;
+      case "welding": // percikan las yang jatuh
+        add({ k: "flash", r: 45 + mach * 20, rate: 5, tint: "255,207,90" });
+        for (let i = 0; i < 32; i++) {
+          const a = rnd(-Math.PI, 0.3), sp = rnd(160, 560);
+          add({ k: "weld", vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, rate: rnd(1.2, 2.2) });
+        }
         break;
       case "impact": // ledakan ala komik
         add({ k: "burst", r: 16, grow: 160, spikes: 12, rot: rnd(0, 1), rate: 3.2 });
@@ -378,11 +427,13 @@ export function createStage(o) {
     if (showAI) drawAI(dt);
     if (is3D()) {
       if (coil > 0.01) drawCoil();
-      cx.drawImage(r3d.render(whip, { x: ptr.x, y: ptr.y, z: 0 }, v, S, clock), 0, 0, W, H);
+      cx.drawImage(r3d.render(whip, { x: ptr.x, y: ptr.y, z: 0 }, v, S, clock, clock - lastCrackAt), 0, 0, W, H);
+      drawExtras(true);
     } else {
       drawHandle();
       if (coil > 0.01) drawCoil();
       drawRope();
+      drawExtras(false);
     }
     if (mode === "click" && !auto) drawHomeRing();
     drawFx(dt);
@@ -463,25 +514,59 @@ export function createStage(o) {
   function drawRope() {
     const { x, y, n } = whip;
     if (v.strands) return drawStrands();
+    if (v.robot) return drawRobot();
+    if (v.chain) return drawChain();
+    // hologram: kedip + kadang kepecah warna (RGB split)
+    let holoA = 1;
+    if (v.holo) {
+      holoA = 0.55 + 0.25 * Math.sin(clock * 23) * Math.sin(clock * 7.3);
+      if (!reduced && Math.random() < 0.05) {
+        cx.save(); cx.globalCompositeOperation = "lighter"; cx.lineCap = "round";
+        for (const [c, off] of [["rgba(255,79,216,0.5)", -4], ["rgba(77,227,255,0.5)", 4]]) {
+          cx.strokeStyle = c; cx.lineWidth = v.w0 * 0.8; cx.beginPath();
+          for (let i = 0; i < n; i++) i ? cx.lineTo(x[i] + off, y[i]) : cx.moveTo(x[i] + off, y[i]);
+          cx.stroke();
+        }
+        cx.restore();
+      }
+      cx.globalAlpha = holoA;
+    }
     if (v.glow) {
       cx.shadowColor = typeof v.glow === "string" ? v.glow : "#ffd36b";
       cx.shadowBlur = 14 + Math.min(30, machShown * 18);
     }
     cx.strokeStyle = v.rope;
     cx.lineCap = v.flat ? "butt" : "round";
+    if (v.fiber) { cx.strokeStyle = "rgba(232,247,255,0.35)"; }
     for (let i = 0; i < n - 1; i++) {
-      cx.lineWidth = v.w0 + (v.w1 - v.w0) * Math.pow(i / (n - 1), 0.7);
+      const f = i / (n - 1);
+      // logam cair: ketebalannya beriak jalan sepanjang tali
+      cx.lineWidth = (v.w0 + (v.w1 - v.w0) * Math.pow(f, 0.7)) * (v.chrome ? 1 + 0.22 * Math.sin(f * 18 - clock * 9) : 1);
       cx.beginPath(); cx.moveTo(x[i], y[i]); cx.lineTo(x[i + 1], y[i + 1]); cx.stroke();
     }
     cx.lineCap = "round";
     cx.shadowBlur = 0;
+    if (v.chrome) {
+      // kilap: garis terang tipis di sisi atas + bayangan gelap di sisi bawah
+      for (const [c, k, wd] of [["rgba(40,46,54,0.55)", 0.3, 1.6], ["rgba(255,255,255,0.85)", -0.28, 1.2]]) {
+        cx.strokeStyle = c; cx.lineWidth = wd; cx.beginPath();
+        for (let i = 0; i < n; i++) {
+          const j = Math.min(n - 1, Math.max(1, i)), ddx = x[j] - x[j - 1], ddy = y[j] - y[j - 1], ll = Math.hypot(ddx, ddy) || 1;
+          const w = (v.w0 + (v.w1 - v.w0) * Math.pow(i / (n - 1), 0.7)) * k;
+          const px = x[i] - (ddy / ll) * w, py = y[i] + (ddx / ll) * w;
+          i ? cx.lineTo(px, py) : cx.moveTo(px, py);
+        }
+        cx.stroke();
+      }
+    }
+    cx.globalAlpha = 1;
     if (v.flat) {
       // jahitan tengah sabuk
       cx.strokeStyle = "rgba(236,232,225,0.35)"; cx.lineWidth = 1; cx.setLineDash([3, 4]);
       cx.beginPath(); cx.moveTo(x[0], y[0]);
       for (let i = 1; i < n; i++) cx.lineTo(x[i], y[i]);
       cx.stroke(); cx.setLineDash([]);
-    } else if (!v.plug) {
+    } else if (!v.plug && !v.chrome && !v.holo && !v.fiber && !v.void && !v.core) {
       // anyaman
       cx.strokeStyle = "rgba(0,0,0,0.28)"; cx.lineWidth = 1;
       for (let i = 1; i < n - 3; i += 2) {
@@ -495,6 +580,7 @@ export function createStage(o) {
     const ux = dx / l, uy = dy / l;
     if (v.plug) return drawTip(x[t], y[t], ux, uy, "plug");
     if (v.buckle) return drawTip(x[t], y[t], ux, uy, "buckle");
+    if (v.void || v.fiber) return; // ujungnya digambar di drawExtras
     // cracker di ujung
     cx.strokeStyle = v.glow ? "#fff3c4" : "#efe6d6"; cx.lineWidth = 1.2;
     for (let k = -1; k <= 1; k++) {
@@ -504,6 +590,101 @@ export function createStage(o) {
     }
     if (v.fire && !reduced && machShown > 0.35 && Math.random() < 0.7) {
       fx.push({ k: "ember", x: x[t], y: y[t], vx: (Math.random() - 0.5) * 60, vy: -40 - Math.random() * 60, size: 1.5 + Math.random() * 2.5, life: 1, rate: 2.5 });
+    }
+  }
+
+  // rantai energi: mata rantai gantian (lingkaran / tampak samping), sambungannya nyala.
+  // Abis ctarr, nyala energinya jalan dari gagang ke ujung.
+  function drawChain() {
+    const { x, y, n } = whip, wave = (clock - lastCrackAt) * 2.6;
+    for (let i = 0; i < n - 1; i++) {
+      const dx = x[i + 1] - x[i], dy = y[i + 1] - y[i], L = Math.hypot(dx, dy) || 1;
+      const w = (v.w0 + (v.w1 - v.w0) * (i / (n - 1))) * 0.6;
+      cx.save(); cx.translate((x[i] + x[i + 1]) / 2, (y[i] + y[i + 1]) / 2); cx.rotate(Math.atan2(dy, dx));
+      cx.strokeStyle = v.rope; cx.fillStyle = v.rope;
+      if (i % 2) { cx.lineWidth = 2.4; cx.beginPath(); cx.ellipse(0, 0, L * 0.62, w, 0, 0, Math.PI * 2); cx.stroke(); }
+      else { cx.beginPath(); cx.ellipse(0, 0, L * 0.62, 1.8, 0, 0, Math.PI * 2); cx.fill(); }
+      cx.restore();
+    }
+    cx.shadowColor = v.chain; cx.shadowBlur = 10; cx.fillStyle = v.chain;
+    for (let i = 0; i < n; i++) {
+      const f = i / (n - 1), pulse = Math.exp(-((f - wave) ** 2) * 30);
+      cx.globalAlpha = Math.min(1, 0.35 + pulse + machShown * 0.2);
+      cx.beginPath(); cx.arc(x[i], y[i], 1.6 + pulse * 2.5, 0, Math.PI * 2); cx.fill();
+    }
+    cx.globalAlpha = 1; cx.shadowBlur = 0;
+  }
+
+  // lengan robot: ruas logam kaku, engsel baut, capit di ujung
+  function drawRobot() {
+    const { x, y, n } = whip;
+    cx.lineCap = "round";
+    for (let i = 0; i < n - 1; i++) {
+      const w = v.w0 + (v.w1 - v.w0) * (i / (n - 1));
+      cx.strokeStyle = "#1c2026"; cx.lineWidth = w + 3;
+      cx.beginPath(); cx.moveTo(x[i], y[i]); cx.lineTo(x[i + 1], y[i + 1]); cx.stroke();
+      cx.strokeStyle = v.rope; cx.lineWidth = w;
+      cx.beginPath(); cx.moveTo(x[i], y[i]); cx.lineTo(x[i + 1], y[i + 1]); cx.stroke();
+      cx.strokeStyle = "rgba(255,255,255,0.35)"; cx.lineWidth = 1.2;
+      cx.beginPath(); cx.moveTo(x[i], y[i] - w * 0.25); cx.lineTo(x[i + 1], y[i + 1] - w * 0.25); cx.stroke();
+    }
+    for (let i = 0; i < n; i++) {
+      const w = v.w0 + (v.w1 - v.w0) * (i / (n - 1));
+      cx.fillStyle = "#2a2f37"; cx.beginPath(); cx.arc(x[i], y[i], w * 0.62, 0, Math.PI * 2); cx.fill();
+      cx.fillStyle = "#c9d1da"; cx.beginPath(); cx.arc(x[i], y[i], w * 0.2, 0, Math.PI * 2); cx.fill();
+    }
+    const t = n - 1, a = Math.atan2(y[t] - y[t - 1], x[t] - x[t - 1]), open = 0.35 + Math.min(0.4, machShown * 0.3);
+    cx.strokeStyle = "#c9d1da"; cx.lineWidth = 3;
+    for (const s of [-1, 1]) {
+      const b = a + s * open;
+      cx.beginPath(); cx.moveTo(x[t], y[t]);
+      cx.lineTo(x[t] + Math.cos(b) * 12, y[t] + Math.sin(b) * 12);
+      cx.lineTo(x[t] + Math.cos(a) * 17, y[t] + Math.sin(a) * 17); cx.stroke();
+    }
+  }
+
+  // tambahan yang digambar di atas tali (juga di mode 3D): listrik tesla, denyut fiber,
+  // cakram lubang hitam (2D aja, di 3D udah jadi model)
+  function drawExtras(d3) {
+    const { x, y, n } = whip, t = n - 1;
+    if (v.arcs && !reduced) {
+      cx.save(); cx.strokeStyle = v.arcs; cx.shadowColor = v.arcs; cx.shadowBlur = 8; cx.lineWidth = 1.2;
+      const count = 1 + Math.floor(Math.random() * 2) + Math.floor(machShown * 3);
+      for (let k = 0; k < count; k++) {
+        const i = 2 + Math.floor(Math.random() * (n - 4)), j = Math.min(t, i + 2 + Math.floor(Math.random() * 4));
+        cx.globalAlpha = 0.5 + Math.random() * 0.5; cx.beginPath(); cx.moveTo(x[i], y[i]);
+        for (let m = 1; m < 5; m++) {
+          const f = m / 5, px = x[i] + (x[j] - x[i]) * f, py = y[i] + (y[j] - y[i]) * f;
+          cx.lineTo(px + (Math.random() - 0.5) * 16, py + (Math.random() - 0.5) * 16);
+        }
+        cx.lineTo(x[j], y[j]); cx.stroke();
+      }
+      cx.restore();
+    }
+    if (v.fiber) {
+      // denyut cahaya warna-warni jalan dari gagang ke ujung, makin kenceng diayun makin cepet
+      const speed = 0.5 + machShown * 2.2;
+      cx.save(); cx.globalCompositeOperation = "lighter";
+      for (let k = 0; k < 6; k++) {
+        const f = (clock * speed + k / 6) % 1, i = f * t, a = Math.floor(i), b = Math.min(t, a + 1), r = i - a;
+        const px = x[a] + (x[b] - x[a]) * r, py = y[a] + (y[b] - y[a]) * r, hue = (k * 60 + clock * 120) % 360;
+        cx.fillStyle = `hsl(${hue},100%,65%)`; cx.shadowColor = cx.fillStyle; cx.shadowBlur = 12;
+        cx.beginPath(); cx.arc(px, py, 3.2, 0, Math.PI * 2); cx.fill();
+      }
+      cx.fillStyle = `hsl(${(clock * 200) % 360},100%,75%)`; cx.shadowColor = cx.fillStyle; cx.shadowBlur = 16;
+      cx.beginPath(); cx.arc(x[t], y[t], 3.5 + machShown * 2, 0, Math.PI * 2); cx.fill();
+      cx.restore();
+    }
+    if (v.void && !d3) {
+      // cakram cahaya muter di ujung, tengahnya hitam pekat
+      cx.save(); cx.translate(x[t], y[t]); cx.rotate(clock * 2.5);
+      cx.shadowColor = v.glow; cx.shadowBlur = 14;
+      const g = cx.createLinearGradient(-12, 0, 12, 0);
+      g.addColorStop(0, "#ff9a3c"); g.addColorStop(0.5, v.glow); g.addColorStop(1, "#ff9a3c");
+      cx.strokeStyle = g; cx.lineWidth = 2.6;
+      cx.beginPath(); cx.ellipse(0, 0, 13, 4.5, 0, 0, Math.PI * 2); cx.stroke();
+      cx.shadowBlur = 0; cx.fillStyle = "#000"; cx.beginPath(); cx.arc(0, 0, 4.5, 0, Math.PI * 2); cx.fill();
+      cx.restore();
     }
   }
 
@@ -616,6 +797,33 @@ export function createStage(o) {
           cx.strokeStyle = `rgba(20,16,10,${L})`; cx.lineWidth = 2; cx.stroke();
           break;
         }
+        case "pixel":
+          cx.fillStyle = `rgba(${p.color},${L * 0.85})`;
+          cx.fillRect(p.x - p.w / 2 + (Math.random() - 0.5) * 6, p.y - p.h / 2, p.w, p.h);
+          break;
+        case "drop": {
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt;
+          const g = cx.createRadialGradient(p.x - p.r * 0.3, p.y - p.r * 0.3, 0, p.x, p.y, p.r);
+          g.addColorStop(0, `rgba(255,255,255,${L})`); g.addColorStop(0.5, `rgba(200,208,216,${L})`); g.addColorStop(1, `rgba(90,98,108,${L})`);
+          cx.fillStyle = g; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI * 2); cx.fill();
+          break;
+        }
+        case "void":
+          p.r += p.grow * dt;
+          cx.fillStyle = `rgba(8,2,18,${L * 0.45})`; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI * 2); cx.fill();
+          cx.strokeStyle = `rgba(178,107,255,${L * 0.6})`; cx.lineWidth = 3; cx.stroke();
+          break;
+        case "suck": {
+          p.d *= 1 - dt * 3.2; p.a += p.spin * dt;
+          const sx = p.x + Math.cos(p.a) * p.d, sy = p.y + Math.sin(p.a) * p.d;
+          cx.fillStyle = `rgba(${p.color},${L})`; cx.beginPath(); cx.arc(sx, sy, 1.2 + L * 1.6, 0, Math.PI * 2); cx.fill();
+          break;
+        }
+        case "weld":
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt; p.vx *= 0.99;
+          cx.strokeStyle = `rgba(255,${Math.round(180 + 70 * L)},${Math.round(90 + 140 * L)},${L})`; cx.lineWidth = 1.6;
+          cx.beginPath(); cx.moveTo(p.x, p.y); cx.lineTo(p.x - p.vx * 0.025, p.y - p.vy * 0.025); cx.stroke();
+          break;
         case "ember":
           p.x += p.vx * dt; p.y += p.vy * dt; p.vy -= 120 * dt; p.vx *= 0.97;
           cx.fillStyle = `rgba(255,${Math.round(120 + 100 * L)},40,${L})`;

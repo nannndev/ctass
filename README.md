@@ -15,8 +15,10 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
   makin keras kalau makin kenceng.
 - **Suara disintesis pakai Web Audio**, nggak ada file rekaman. Ayun pelan nggak bunyi,
   cuma pas ujungnya tembus Mach 1 keluar ctarr.
-- **10 pecut, beda suara & efek:** Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti,
-  Sapu lidi (srak!), Kabel charger (zzt!), Ikat pinggang (plak!), Cambuk api (bwosh!), Cambuk plasma (vzwap!)
+- **17 pecut, beda suara & efek:** Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti,
+  Sapu lidi (srak!), Kabel charger (zzt!), Ikat pinggang (plak!), Cambuk api (bwosh!), Cambuk plasma (vzwap!),
+  plus 7 futuristik: Hologram (bzzrt!), Logam cair (shhing!), Rantai energi (klangg!), Tesla (krzzak!),
+  Lubang hitam (vwuum!), Fiber optik (pew!), Lengan robot (klank!)
 - **Bisa dicustom** di jendela Ctas: panjang, kekakuan, berat, warna tali & gagang,
   campur suara & efek dari pecut lain, tulisan pas ctarr, gampang/susahnya bunyi, volume.
   Ada preview buat nyobain langsung, dan pengaturannya disimpan. Tulisan pas ctarr bisa dimatiin.
