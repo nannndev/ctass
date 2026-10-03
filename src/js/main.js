@@ -158,4 +158,4 @@ if (OVERLAY) {
   applySettings(saved);
 }
 pick(settings.variant);
-window.__ctas = { get score() { return stage.score; } };
+window.__ctas = { stage, get score() { return stage.score; } };

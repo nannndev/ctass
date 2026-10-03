@@ -40,12 +40,13 @@ fn setting_lang(app: &AppHandle) -> String {
     lang.filter(|l| l == "en" || l == "id").unwrap_or_else(|| "id".into())
 }
 
-fn tray_texts(lang: &str) -> [String; 3] {
+fn tray_texts(lang: &str) -> [String; 4] {
     let key = if cfg!(target_os = "macos") { "⌘⇧X" } else { "Ctrl+Alt+X" };
+    let version = env!("CARGO_PKG_VERSION");
     if lang == "en" {
-        ["Open Ctas (pick & tweak whips)".into(), format!("Start / stop whipping   {key}"), "Quit".into()]
+        ["Open Ctas (pick & tweak whips)".into(), format!("Start / stop whipping   {key}"), format!("Check for updates (v{version})"), "Quit".into()]
     } else {
-        ["Buka Ctas (pilih & atur pecut)".into(), format!("Mulai / udahan mecut   {key}"), "Keluar".into()]
+        ["Buka Ctas (pilih & atur pecut)".into(), format!("Mulai / udahan mecut   {key}"), format!("Cek update (v{version})"), "Keluar".into()]
     }
 }
 
@@ -328,12 +329,13 @@ pub fn run() {
             app.global_shortcut().register(shortcut)?;
 
             // ikon di menu bar / system tray
-            let [t_open, t_start, t_quit] = tray_texts(&setting_lang(app.handle()));
+            let [t_open, t_start, t_update, t_quit] = tray_texts(&setting_lang(app.handle()));
             let open = MenuItem::with_id(app, "open", t_open, true, None::<&str>)?;
             let start = MenuItem::with_id(app, "toggle", t_start, true, None::<&str>)?;
+            let update = MenuItem::with_id(app, "update", t_update, true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", t_quit, true, None::<&str>)?;
-            *app.state::<Ctas>().tray_items.lock().unwrap() = vec![open.clone(), start.clone(), quit.clone()];
-            let menu = Menu::with_items(app, &[&open, &start, &PredefinedMenuItem::separator(app)?, &quit])?;
+            *app.state::<Ctas>().tray_items.lock().unwrap() = vec![open.clone(), start.clone(), update.clone(), quit.clone()];
+            let menu = Menu::with_items(app, &[&open, &start, &PredefinedMenuItem::separator(app)?, &update, &quit])?;
             let mut tray = TrayIconBuilder::with_id("ctas")
                 .tooltip("Ctas")
                 .menu(&menu)
@@ -341,6 +343,12 @@ pub fn run() {
                 .on_menu_event(|app, event| match event.id().as_ref() {
                     "open" => open_panel(app),
                     "toggle" => toggle(app),
+                    "update" => {
+                        open_panel(app);
+                        if let Some(p) = app.get_webview_window("panel") {
+                            let _ = p.emit("ctas://check-update", ());
+                        }
+                    }
                     "quit" => app.exit(0),
                     _ => {}
                 })
