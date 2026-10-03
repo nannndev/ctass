@@ -12,8 +12,6 @@ export const DEFAULTS = {
   lang: null,      // "id" / "en" (null = ikut bahasa sistem)
   sensitivity: 1, // pengali batas Mach 1. Kecil = lebih gampang bunyi
   volume: 1,
-  nag: false,
-  autosend: false,
   theme: "classic", // "classic" (gelap elegan) / "future" (neon futuristik)
   custom: {},     // { [key pecut]: { len, bend, grav, rope, grip, sound, fx, word, echo, room, pitch, file } }
                   // sound = key pecut lain, atau "file" = suara sendiri (file: { id, name, start, end, gain })
@@ -41,6 +39,7 @@ export function normalize(raw) {
   s.showWord = s.showWord !== false;
   s.view = s.view === "3d" ? "3d" : "2d";
   s.theme = s.theme === "future" ? "future" : "classic";
+  delete s.nag; delete s.autosend; // fitur omelan udah dihapus
   if (!s.custom || typeof s.custom !== "object") s.custom = {};
   // suara bawaan sempet pakai id lain (v0.3.2), pindahin ke id baru
   const OLD = { "preset:anjing": ["preset:special1", "Special #1"], "preset:antek": ["preset:special2", "Special #2"] };

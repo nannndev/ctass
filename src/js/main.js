@@ -106,7 +106,7 @@ function flashPill(ms = 2600) {
 function dismiss() {
   if (!OVERLAY) return;
   const { crack, hit } = stage.session;
-  TAURI.core.invoke("dismiss", { cracks: crack, hits: hit }).catch(console.error);
+  TAURI.core.invoke("dismiss").catch(console.error);
   stage.session.crack = stage.session.hit = 0;
 }
 // WebView desktop biasanya boleh muter suara tanpa klik. Kalau ternyata nggak,
