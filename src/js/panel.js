@@ -34,6 +34,7 @@ const STR = {
     tooBig: "File kegedean (maks 8 MB). Potong dulu ya.", badFile: "File ini nggak bisa dibaca. Coba mp3 / wav / ogg / m4a.",
     missingFile: "File suaranya udah nggak ada. Pilih lagi ya.",
     themeClassic: "Klasik", themeFuture: "Futuristik",
+    sampleOk: "🎙 Pakai rekaman cambuk asli.", sampleLoading: "Lagi muat rekaman cambuk…", sampleFail: "⚠ Rekaman cambuk gagal dimuat, sementara pakai suara sintetis.",
     view2d: "2D", view2dSub: "Paling ringan. Semua pecut.", view3d: "3D", view3dSub: "Pecutnya jadi 3D beneran. Sedikit lebih berat.", view3dFail: "3D nggak didukung di komputer ini, balik ke 2D.",
     modeFollow: "Ikut kursor", modeFollowSub: "Pecut nempel di kursor. Sentak mouse buat ctarr.",
     modeClick: "Klik = pecut", modeClickSub: "Pecut nongkrong di pojok. Tiap klik, dia nyabet titik itu. Seret gagangnya buat mindahin.",
@@ -61,6 +62,7 @@ const STR = {
     tooBig: "That file's too big (max 8 MB). Trim it first.", badFile: "Can't read this file. Try an mp3 / wav / ogg / m4a.",
     missingFile: "That sound file is gone. Pick it again.",
     themeClassic: "Classic", themeFuture: "Futuristic",
+    sampleOk: "🎙 Using a real whip recording.", sampleLoading: "Loading the whip recording…", sampleFail: "⚠ Couldn't load the whip recording, using the synthesized sound for now.",
     view2d: "2D", view2dSub: "Lightest. Every whip.", view3d: "3D", view3dSub: "Real 3D whips. A bit heavier.", view3dFail: "3D isn't supported on this computer, back to 2D.",
     modeFollow: "Follow cursor", modeFollowSub: "The whip sticks to your cursor. Flick the mouse to crack.",
     modeClick: "Click = whip", modeClickSub: "The whip waits in a corner. Every click, it lashes that spot. Drag its handle to move it.",
@@ -175,7 +177,15 @@ function apply() {
   sound.setVolume(settings.volume);
   document.documentElement.dataset.theme = settings.theme;
   stage.setTheme(settings.theme);
-  ensureSound(sound, effective(settings).sound).then((ok) => { if (!ok) fileNote("missingFile"); drawWave(); });
+  const snd = effective(settings).sound, sample = snd.file && snd.file.id.startsWith("sample:");
+  $("soundInfo").hidden = !sample;
+  if (sample) $("soundInfo").textContent = S().sampleLoading;
+  ensureSound(sound, snd).then((ok) => {
+    // pecut yang pakai rekaman asli: kasih tau beneran kepakai atau nggak
+    if (sample) $("soundInfo").textContent = ok && (sound.file(snd.file.id) || !sound.ac) ? S().sampleOk : S().sampleFail;
+    else if (!ok) fileNote("missingFile");
+    drawWave();
+  });
 }
 
 function changed() { render(); save(); }

@@ -98,7 +98,8 @@ export class Sound {
 
     const route = (s, gain) => {
       const g = ac.createGain(); g.gain.value = gain;
-      const wet = ac.createGain(); wet.gain.value = snd.wet;
+      // rekaman udah bawa gema ruangan sendiri, jadi reverb tambahannya dikurangin biar nggak kabur
+      const wet = ac.createGain(); wet.gain.value = snd.file ? snd.wet * 0.35 : snd.wet;
       s.connect(g); g.connect(out); g.connect(wet); wet.connect(this.verb);
       if (send) g.connect(send);
       return g;
