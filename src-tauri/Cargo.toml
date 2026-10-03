@@ -1,6 +1,6 @@
 [package]
 name = "ctas"
-version = "0.2.8"
+version = "0.2.9"
 description = "Pecut realistis buat mecut AI biar rajin"
 edition = "2021"
 

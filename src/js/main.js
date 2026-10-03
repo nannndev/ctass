@@ -136,6 +136,9 @@ if (OVERLAY) {
     ensureSound();
   });
   TAURI.event.listen("ctas://cursor", (e) => stage.pointer(e.payload[0], e.payload[1]));
+  // overlay pindah ke monitor lain: tunggu ukuran jendelanya kebaru, terus pasang ulang pecutnya
+  // (biar lompatan posisi nggak kebaca sebagai sentakan)
+  TAURI.event.listen("ctas://monitor", () => { stage.rearm(); setTimeout(() => stage.rearm(), 80); });
   TAURI.event.listen("ctas://settings", (e) => applySettings(e.payload));
   // mode klik: tekan = nyabet (atau mulai geser kalau kena gagang), lepas = selesai geser
   TAURI.event.listen("ctas://click", (e) => {

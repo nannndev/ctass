@@ -127,7 +127,24 @@ fn track_cursor(app: &AppHandle) {
         }
         let mut last = (f64::NAN, f64::NAN);
         let mut clicks = mouse::Clicks::new();
+        // monitor yang lagi ditutupin overlay (diidentifikasi dari posisinya)
+        let monitor_at = |x: f64, y: f64| app.monitor_from_point(x, y).ok().flatten();
+        let mut screen = app.cursor_position().ok().and_then(|p| monitor_at(p.x, p.y)).map(|m| *m.position());
+        let mut tick = 0u32;
         while tracking.load(Ordering::SeqCst) {
+            tick = tick.wrapping_add(1);
+            // banyak monitor: kursor pindah layar = overlay ikut pindah ke layar itu (dicek ~tiap 50 ms)
+            if tick % 8 == 0 {
+                if let Some(m) = app.cursor_position().ok().and_then(|p| monitor_at(p.x, p.y)) {
+                    if Some(*m.position()) != screen {
+                        screen = Some(*m.position());
+                        let _ = w.set_position(*m.position());
+                        let _ = w.set_size(*m.size());
+                        let _ = w.emit("ctas://monitor", ());
+                        last = (f64::NAN, f64::NAN);
+                    }
+                }
+            }
             if let (Ok(p), Ok(origin), Ok(scale)) = (app.cursor_position(), w.outer_position(), w.scale_factor()) {
                 let x = (p.x - origin.x as f64) / scale;
                 let y = (p.y - origin.y as f64) / scale;
