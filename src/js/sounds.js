@@ -6,8 +6,8 @@ export const MAX_BYTES = 8 * 1024 * 1024; // 8 MB cukup buat potongan suara
 // Suara bawaan yang ikut di app (folder src/sounds). Dipakai lewat editor yang sama
 // kayak suara sendiri, jadi bisa dipotong & diatur volumenya juga.
 export const PRESETS = {
-  "preset:anjing": { name: "Anjing (Prabowo)", url: "sounds/anjing.mp3" },
-  "preset:antek": { name: "Hey antek-antek asing (Prabowo)", url: "sounds/antek-asing.mp3" },
+  "preset:special1": { name: "Special #1", url: "sounds/special-1.mp3" },
+  "preset:special2": { name: "Special #2", url: "sounds/special-2.mp3" },
 };
 export const isPreset = (id) => typeof id === "string" && id.startsWith("preset:");
 

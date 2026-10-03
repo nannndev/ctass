@@ -42,6 +42,12 @@ export function normalize(raw) {
   s.view = s.view === "3d" ? "3d" : "2d";
   s.theme = s.theme === "future" ? "future" : "classic";
   if (!s.custom || typeof s.custom !== "object") s.custom = {};
+  // suara bawaan sempet pakai id lain (v0.3.2), pindahin ke id baru
+  const OLD = { "preset:anjing": ["preset:special1", "Special #1"], "preset:antek": ["preset:special2", "Special #2"] };
+  for (const c of Object.values(s.custom)) {
+    const f = c && c.file, to = f && OLD[f.id];
+    if (to) c.file = { ...f, id: to[0], name: to[1] };
+  }
   return s;
 }
 
