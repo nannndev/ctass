@@ -57,6 +57,18 @@ export const EN = {
   "Bikin AppImage-nya bisa dijalanin, terus buka:": "Make the AppImage executable, then run it:",
   "Atau install <code>.deb</code>-nya. Fitur ketik omelan butuh <code>xdotool</code> (<code>sudo apt install xdotool</code>).":
     "Or install the <code>.deb</code>. Scolding needs <code>xdotool</code> (<code>sudo apt install xdotool</code>).",
+  "Open source": "Open source",
+  "Bikin bareng-bareng.": "Built together.",
+  "Ctas gratis dan kodenya terbuka. Kasih bintang, laporin bug, ikut ngoding, atau traktir kopi biar makin rajin update.":
+    "Ctas is free and open source. Star it, report bugs, contribute code, or buy a coffee to keep the updates coming.",
+  "Repo": "Repo",
+  "Semua kodenya ada di GitHub: fisika tali, suara, model 3D, sampai app desktopnya.": "All the code is on GitHub: rope physics, sound, 3D models, the desktop app.",
+  "Laporin bug": "Report a bug",
+  "Contributor": "Contributors",
+  "Makasih buat yang udah ikut ngembangin. Mau nambah pecut atau benerin sesuatu? Fork, terus kirim pull request.":
+    "Thanks to everyone who's helped build it. Want to add a whip or fix something? Fork it and send a pull request.",
+  "Donasi": "Donate",
+  "Ctas bakal tetap gratis. Kalau lu suka, boleh traktir kopi.": "Ctas will stay free. If you like it, feel free to buy me a coffee.",
   "Dibikin iseng.": "Made for fun.",
 };
 
@@ -90,5 +102,6 @@ export const EN_DYNAMIC = {
   hintClick: "<strong>Click anywhere.</strong>The whip lashes that spot. Double-click = twice. Drag its handle to move it.",
   hintFollow: "<strong>Click, then swing and flick.</strong>A slow swing won't crack. You have to snap it.",
   nag: "[Ctas] You just got whipped 7 times, 2 of them in the face. Hurry up, no hallucinating, just do it.",
+  star: "★ Star on GitHub", seeAll: "See all",
   copied: "Copied", copy: "Copy", pressCopy: (mac) => (mac ? "Press ⌘C" : "Press Ctrl+C"),
 };
