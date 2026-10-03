@@ -10,7 +10,7 @@ const $ = (id) => document.getElementById(id);
 const sound = new Sound();
 const demo = document.querySelector(".demo");
 const IS_MAC = /Mac/i.test(navigator.userAgent);
-const TRANSLATE = "nav a, a.btn, .eyebrow, h1, h2, h3, main p, main li:not(.steps li), figcaption, dt, .demo-hint, .foot span";
+const TRANSLATE = "nav a, a.btn:not(#starBtn), .eyebrow, h1, h2, h3, main p, main li:not(.steps li), figcaption, dt, .demo-hint, .foot span";
 
 let lang = "id";
 try { lang = localStorage.getItem("ctas.lang") || detectLang(); } catch { lang = detectLang(); }
@@ -45,6 +45,7 @@ const ID = {
   hintClick: "<strong>Klik di mana aja.</strong>Pecutnya nyabet titik itu. Double klik = dua kali. Seret gagangnya buat mindahin.",
   hintFollow: "<strong>Klik, terus ayun dan sentak.</strong>Ayun pelan nggak bunyi. Harus disentak.",
   nag: "[Ctas] Kamu barusan dipecut 7 kali, 2 kali kena muka. Cepetan dong, jangan halu, langsung kerjain.",
+  star: "★ Star di GitHub", seeAll: "Lihat semua",
   copied: "Ke-copy", copy: "Copy", pressCopy: (mac) => (mac ? "Tekan ⌘C" : "Tekan Ctrl+C"),
 };
 const L = () => (lang === "en" ? E : ID);
@@ -161,6 +162,8 @@ function applyLang() {
     c.querySelector("button").textContent = T.try;
   });
   $("heroDl").textContent = T.download[OS || "none"];
+  $("starBtn").firstChild.textContent = T.star + " ";
+  $("contributors").querySelector(".more").textContent = T.seeAll;
   $("langBtn").textContent = lang === "en" ? "ID" : "EN";
   $("langBtn").title = lang === "en" ? "Ganti ke Bahasa Indonesia" : "Switch to English";
   document.title = lang === "en" ? "Ctas · a virtual whip" : "Ctas · pecut virtual";
@@ -188,6 +191,33 @@ if ("IntersectionObserver" in window) {
     if (!entries[0].isIntersecting) return;
     seen = true; obs.disconnect(); retype();
   }, { threshold: 0.6 }).observe(typed);
+}
+
+// ---------- Open source: bintang, contributor, donasi ----------
+const REPO = "nannndev/ctass";
+// Isi link donasi di sini (Saweria / Trakteer / GitHub Sponsors / Ko-fi). Kosong = kartu donasi disembunyiin.
+const DONATE = [];
+fetch(`https://api.github.com/repos/${REPO}`).then((r) => (r.ok ? r.json() : null)).then((d) => {
+  if (d && typeof d.stargazers_count === "number") $("starCount").textContent = d.stargazers_count;
+}).catch(() => {});
+fetch(`https://api.github.com/repos/${REPO}/contributors?per_page=24`).then((r) => (r.ok ? r.json() : [])).then((list) => {
+  const box = $("contributors"), more = box.querySelector(".more");
+  (Array.isArray(list) ? list : []).filter((c) => c.type !== "Bot").forEach((c) => {
+    const a = document.createElement("a");
+    a.className = "av"; a.href = c.html_url; a.target = "_blank"; a.rel = "noopener";
+    a.title = `${c.login} · ${c.contributions} commit`;
+    const img = document.createElement("img");
+    img.src = c.avatar_url + "&s=80"; img.alt = c.login; img.loading = "lazy"; img.width = 40; img.height = 40;
+    a.appendChild(img); box.insertBefore(a, more);
+  });
+}).catch(() => {});
+if (DONATE.length) {
+  $("donateCard").hidden = false;
+  DONATE.forEach(({ label, url }, i) => {
+    const a = document.createElement("a");
+    a.className = i ? "btn btn-ghost" : "btn"; a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = label;
+    $("donateBtns").appendChild(a);
+  });
 }
 
 // ---------- Tombol copy perintah install ----------
