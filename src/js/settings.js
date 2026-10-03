@@ -62,7 +62,7 @@ export function effective(settings) {
   if (c.rope) v.rope = c.rope;
   if (c.grip) v.grip = c.grip;
   v.sound = { ...(c.sound && VARIANTS[c.sound] ? VARIANTS[c.sound].sound : base.sound) };
-  if (c.sound === "file" && c.file?.id) v.sound.file = { ...c.file };
+  if (c.sound === "file" && c.file?.id) { v.sound.file = { ...c.file }; v.sound.extra = null; } // suara pilihan sendiri: tanpa lapisan tambahan
   if (c.echo != null) v.sound.echo = c.echo > 0 ? [v.sound.echo?.[0] ?? 0.26, v.sound.echo?.[1] ?? 0.3, c.echo] : null;
   if (c.room != null) v.sound.wet = c.room;
   if (c.pitch) v.sound.pitch = c.pitch;

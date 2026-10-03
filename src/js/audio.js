@@ -104,16 +104,19 @@ export class Sound {
       return g;
     };
 
-    // suara sendiri: mainin potongan file-nya (awal-akhir yang dipilih di editor)
+    // rekaman (suara asli pecut, suara bawaan, atau suara sendiri): mainin potongannya.
+    // Lapisan khas pecutnya (rumbai, denting, api, ...) tetap ditumpuk di bawah.
     const fb = snd.file && this.files.get(snd.file.id);
     if (fb) {
       const s = ac.createBufferSource();
       s.buffer = fb;
-      s.playbackRate.value = (snd.file.rate ?? 1) * (snd.pitch ?? 1);
+      // tiap ctarr nadanya geser dikit biar nggak kedengeran kayak rekaman diulang
+      s.playbackRate.value = (snd.file.rate ?? 1) * (snd.pitch ?? 1) * (snd.file.vary ? 0.95 + Math.random() * 0.1 : 1);
       const start = clamp(snd.file.start ?? 0, 0, fb.duration);
       const end = clamp(snd.file.end ?? fb.duration, start + 0.01, fb.duration);
       route(s, a * (snd.file.gain ?? 1));
       s.start(t, start, end - start);
+      this.extras(snd, t, out, a);
       return;
     }
 
@@ -137,7 +140,10 @@ export class Sound {
     bg.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     body.connect(bg); bg.connect(out);
     body.start(t); body.stop(t + dur + 0.02);
+    this.extras(snd, t, out, a);
+  }
 
+  extras(snd, t, out, a) {
     if (snd.extra === "rustle") this.rustle(t + 0.008, out, a);
     if (snd.extra === "chime") this.chime(t + 0.004, out, a);
     if (snd.extra === "swish") this.sweep(t, out, a * 0.55, "bandpass", 3600, 1100, 0.17, 1.2);

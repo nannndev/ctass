@@ -5,11 +5,20 @@ export const MAX_BYTES = 8 * 1024 * 1024; // 8 MB cukup buat potongan suara
 
 // Suara bawaan yang ikut di app (folder src/sounds). Dipakai lewat editor yang sama
 // kayak suara sendiri, jadi bisa dipotong & diatur volumenya juga.
+// URL dihitung dari lokasi file ini (js/ -> ../sounds/), jadi jalan di app, /play, dan demo landing.
+const at = (f) => new URL(`../sounds/${f}`, import.meta.url).href;
 export const PRESETS = {
-  "preset:special1": { name: "Special #1", url: "sounds/special-1.mp3" },
-  "preset:special2": { name: "Special #2", url: "sounds/special-2.mp3" },
+  "preset:special1": { name: "Special #1", url: at("special-1.mp3") },
+  "preset:special2": { name: "Special #2", url: at("special-2.mp3") },
 };
-export const isPreset = (id) => typeof id === "string" && id.startsWith("preset:");
+// rekaman pecut asli yang dipakai beberapa pecut (lihat `file` di variants.js), nggak muncul di dropdown
+const SAMPLES = {
+  "sample:crack": { url: at("whip-crack.mp3") },
+  "sample:snap": { url: at("whip-snap.mp3") },
+  "sample:heavy": { url: at("whip-heavy.mp3") },
+};
+const BUILTIN = { ...PRESETS, ...SAMPLES };
+export const isPreset = (id) => typeof id === "string" && (id.startsWith("preset:") || id.startsWith("sample:"));
 
 const newId = (name) => {
   const ext = (name.match(/\.([a-z0-9]{1,5})$/i)?.[1] || "audio").toLowerCase();
@@ -48,7 +57,7 @@ export async function saveSound(file) {
 export async function loadSound(id) {
   try {
     if (isPreset(id)) {
-      const r = await fetch(PRESETS[id]?.url || "");
+      const r = await fetch(BUILTIN[id]?.url || "");
       return r.ok ? await r.arrayBuffer() : null;
     }
     if (TAURI) return await TAURI.core.invoke("load_sound", { id });
@@ -69,10 +78,12 @@ export async function deleteSound(id) {
 
 // pastiin file suara yang kepake pecut ini udah dimuat ke Sound.
 // Balikin false kalau file-nya udah nggak ada (bunyinya balik ke ctarr bawaan).
-const loading = new Map();
+const caches = new WeakMap(); // per objek Sound, biar dua Sound di satu halaman nggak saling ketuker
 export async function ensureSound(sound, snd) {
   const id = snd?.file?.id;
   if (!id || sound.file(id)) return true;
+  if (!caches.has(sound)) caches.set(sound, new Map());
+  const loading = caches.get(sound);
   if (!loading.has(id)) {
     loading.set(id, loadSound(id).then(async (data) => (data ? !!(await sound.addFile(id, data)) || !sound.ac : false)));
   }

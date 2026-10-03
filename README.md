@@ -12,8 +12,10 @@ tekan **⌘⇧X**, pecut sepuasnya, terus tekan **Esc**. Lumayan buat ngelampias
 - **Bunyi CTARR kalau ujungnya tembus "Mach 1".** Pecut asli bunyi karena ujungnya
   lebih cepat dari suara. Di sini kecepatan ujung diukur tiap sub-step, dan bunyinya
   makin keras kalau makin kenceng.
-- **Suara disintesis pakai Web Audio**, nggak ada file rekaman. Ayun pelan nggak bunyi,
-  cuma pas ujungnya tembus Mach 1 keluar ctarr.
+- **Suara pecut asli + sintesis:** Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti, dan Cambuk api
+  pakai rekaman cambuk beneran (nadanya digeser dikit tiap ctarr biar nggak monoton), plus lapisan khasnya
+  (desir rumbai, denting, api). Pecut lain disintesis langsung pakai Web Audio. Ayun pelan nggak bunyi,
+  harus disentak.
 - **17 pecut, beda suara & efek:** Jaranan, Cambuk sapi, Bullwhip, Samandiman, Cemeti,
   Sapu lidi (srak!), Kabel charger (zzt!), Ikat pinggang (plak!), Cambuk api (bwosh!), Cambuk plasma (vzwap!),
   plus 7 futuristik: Hologram (bzzrt!), Logam cair (shhing!), Rantai energi (klangg!), Tesla (krzzak!),
@@ -146,3 +148,8 @@ File update ditandatangani pakai kunci Tauri. Kunci privatnya disimpan di GitHub
 Secrets `TAURI_SIGNING_PRIVATE_KEY` (tanpa password). Kalau secret-nya belum ada,
 CI tetap build kayak biasa, cuma `latest.json` nggak dibikin jadi app nggak dapet update.
 Kunci publiknya ada di `src-tauri/tauri.conf.json` → `plugins.updater.pubkey`.
+
+## Kredit suara
+
+Rekaman cambuk (`src/sounds/whip-*.mp3`) dari [Universfield](https://pixabay.com/users/universfield-28281460/)
+di Pixabay, dipakai sesuai [Pixabay Content License](https://pixabay.com/service/license-summary/).
