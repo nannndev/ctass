@@ -30,7 +30,7 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
 - **Tema klasik / futuristik:** futuristik = neon cyan, lantai grid, tulisan nyala.
 - **Atur suara:** tombol tes, gema, ruang (reverb), nada. Bisa pakai **suara sendiri** (mp3/wav/ogg/m4a, maks 8 MB)
   plus editor: lihat gelombangnya, potong awal & akhir, atur volume.
-  Ada juga suara bawaan siap pakai: "Anjing" dan "Hey antek-antek asing" (Prabowo).
+  Ada juga suara bawaan siap pakai: Special #1 dan Special #2.
 - **Update otomatis:** Ctas ngecek versi baru pas dibuka. Kalau ada, tinggal klik "Update sekarang".
   Buka Ctas lagi pas udah jalan = jendela yang lama yang muncul, nggak dobel.
 - **Dua bahasa:** Indonesia & English (landing page, app, sampai omelannya).

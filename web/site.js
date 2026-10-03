@@ -196,7 +196,7 @@ if ("IntersectionObserver" in window) {
 // ---------- Open source: bintang, contributor, donasi ----------
 const REPO = "nannndev/ctass";
 // Isi link donasi di sini (Saweria / Trakteer / GitHub Sponsors / Ko-fi). Kosong = kartu donasi disembunyiin.
-const DONATE = [];
+const DONATE = [{ label: "☕ Buy me a coffee", url: "https://buymeacoffee.com/ekaprasety8" }];
 fetch(`https://api.github.com/repos/${REPO}`).then((r) => (r.ok ? r.json() : null)).then((d) => {
   if (d && typeof d.stargazers_count === "number") $("starCount").textContent = d.stargazers_count;
 }).catch(() => {});
