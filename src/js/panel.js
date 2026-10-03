@@ -5,7 +5,7 @@ import { createStage } from "./stage.js";
 import { drawSwatch } from "./swatch.js";
 import { RANGES, normalize, effective } from "./settings.js";
 import { whipName } from "./i18n.js";
-import { saveSound, deleteSound, ensureSound } from "./sounds.js";
+import { saveSound, deleteSound, ensureSound, PRESETS, isPreset } from "./sounds.js";
 
 const TAURI = window.__TAURI__;
 const IS_MAC = /Mac/i.test(navigator.userAgent);
@@ -124,7 +124,7 @@ function texts() {
   document.querySelectorAll("[data-t]").forEach((el) => (el.textContent = typeof T[el.dataset.t] === "string" ? T[el.dataset.t] : ""));
   document.querySelectorAll(".lang").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.lang === settings.lang)));
   document.querySelectorAll(".tile").forEach((t) => (t.querySelector(".nm").textContent = name(t.dataset.k)));
-  for (const id of ["sound", "fx"]) [...$(id).options].forEach((o) => (o.textContent = o.value === "file" ? T.soundFile : name(o.value)));
+  for (const id of ["sound", "fx"]) [...$(id).options].forEach((o) => (o.textContent = o.value === "file" ? T.soundFile : PRESETS[o.value] ? "🎙 " + PRESETS[o.value].name : name(o.value)));
   $("foot").innerHTML = T.foot(T.tray);
   $("count").textContent = count + " " + T.cracks;
   if (!TAURI) $("version").textContent = T.webVersion;
@@ -142,7 +142,7 @@ function render() {
   setRange("grav", RANGES.grav, c.grav ?? 1); $("oGrav").textContent = pct(c.grav ?? 1);
   $("rope").value = c.rope ?? b.rope; $("oRope").textContent = $("rope").value;
   $("grip").value = c.grip ?? b.grip; $("oGrip").textContent = $("grip").value;
-  $("sound").value = c.sound === "file" && c.file ? "file" : c.sound && c.sound !== "file" ? c.sound : k;
+  $("sound").value = c.sound === "file" && c.file ? (isPreset(c.file.id) ? c.file.id : "file") : c.sound && c.sound !== "file" ? c.sound : k;
   const rec = (c.sound && VARIANTS[c.sound] ? VARIANTS[c.sound] : b).sound;
   const echo = c.echo ?? rec.echo?.[2] ?? 0, room = c.room ?? rec.wet, pitch = c.pitch ?? 1;
   setRange("echo", RANGES.echo, echo); $("oEcho").textContent = echo > 0 ? pct(echo / RANGES.echo[1]) : T.off;
@@ -198,7 +198,7 @@ KEYS.forEach((k, i) => {
 for (const id of ["sound", "fx"]) {
   KEYS.forEach((k) => { const o = document.createElement("option"); o.value = k; $(id).appendChild(o); });
 }
-{ const o = document.createElement("option"); o.value = "file"; $("sound").appendChild(o); }
+for (const v of [...Object.keys(PRESETS), "file"]) { const o = document.createElement("option"); o.value = v; $("sound").appendChild(o); }
 
 // custom pecut yang lagi dipilih
 const bindCustom = (id, parse = Number) => $(id).addEventListener("input", (e) => {
@@ -252,8 +252,17 @@ function fileNote(key) { $("fileNote").hidden = !key; $("fileNote").textContent 
 
 $("sound").addEventListener("change", (e) => {
   const v = e.target.value;
+  if (PRESETS[v]) {
+    // suara bawaan: pakai editor yang sama, mulai dari full (bisa dipotong)
+    const old = custom().file;
+    if (old && !isPreset(old.id)) deleteSound(old.id);
+    custom().file = { id: v, name: PRESETS[v].name, start: 0, end: null, gain: 1 };
+    custom().sound = "file";
+    fileNote(null); changed(); test();
+    return;
+  }
   if (v === "file") {
-    if (custom().file) { custom().sound = "file"; changed(); }
+    if (custom().file && !isPreset(custom().file.id)) { custom().sound = "file"; changed(); }
     else { $("fileIn").click(); render(); } // balikin dropdown sampai file kepilih
     return;
   }
