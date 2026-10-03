@@ -100,5 +100,6 @@ export const EN_DYNAMIC = {
   hintClick: "<strong>Click anywhere.</strong>The whip lashes that spot. Double-click = twice. Drag its handle to move it.",
   hintFollow: "<strong>Click, then swing and flick.</strong>A slow swing won't crack. You have to snap it.",
   star: "★ Star on GitHub", seeAll: "See all",
+  downloads: (n) => `⬇ <b>${n}</b> downloads`,
   copied: "Copied", copy: "Copy", pressCopy: (mac) => (mac ? "Press ⌘C" : "Press Ctrl+C"),
 };
