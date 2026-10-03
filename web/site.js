@@ -5,7 +5,7 @@ import { createStage } from "/engine/stage.js";
 import { drawSwatch } from "/engine/swatch.js";
 import { detectLang, translateDom, whipName } from "/engine/i18n.js";
 import { EN, EN_DYNAMIC as E } from "/en.js";
-import { ensureSound } from "/engine/sounds.js";
+import { ensureSound, loadSwing } from "/engine/sounds.js";
 
 const $ = (id) => document.getElementById(id);
 const sound = new Sound();
@@ -43,6 +43,7 @@ const ID = {
   modeFollow: "Mode: ikut kursor", modeClick: "Mode: klik = pecut",
   view2d: "Tampilan: 2D", view3d: "Tampilan: 3D", view3dFail: "3D nggak didukung browser ini",
   themeClassic: "Tema: klasik", themeFuture: "Tema: futuristik",
+  swingOn: "Ayunan: on", swingOff: "Ayunan: off",
   hintClick: "<strong>Klik di mana aja.</strong>Pecutnya nyabet titik itu. Double klik = dua kali. Seret gagangnya buat mindahin.",
   hintFollow: "<strong>Klik, terus ayun dan sentak.</strong>Ayun pelan nggak bunyi. Harus disentak.",
   star: "★ Star di GitHub", seeAll: "Lihat semua",
@@ -109,6 +110,13 @@ $("viewBtn").onclick = async () => {
   view3dFail = !ok;
   labels();
 };
+let swingOn = false;
+$("swingBtn").onclick = () => {
+  sound.init(); swingOn = !swingOn;
+  sound.setSwing(swingOn, 0.8);
+  if (swingOn) loadSwing(sound);
+  labels();
+};
 let future = false;
 $("themeBtn").onclick = () => {
   future = !future;
@@ -149,6 +157,8 @@ function labels() {
   const on = stage.is3D;
   $("viewBtn").textContent = view3dFail ? T.view3dFail : on ? T.view3d : T.view2d;
   $("themeBtn").textContent = future ? T.themeFuture : T.themeClassic;
+  $("swingBtn").textContent = swingOn ? T.swingOn : T.swingOff;
+  $("swingBtn").setAttribute("aria-pressed", String(swingOn));
   $("themeBtn").setAttribute("aria-pressed", String(future));
   $("viewBtn").setAttribute("aria-pressed", String(on));
 }

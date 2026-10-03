@@ -403,6 +403,7 @@ export function createStage(o) {
     if (showAI && mach > 0.45 && hitCool <= 0 && tipInAI()) { onHit(cracked); hitCool = 0.6; }
 
     o.onMach?.(mach, machShown);
+    o.sound.swing?.(mach, (whip.x[whip.n - 1] / W) * 2 - 1, dt); // suara ayunan (kalau dinyalain)
     draw(dt);
     if (running) requestAnimationFrame(frame);
   }

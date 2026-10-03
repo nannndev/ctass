@@ -155,6 +155,56 @@ export class Sound {
     if (snd.extra && this[FUTURE[snd.extra]]) this[FUTURE[snd.extra]](t, out, a);
   }
 
+  // ---------- suara ayunan ----------
+  // Dua lapis, dua-duanya ngikut kecepatan ujung tali (mach = kecepatan / batas ctarr):
+  //   1. loop "wush-wush" cambuk diputer: makin kenceng, putarannya makin cepet, makin keras & terang
+  //   2. wush satuan acak tiap ayunan tiba-tiba kenceng
+  // swing() dipanggil tiap frame dari stage.js. Kalau frame berhenti, suaranya mudar sendiri.
+  setSwing(on, vol = 0.7) { this.swingOn = !!on; this.swingVol = vol; if (!this.swingOn) this.swingStop(); }
+  // muted = overlay lagi disembunyiin (abis udahan): diem total sampai mulai lagi
+  swingStop(muted = false) {
+    this.swingMuted = muted;
+    if (!this.sw) return;
+    const t = this.ac.currentTime;
+    this.sw.g.gain.cancelScheduledValues(t); this.sw.g.gain.setTargetAtTime(0, t, 0.05);
+  }
+  swing(mach, pan, dt) {
+    if (!this.swingOn || !this.ac || !this.on || this.swingMuted) return;
+    const { ac } = this, t = ac.currentTime;
+    const loop = this.files.get("sample:swingloop"), sprite = this.files.get("sample:swish");
+    const k = clamp((mach - 0.1) / 0.85, 0, 1);
+    this.swK = (this.swK ?? 0) + (k - (this.swK ?? 0)) * Math.min(1, dt * 10);
+    if (loop) {
+      if (!this.sw) {
+        const src = ac.createBufferSource(); src.buffer = loop; src.loop = true;
+        const lp = ac.createBiquadFilter(); lp.type = "lowpass";
+        const g = ac.createGain(); g.gain.value = 0;
+        const p = ac.createStereoPanner ? ac.createStereoPanner() : null;
+        src.connect(lp); lp.connect(g);
+        if (p) { g.connect(p); p.connect(this.master); } else g.connect(this.master);
+        src.start();
+        this.sw = { src, lp, g, p };
+      }
+      const s = this.swK, sw = this.sw;
+      sw.src.playbackRate.setTargetAtTime(0.6 + s * 1.2, t, 0.05);
+      sw.lp.frequency.setTargetAtTime(700 + s * 7000, t, 0.05);
+      if (sw.p) sw.p.pan.setTargetAtTime(clamp(pan, -0.8, 0.8), t, 0.05);
+      sw.g.gain.cancelScheduledValues(t);
+      sw.g.gain.setTargetAtTime(this.swingVol * 0.55 * s ** 1.4, t, 0.04);
+      sw.g.gain.setTargetAtTime(0, t + 0.15, 0.08); // kalau nggak disegerin frame berikutnya, mudar
+    }
+    if (sprite && mach > 0.5 && (this.swPrev ?? 0) <= 0.5 && t - (this.swLast ?? -1) > 0.22) {
+      this.swLast = t;
+      const i = (Math.random() * 10) | 0, src = ac.createBufferSource(), g = ac.createGain();
+      src.buffer = sprite;
+      src.playbackRate.value = 0.85 + k * 0.45 + Math.random() * 0.08;
+      g.gain.value = this.swingVol * (0.3 + k * 0.5);
+      src.connect(g); g.connect(this.panner(pan));
+      src.start(t, i * 0.4, 0.4);
+    }
+    this.swPrev = mach;
+  }
+
   // ---------- lapisan pecut futuristik ----------
   tone(t, out, type, f0, f1, dur, lv, verb) {
     const { ac } = this, o = ac.createOscillator(), g = ac.createGain();

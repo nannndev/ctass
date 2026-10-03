@@ -152,6 +152,8 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius
 .switch input:checked { background: var(--accent); }
 .switch input:checked::after { transform: translateX(16px); background: #0b0b0c; }
 
+#swingVolRow { margin: 4px 0 6px; }
+#swingVolRow[hidden] { display: none; }
 .about { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 12px 14px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; }
 .about b { font-weight: 600; }
 .status { color: var(--muted); font-size: 12px; }
