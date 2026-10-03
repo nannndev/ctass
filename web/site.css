@@ -229,6 +229,9 @@ code { font: 400 0.9em var(--mono); color: var(--fg); background: var(--surface)
 .dl .btn.is-you { background: var(--fg); color: #0b0b0c; border-color: var(--fg); }
 .dl .btn.is-you span { color: #4a4740; }
 .dl .btn.is-you:hover { background: var(--accent); border-color: var(--accent); }
+.dl-count { margin-top: 18px; font: 500 13px var(--mono); color: var(--muted); letter-spacing: 0.02em; }
+.dl-count b { color: var(--fg); font-weight: 600; }
+.dl-count[hidden] { display: none; }
 .dl-meta { margin-top: 16px; font-size: 13px; color: var(--muted); }
 .dl-meta a { color: var(--muted); }
 .notes strong { color: var(--fg); font-weight: 500; }

@@ -47,6 +47,7 @@ const ID = {
   hintClick: "<strong>Klik di mana aja.</strong>Pecutnya nyabet titik itu. Double klik = dua kali. Seret gagangnya buat mindahin.",
   hintFollow: "<strong>Klik, terus ayun dan sentak.</strong>Ayun pelan nggak bunyi. Harus disentak.",
   star: "★ Star di GitHub", seeAll: "Lihat semua",
+  downloads: (n) => `⬇ <b>${n}</b> kali di-download`,
   copied: "Ke-copy", copy: "Copy", pressCopy: (mac) => (mac ? "Tekan ⌘C" : "Tekan Ctrl+C"),
 };
 const L = () => (lang === "en" ? E : ID);
@@ -175,6 +176,7 @@ function applyLang() {
   $("heroDl").textContent = T.download[OS || "none"];
   $("starBtn").firstChild.textContent = T.star + " ";
   $("contributors").querySelector(".more").textContent = T.seeAll;
+  if (typeof showDownloads === "function") showDownloads();
   $("langBtn").textContent = lang === "en" ? "ID" : "EN";
   $("langBtn").title = lang === "en" ? "Ganti ke Bahasa Indonesia" : "Switch to English";
   document.title = lang === "en" ? "Ctas · a virtual whip" : "Ctas · pecut virtual";
@@ -185,6 +187,19 @@ $("langBtn").onclick = () => {
   try { localStorage.setItem("ctas.lang", lang); } catch {}
   applyLang();
 };
+
+// ---------- Jumlah download (total file installer di semua GitHub Release) ----------
+const INSTALLERS = /^Ctas-(macOS\.dmg|Windows-setup\.exe|Linux\.AppImage|Linux\.deb)$/;
+let downloads = 0;
+function showDownloads() {
+  if (!downloads) return;
+  const n = downloads.toLocaleString(lang === "en" ? "en-US" : "id-ID");
+  for (const id of ["dlCountHero", "dlCount"]) { $(id).innerHTML = L().downloads(n); $(id).hidden = false; }
+}
+fetch("https://api.github.com/repos/nannndev/ctass/releases?per_page=100").then((r) => (r.ok ? r.json() : [])).then((rels) => {
+  downloads = (Array.isArray(rels) ? rels : []).reduce((sum, r) => sum + (r.assets || []).reduce((s, a) => s + (INSTALLERS.test(a.name) ? a.download_count : 0), 0), 0);
+  showDownloads();
+}).catch(() => {});
 
 // ---------- Open source: bintang, contributor, donasi ----------
 const REPO = "nannndev/ctass";
