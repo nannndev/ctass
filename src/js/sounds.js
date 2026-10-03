@@ -3,6 +3,14 @@
 const TAURI = window.__TAURI__;
 export const MAX_BYTES = 8 * 1024 * 1024; // 8 MB cukup buat potongan suara
 
+// Suara bawaan yang ikut di app (folder src/sounds). Dipakai lewat editor yang sama
+// kayak suara sendiri, jadi bisa dipotong & diatur volumenya juga.
+export const PRESETS = {
+  "preset:anjing": { name: "Anjing (Prabowo)", url: "sounds/anjing.mp3" },
+  "preset:antek": { name: "Hey antek-antek asing (Prabowo)", url: "sounds/antek-asing.mp3" },
+};
+export const isPreset = (id) => typeof id === "string" && id.startsWith("preset:");
+
 const newId = (name) => {
   const ext = (name.match(/\.([a-z0-9]{1,5})$/i)?.[1] || "audio").toLowerCase();
   const rnd = [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -39,6 +47,10 @@ export async function saveSound(file) {
 // ambil isi file (ArrayBuffer) atau null kalau udah nggak ada
 export async function loadSound(id) {
   try {
+    if (isPreset(id)) {
+      const r = await fetch(PRESETS[id]?.url || "");
+      return r.ok ? await r.arrayBuffer() : null;
+    }
     if (TAURI) return await TAURI.core.invoke("load_sound", { id });
     return (await idb("readonly", (s) => s.get(id))) || null;
   } catch (e) {
@@ -48,6 +60,7 @@ export async function loadSound(id) {
 }
 
 export async function deleteSound(id) {
+  if (isPreset(id)) return; // bawaan app, jangan dihapus
   try {
     if (TAURI) await TAURI.core.invoke("delete_sound", { id });
     else await idb("readwrite", (s) => s.delete(id));
