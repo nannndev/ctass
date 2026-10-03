@@ -24,7 +24,7 @@ const STR = {
     showWord: "Tampilkan tulisan pas ctarr", showWordSub: "Matiin kalau mau efeknya aja tanpa tulisan.",
     general: "Umum",
     tipKeys: "Tips: tekan 1–9 & 0 buat ganti pecut. Coba langsung di preview atas.",
-    groupMode: "Cara mecut", groupView: "Tampilan", groupFeel: "Rasa", groupNag: "Omelan", about: "Tentang",
+    groupMode: "Cara mecut", groupView: "Tampilan", groupFeel: "Rasa", about: "Tentang",
     checkUpdate: "Cek update", checking: "Lagi ngecek…", upToDate: "Udah versi terbaru.", updateFail: "Gagal ngecek update. Coba lagi nanti.",
     newVersion: (v) => `Versi baru <b>v${v}</b> udah ada.`, updateNow: "Update sekarang", updating: "Lagi download…", restarting: "Bentar, Ctas dibuka ulang…",
     webVersion: "versi web",
@@ -39,8 +39,6 @@ const STR = {
     modeClick: "Klik = pecut", modeClickSub: "Pecut nongkrong di pojok. Tiap klik, dia nyabet titik itu. Seret gagangnya buat mindahin.",
     linuxNote: "Di Linux, mode klik baru jalan di preview ini, belum di overlay.",
     easy: "Gampang bunyi", volume: "Volume",
-    nag: "Ketik omelan ke AI pas udahan", nagSub: "Omelan diketik ke jendela yang lagi aktif.", nagMac: " Di Mac, bakal minta izin Accessibility sekali.",
-    autosend: "Langsung kirim", autosendSub: "Sekalian tekan Enter abis ngetik omelan.",
     stiff: "kaku", medium: "sedang", loose: "lentur", cracks: "ctarr",
     hintFollow: "Coba ayun di sini, terus sentak.", hintClick: "Klik di sini buat nyabet. Seret gagangnya buat mindahin.",
     foot: (tray) => `Jendela ini boleh ditutup, Ctas tetap jalan di ${tray}. Mulai / udahan kapan aja pakai <b>${KEY}</b>.`,
@@ -53,7 +51,7 @@ const STR = {
     showWord: "Show the word on crack", showWordSub: "Turn off if you only want the effect, no text.",
     general: "General",
     tipKeys: "Tip: press 1–9 & 0 to switch whips. Try it right in the preview above.",
-    groupMode: "How to whip", groupView: "Look", groupFeel: "Feel", groupNag: "Scolding", about: "About",
+    groupMode: "How to whip", groupView: "Look", groupFeel: "Feel", about: "About",
     checkUpdate: "Check for updates", checking: "Checking…", upToDate: "You're on the latest version.", updateFail: "Couldn't check for updates. Try again later.",
     newVersion: (v) => `Version <b>v${v}</b> is out.`, updateNow: "Update now", updating: "Downloading…", restarting: "Hang on, restarting Ctas…",
     webVersion: "web version",
@@ -68,8 +66,6 @@ const STR = {
     modeClick: "Click = whip", modeClickSub: "The whip waits in a corner. Every click, it lashes that spot. Drag its handle to move it.",
     linuxNote: "On Linux, click mode only works in this preview for now, not the overlay.",
     easy: "Easy to crack", volume: "Volume",
-    nag: "Type a scolding into the AI when done", nagSub: "It's typed into whatever window is active.", nagMac: " On Mac, it asks for Accessibility permission once.",
-    autosend: "Send right away", autosendSub: "Also press Enter after typing it.",
     stiff: "stiff", medium: "medium", loose: "loose", cracks: "cracks",
     hintFollow: "Swing here, then flick.", hintClick: "Click here to whip. Drag its handle to move it.",
     foot: (tray) => `You can close this window, Ctas keeps running in the ${tray}. Start / stop anytime with <b>${KEY}</b>.`,
@@ -163,8 +159,6 @@ function render() {
   $("viewSub").textContent = settings.view === "3d" ? T.view3dSub : T.view2dSub;
   $("hint").textContent = settings.mode === "click" ? T.hintClick : T.hintFollow;
   $("clickNote").hidden = !(IS_LINUX && TAURI && settings.mode === "click");
-  $("nag").checked = settings.nag;
-  $("autosend").checked = settings.autosend;
   apply();
 }
 
@@ -226,8 +220,6 @@ document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListene
 }));
 document.querySelectorAll('input[name="view"]').forEach((r) => r.addEventListener("change", () => { settings.view = r.value; changed(); }));
 document.querySelectorAll('input[name="theme"]').forEach((r) => r.addEventListener("change", () => { settings.theme = r.value; changed(); }));
-$("nag").addEventListener("change", (e) => { settings.nag = e.target.checked; changed(); });
-$("autosend").addEventListener("change", (e) => { settings.autosend = e.target.checked; changed(); });
 document.querySelectorAll(".lang").forEach((b) => (b.onclick = () => { settings.lang = b.dataset.lang; changed(); }));
 
 // ---------- Suara: tes, suara sendiri, editor potong ----------

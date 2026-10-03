@@ -44,7 +44,6 @@ const ID = {
   themeClassic: "Tema: klasik", themeFuture: "Tema: futuristik",
   hintClick: "<strong>Klik di mana aja.</strong>Pecutnya nyabet titik itu. Double klik = dua kali. Seret gagangnya buat mindahin.",
   hintFollow: "<strong>Klik, terus ayun dan sentak.</strong>Ayun pelan nggak bunyi. Harus disentak.",
-  nag: "[Ctas] Kamu barusan dipecut 7 kali, 2 kali kena muka. Cepetan dong, jangan halu, langsung kerjain.",
   star: "★ Star di GitHub", seeAll: "Lihat semua",
   copied: "Ke-copy", copy: "Copy", pressCopy: (mac) => (mac ? "Tekan ⌘C" : "Tekan Ctrl+C"),
 };
@@ -168,30 +167,12 @@ function applyLang() {
   $("langBtn").title = lang === "en" ? "Ganti ke Bahasa Indonesia" : "Switch to English";
   document.title = lang === "en" ? "Ctas · a virtual whip" : "Ctas · pecut virtual";
   labels();
-  retype();
 }
 $("langBtn").onclick = () => {
   lang = lang === "en" ? "id" : "en";
   try { localStorage.setItem("ctas.lang", lang); } catch {}
   applyLang();
 };
-
-// ---------- Contoh omelan, diketik ulang waktu kelihatan ----------
-const typed = $("typed");
-let typer = 0, seen = false;
-function retype() {
-  const NAG = L().nag;
-  clearInterval(typer);
-  if (!seen || matchMedia("(prefers-reduced-motion: reduce)").matches) { typed.textContent = NAG; return; }
-  let i = 0; typed.textContent = "";
-  typer = setInterval(() => { typed.textContent = NAG.slice(0, ++i); if (i >= NAG.length) clearInterval(typer); }, 28);
-}
-if ("IntersectionObserver" in window) {
-  new IntersectionObserver((entries, obs) => {
-    if (!entries[0].isIntersecting) return;
-    seen = true; obs.disconnect(); retype();
-  }, { threshold: 0.6 }).observe(typed);
-}
 
 // ---------- Open source: bintang, contributor, donasi ----------
 const REPO = "nannndev/ctass";

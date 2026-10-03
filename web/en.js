@@ -27,8 +27,7 @@ export const EN = {
     "Start whipping. Your screen stays clickable as usual. On Windows/Linux use <strong>Ctrl+Alt+X</strong>.",
   "Ayun mouse terus balik arah mendadak. Ctarr. Atau pakai mode klik: pecut nongkrong di pojok, tiap klik dia nyabet titik itu.":
     "Swing the mouse and suddenly reverse. Crack. Or use click mode: the whip waits in a corner and lashes wherever you click.",
-  "Udahan. Kalau omelan dinyalain, langsung keketik di chat AI lu.": "Stop. If scolding is on, it gets typed into your AI chat.",
-  "Contohnya kayak gini": "Something like this",
+  "Udahan. Pecutnya ilang, layar balik kayak biasa.": "Stop. The whip disappears and your screen is back to normal.",
   "Download Ctas": "Download Ctas",
   "Gratis. Pilih sesuai OS lu.": "Free. Pick your OS.",
   "<strong>macOS:</strong> app-nya belum di-sign Apple, jadi pas pertama dibuka bakal ditolak. Ikutin <a href=\"#install\">cara install</a> di bawah, cuma sekali kok.":
@@ -37,7 +36,6 @@ export const EN = {
     "<strong>Windows:</strong> if the blue SmartScreen window shows up, click <em>More info</em> → <em>Run anyway</em>.",
   "<strong>Linux:</strong> butuh X11. Di Wayland, pecutnya belum bisa ngikutin kursor.":
     "<strong>Linux:</strong> needs X11. On Wayland the whip can't follow the cursor yet.",
-  "Izin Accessibility cuma diminta kalau lu nyalain fitur omelan.": "Accessibility permission is only requested if you turn on scolding.",
   "Cara install": "Install",
   "Kalau macOS bilang \"rusak\"": "If macOS says it's \"damaged\"",
   "Tenang, app-nya nggak rusak. macOS cuma ngeblok app yang belum di-sign Apple. Cukup sekali ini aja:":
@@ -55,8 +53,7 @@ export const EN = {
   "Jalanin <code>Ctas-Windows-setup.exe</code>. Kalau muncul SmartScreen (\"Windows protected your PC\"), klik <strong>More info</strong> → <strong>Run anyway</strong>. Ikon Ctas ada di system tray pojok kanan bawah. Mulai/udahan pakai <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>X</kbd>.":
     "Run <code>Ctas-Windows-setup.exe</code>. If SmartScreen shows up (\"Windows protected your PC\"), click <strong>More info</strong> → <strong>Run anyway</strong>. The Ctas icon sits in the system tray, bottom right. Start/stop with <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>X</kbd>.",
   "Bikin AppImage-nya bisa dijalanin, terus buka:": "Make the AppImage executable, then run it:",
-  "Atau install <code>.deb</code>-nya. Fitur ketik omelan butuh <code>xdotool</code> (<code>sudo apt install xdotool</code>).":
-    "Or install the <code>.deb</code>. Scolding needs <code>xdotool</code> (<code>sudo apt install xdotool</code>).",
+  "Atau install <code>.deb</code>-nya.": "Or install the <code>.deb</code>.",
   "Open source": "Open source",
   "Bikin bareng-bareng.": "Built together.",
   "Ctas gratis dan kodenya terbuka. Kasih bintang, laporin bug, ikut ngoding, atau traktir kopi biar makin rajin update.":
@@ -101,7 +98,6 @@ export const EN_DYNAMIC = {
   themeClassic: "Theme: classic", themeFuture: "Theme: futuristic",
   hintClick: "<strong>Click anywhere.</strong>The whip lashes that spot. Double-click = twice. Drag its handle to move it.",
   hintFollow: "<strong>Click, then swing and flick.</strong>A slow swing won't crack. You have to snap it.",
-  nag: "[Ctas] You just got whipped 7 times, 2 of them in the face. Hurry up, no hallucinating, just do it.",
   star: "★ Star on GitHub", seeAll: "See all",
   copied: "Copied", copy: "Copy", pressCopy: (mac) => (mac ? "Press ⌘C" : "Press Ctrl+C"),
 };

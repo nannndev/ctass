@@ -628,10 +628,8 @@ dependencies = [
 
 [[package]]
 name = "ctas"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
- "core-foundation 0.10.1",
- "core-graphics",
  "serde",
  "serde_json",
  "tauri",

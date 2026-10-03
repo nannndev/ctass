@@ -3,8 +3,7 @@
 Pecut realistis buat mecut AI biar rajin. Ayun mouse, sentak, **CTARR!**
 
 Ctas itu overlay transparan di atas layar (macOS, Windows, Linux). Pas AI lu lelet, halu, atau ngeles,
-tekan **⌘⇧X**, pecut sepuasnya, terus tekan **Esc**. Omelan lu langsung diketik
-ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
+tekan **⌘⇧X**, pecut sepuasnya, terus tekan **Esc**. Lumayan buat ngelampiasin kesel.
 
 ## Fitur
 
@@ -33,7 +32,7 @@ ke jendela AI yang tadi aktif (Claude, ChatGPT, terminal, apa aja).
   Ada juga suara bawaan siap pakai: Special #1 dan Special #2.
 - **Update otomatis:** Ctas ngecek versi baru pas dibuka. Kalau ada, tinggal klik "Update sekarang".
   Buka Ctas lagi pas udah jalan = jendela yang lama yang muncul, nggak dobel.
-- **Dua bahasa:** Indonesia & English (landing page, app, sampai omelannya).
+- **Dua bahasa:** Indonesia & English (landing page sama app).
 
 ## Pakai
 
@@ -51,12 +50,6 @@ Pas dibuka, muncul **jendela Ctas**: pilih pecut, custom, cobain di preview, ter
 
 Overlay-nya tembus klik dan nggak ngambil fokus, jadi selama mecut lu tetap bisa klik dan
 ngetik kayak biasa. Pecutnya cuma nempel di kursor.
-
-Di jendela Ctas ada dua pilihan omelan, dua-duanya default mati:
-
-- **Ketik omelan ke AI pas udahan**: omelan diketik ke jendela yang lagi aktif. Di Mac,
-  waktu dinyalain, macOS minta izin **Accessibility** buat Ctas (sekali aja).
-- **Langsung kirim**: sekalian tekan Enter.
 
 Kalau ctarr-nya susah keluar, geser **Gampang bunyi** ke kanan, atau pakai mode **Klik = pecut**
 yang pasti bunyi tiap klik. Mode klik di overlay jalan di Mac & Windows (di Linux baru di preview).
@@ -86,7 +79,7 @@ Ctas nggak muncul di Dock. Ikonnya ada di menu bar, dan overlay pecutnya langsun
 Ikonnya ada di system tray.
 
 **Linux.** `chmod +x Ctas-Linux.AppImage && ./Ctas-Linux.AppImage`, atau install `.deb`-nya.
-Butuh X11: di Wayland pecutnya belum bisa ngikutin kursor. Fitur ketik omelan butuh `xdotool`.
+Butuh X11: di Wayland pecutnya belum bisa ngikutin kursor.
 
 ## Develop
 
@@ -114,7 +107,6 @@ src/                 frontend (HTML/CSS/JS polos, tanpa bundler)
 web/                 landing page (Vercel)
 src-tauri/           shell desktop (Tauri 2)
   src/lib.rs         overlay, shortcut global, menu bar
-  src/nag.rs         ngetik omelan ke app lain (CGEvent / SendInput / xdotool)
 ```
 
 ### Rilis

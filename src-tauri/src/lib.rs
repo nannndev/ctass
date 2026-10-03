@@ -6,8 +6,7 @@
 //!   jadi lu tetap bisa klik & ngetik kayak biasa; pecutnya cuma nempel di kursor.
 //!
 //! Alurnya: ⌘⇧X (Ctrl+Alt+X di Windows/Linux) buat mulai, sentak mouse buat ctarr,
-//! shortcut yang sama buat udahan. Kalau fitur omelan nyala, omelan diketik ke jendela
-//! yang lagi aktif (jendela AI lu).
+//! shortcut yang sama buat udahan.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -22,10 +21,9 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut,
 use tauri_plugin_updater::{Update, UpdaterExt};
 
 mod mouse;
-mod nag;
 
 struct Ctas {
-    /// Pengaturan dari jendela Ctas (pecut, custom, omelan). Disimpan ke settings.json.
+    /// Pengaturan dari jendela Ctas (pecut, custom, tampilan). Disimpan ke settings.json.
     settings: Mutex<Value>,
     /// Thread pembaca posisi kursor lagi jalan.
     tracking: Arc<AtomicBool>,
@@ -55,10 +53,6 @@ fn update_tray(app: &AppHandle) {
     for (item, text) in app.state::<Ctas>().tray_items.lock().unwrap().iter().zip(texts) {
         let _ = item.set_text(text);
     }
-}
-
-fn setting_bool(app: &AppHandle, key: &str) -> bool {
-    app.state::<Ctas>().settings.lock().unwrap().get(key).and_then(Value::as_bool).unwrap_or(false)
 }
 
 fn settings_path(app: &AppHandle) -> Option<std::path::PathBuf> {
@@ -169,20 +163,11 @@ fn track_cursor(app: &AppHandle) {
 }
 
 #[tauri::command]
-fn dismiss(app: AppHandle, state: State<'_, Ctas>, cracks: u32, hits: u32) {
+fn dismiss(app: AppHandle, state: State<'_, Ctas>) {
     state.tracking.store(false, Ordering::SeqCst);
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.hide();
     }
-    if !setting_bool(&app, "nag") || cracks + hits == 0 {
-        return;
-    }
-    let autosend = setting_bool(&app, "autosend");
-    let text = nag::message(cracks, hits, &setting_lang(&app));
-    std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(120)); // kasih waktu overlay ilang dulu
-        nag::send(&text, autosend);
-    });
 }
 
 /// Matiin tembus klik sementara (dipakai kalau suara butuh satu klik buat nyala).
@@ -200,17 +185,12 @@ fn get_settings(state: State<'_, Ctas>) -> Value {
 
 #[tauri::command]
 fn save_settings(app: AppHandle, state: State<'_, Ctas>, settings: Value) {
-    let nag_was_on = setting_bool(&app, "nag");
-    let nag_on = settings.get("nag").and_then(Value::as_bool).unwrap_or(false);
     *state.settings.lock().unwrap() = settings.clone();
     if let Some(path) = settings_path(&app) {
         if let Some(dir) = path.parent() {
             let _ = std::fs::create_dir_all(dir);
         }
         let _ = std::fs::write(path, serde_json::to_string_pretty(&settings).unwrap_or_default());
-    }
-    if nag_on && !nag_was_on {
-        nag::permitted(true); // izin Accessibility (macOS) baru diminta di sini
     }
     let _ = app.emit("ctas://settings", settings);
     update_tray(&app);

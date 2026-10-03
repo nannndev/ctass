@@ -156,15 +156,7 @@ kbd {
 }
 @media (max-width: 760px) { .steps { grid-template-columns: 1fr; gap: 24px; } }
 
-.chatbox { margin: 48px 0 0; max-width: 720px; }
-.chatbox figcaption { font: 400 11px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-.chat-input {
-  min-height: 80px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px;
-  padding: 18px 20px; font: 400 14px/1.6 var(--mono); color: var(--fg); overflow-wrap: anywhere;
-}
-.caret { display: inline-block; width: 7px; height: 1.1em; background: var(--accent); vertical-align: text-bottom; margin-left: 2px; animation: blink 1s steps(1) infinite; }
-@keyframes blink { 50% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .caret { animation: none; } }
+@media (prefers-reduced-motion: reduce) {  }
 
 /* ---------- Download ---------- */
 .download {
