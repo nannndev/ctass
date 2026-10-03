@@ -5,6 +5,7 @@ import { createStage } from "/engine/stage.js";
 import { drawSwatch } from "/engine/swatch.js";
 import { detectLang, translateDom, whipName } from "/engine/i18n.js";
 import { EN, EN_DYNAMIC as E } from "/en.js";
+import { ensureSound } from "/engine/sounds.js";
 
 const $ = (id) => document.getElementById(id);
 const sound = new Sound();
@@ -92,6 +93,7 @@ Object.entries(VARIANTS).forEach(([k, v]) => {
 });
 function pick(k) {
   stage.pick(k);
+  ensureSound(sound, VARIANTS[k].sound); // pecut yang pakai rekaman asli: muat file-nya
   document.querySelectorAll(".chips .chip[data-k]").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.k === k)));
   labels();
 }

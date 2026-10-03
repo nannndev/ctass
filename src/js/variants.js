@@ -12,6 +12,10 @@
 //          "crackle", "void", "arp", "servo"
 //   gain   pengali volume (nada tinggi kedengeran lebih tipis)
 //
+//   file   rekaman pecut asli (src/sounds) yang dipakai gantiin ctarr sintetis:
+//          { id, start, end (detik), gain, rate (nada), vary (nadanya acak dikit tiap ctarr) }.
+//          Lapisan `extra` tetap ditumpuk. Resep sintetisnya jadi cadangan kalau file gagal dimuat.
+//
 // fx: efek visual khas pas ctarr, word = tulisan yang muncul, shake = kuatnya layar goyang
 // Bentuk khusus: strands (jumlah lidi), plug (colokan di ujung), flat + buckle (sabuk),
 // glow (warna nyala), fire (bara ngikutin ujung), core (inti terang, plasma)
@@ -21,31 +25,31 @@ export const VARIANTS = {
   jaranan: {
     name: "Jaranan", segs: 34, len: 0.60, handle: 0.17, bend: 0.10, damp: 0.994, grav: 950, w0: 6, w1: 1.4,
     rope: "#d9b47a", grip: "#9b2d1f", tassel: true, glow: false, threshold: 4300,
-    sound: { nDur: 0.0011, snap: 0.0025, tail: 0.02, tailLevel: 0.35, rate: 1, body: [160, 55, 0.08, 0.5], wet: 0.3, echo: [0.12, 0.3, 0.35], extra: "rustle" },
+    sound: { file: { id: "sample:heavy", start: 0.08, end: 0.95, gain: 0.75, rate: 1.15, vary: true }, nDur: 0.0011, snap: 0.0025, tail: 0.02, tailLevel: 0.35, rate: 1, body: [160, 55, 0.08, 0.5], wet: 0.3, echo: [0.12, 0.3, 0.35], extra: "rustle" },
     fx: "confetti", word: "CTARR!", color: "#e2775a", shake: 1,
   },
   sapi: {
     name: "Cambuk sapi", segs: 22, len: 0.42, handle: 0.12, bend: 0.20, damp: 0.990, grav: 1400, w0: 10, w1: 3,
     rope: "#6e4527", grip: "#3b2a1a", tassel: false, glow: false, threshold: 4200,
-    sound: { nDur: 0.0026, snap: 0.0045, tail: 0.032, tailLevel: 0.55, rate: 0.72, body: [120, 38, 0.16, 1.1], wet: 0.16, echo: null, extra: null },
+    sound: { file: { id: "sample:heavy", start: 0.07, end: 1.1, gain: 0.85, rate: 0.85, vary: true }, nDur: 0.0026, snap: 0.0045, tail: 0.032, tailLevel: 0.55, rate: 0.72, body: [120, 38, 0.16, 1.1], wet: 0.16, echo: null, extra: null },
     fx: "dust", word: "DHUAR!", color: "#c9a27a", shake: 1.8,
   },
   bullwhip: {
     name: "Bullwhip", segs: 44, len: 0.78, handle: 0.13, bend: 0.07, damp: 0.996, grav: 900, w0: 9, w1: 1.2,
     rope: "#8a5429", grip: "#2d1d12", tassel: false, glow: false, threshold: 5600,
-    sound: { nDur: 0.0006, snap: 0.0015, tail: 0.012, tailLevel: 0.25, rate: 1.15, body: [220, 70, 0.05, 0.35], wet: 0.24, echo: [0.34, 0.4, 0.5], extra: null },
+    sound: { file: { id: "sample:crack", start: 0.17, end: 0.95, gain: 1.6, vary: true }, nDur: 0.0006, snap: 0.0015, tail: 0.012, tailLevel: 0.25, rate: 1.15, body: [220, 70, 0.05, 0.35], wet: 0.24, echo: [0.34, 0.4, 0.5], extra: null },
     fx: "shock", word: "CRACK!", color: "#ece8e1", shake: 1.3,
   },
   samandiman: {
     name: "Samandiman", segs: 38, len: 0.68, handle: 0.15, bend: 0.09, damp: 0.996, grav: 700, w0: 7, w1: 1.5,
     rope: "#f4c95d", grip: "#7a5a14", tassel: true, glow: "#ffd36b", threshold: 5200,
-    sound: { nDur: 0.001, snap: 0.0025, tail: 0.02, tailLevel: 0.3, rate: 1.05, body: [150, 50, 0.09, 0.45], wet: 0.55, echo: [0.2, 0.32, 0.25], extra: "chime", gain: 1.3 },
+    sound: { file: { id: "sample:crack", start: 0.17, end: 0.9, gain: 1.4, rate: 1.08, vary: true }, nDur: 0.001, snap: 0.0025, tail: 0.02, tailLevel: 0.3, rate: 1.05, body: [150, 50, 0.09, 0.45], wet: 0.55, echo: [0.2, 0.32, 0.25], extra: "chime", gain: 1.3 },
     fx: "magic", word: "CTARR!", color: "#f4c95d", shake: 1.1,
   },
   cemeti: {
     name: "Cemeti", segs: 26, len: 0.50, handle: 0.19, bend: 0.24, damp: 0.992, grav: 1100, w0: 5, w1: 1,
     rope: "#e2d2ae", grip: "#5b4a2e", tassel: false, glow: false, threshold: 4800,
-    sound: { nDur: 0.0005, snap: 0.0011, tail: 0.007, tailLevel: 0.18, rate: 1.55, body: [320, 130, 0.03, 0.18], wet: 0.12, echo: null, extra: "double", gain: 1.9 },
+    sound: { file: { id: "sample:snap", start: 0.22, end: 0.95, gain: 1.6, rate: 1.12, vary: true }, nDur: 0.0005, snap: 0.0011, tail: 0.007, tailLevel: 0.18, rate: 1.55, body: [320, 130, 0.03, 0.18], wet: 0.12, echo: null, extra: "double", gain: 1.9 },
     fx: "star", word: "tsik!", color: "#ece8e1", shake: 0.35,
   },
   sapulidi: {
@@ -69,7 +73,7 @@ export const VARIANTS = {
   api: {
     name: "Cambuk api", segs: 40, len: 0.70, handle: 0.14, bend: 0.08, damp: 0.995, grav: 750, w0: 7, w1: 1.3,
     rope: "#ff7a2e", grip: "#3b1a0c", glow: "#ff6a1a", fire: true, threshold: 5000,
-    sound: { nDur: 0.0009, snap: 0.0022, tail: 0.025, tailLevel: 0.35, rate: 1, body: [150, 45, 0.1, 0.55], wet: 0.35, echo: [0.16, 0.25, 0.2], extra: "flame", gain: 1.2 },
+    sound: { file: { id: "sample:heavy", start: 0.07, end: 1.0, gain: 0.8, vary: true }, nDur: 0.0009, snap: 0.0022, tail: 0.025, tailLevel: 0.35, rate: 1, body: [150, 45, 0.1, 0.55], wet: 0.35, echo: [0.16, 0.25, 0.2], extra: "flame", gain: 1.2 },
     fx: "fire", word: "BWOSH!", color: "#ff7a2e", shake: 1.2,
   },
   plasma: {
