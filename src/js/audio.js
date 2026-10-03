@@ -145,6 +145,76 @@ export class Sound {
     if (snd.extra === "slap") this.sweep(t, out, a * 0.8, "lowpass", 2200, 900, 0.045, 0.7);
     if (snd.extra === "zap") this.zap(t, out, a);
     if (snd.extra === "laser") this.laser(t, out, a);
+    if (snd.extra && this[FUTURE[snd.extra]]) this[FUTURE[snd.extra]](t, out, a);
+  }
+
+  // ---------- lapisan pecut futuristik ----------
+  tone(t, out, type, f0, f1, dur, lv, verb) {
+    const { ac } = this, o = ac.createOscillator(), g = ac.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(lv, t + Math.min(0.006, dur / 4));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(out); if (verb) g.connect(this.verb);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  // hologram: blip digital acak + desis yang putus-putus
+  glitch(t, out, a) {
+    for (let k = 0; k < 6; k++) {
+      const tt = t + k * 0.017 + Math.random() * 0.008, f = 200 + Math.random() * 1800;
+      this.tone(tt, out, "square", f, f * (0.6 + Math.random() * 0.8), 0.014, 0.12 * a);
+    }
+    this.sweep(t, out, a * 0.3, "bandpass", 3200, 700, 0.09, 4);
+  }
+  // logam cair: denting nggak harmonis yang bergaung
+  metal(t, out, a) {
+    [700, 1873, 2950, 4330].forEach((f, i) => this.tone(t + i * 0.004, out, "sine", f * (0.97 + Math.random() * 0.06), f * 0.995, 0.5 + Math.random() * 0.4, 0.07 * a, true));
+    this.sweep(t, out, a * 0.35, "highpass", 5000, 2500, 0.06, 0.8);
+  }
+  // rantai: gemerincing beberapa mata rantai + dengung energi
+  chain(t, out, a) {
+    let tt = t + 0.008;
+    for (let k = 0; k < 5; k++) {
+      const f = 2500 + Math.random() * 2600;
+      this.sweep(tt, out, a * (0.25 + Math.random() * 0.25), "bandpass", f, f * 0.9, 0.035, 9);
+      tt += 0.014 + Math.random() * 0.024;
+    }
+    const { ac } = this, o = ac.createOscillator(), lp = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = "sawtooth"; o.frequency.value = 85;
+    lp.type = "lowpass"; lp.frequency.value = 420;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.14 * a, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.38);
+    o.connect(lp); lp.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4);
+  }
+  // tesla: kretek-kretek listrik yang nyebar
+  crackle(t, out, a) {
+    for (let k = 0; k < 12; k++) this.sweep(t + Math.random() * 0.26, out, a * (0.15 + Math.random() * 0.35), "highpass", 2400, 2000, 0.007, 0.7);
+    this.zap(t, out, a * 0.6);
+  }
+  // lubang hitam: bass turun dalem + desir yang nyedot
+  void(t, out, a) {
+    this.tone(t, out, "sine", 82, 26, 0.6, 0.9 * a);
+    const { ac } = this, n = ac.createBufferSource(), lp = ac.createBiquadFilter(), g = ac.createGain();
+    n.buffer = this.noise;
+    lp.type = "lowpass"; lp.frequency.setValueAtTime(1600, t); lp.frequency.exponentialRampToValueAtTime(70, t + 0.55);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.4 * a, t + 0.18); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    n.connect(lp); lp.connect(g); g.connect(out); g.connect(this.verb);
+    n.start(t, Math.random()); n.stop(t + 0.62);
+  }
+  // fiber: arpeggio naik cepet, kinclong
+  arp(t, out, a) {
+    [1047, 1319, 1568, 2093].forEach((f, i) => this.tone(t + i * 0.035, out, "triangle", f, f, 0.14, 0.12 * a, true));
+  }
+  // robot: dengung servo naik + hentakan logam
+  servo(t, out, a) {
+    const { ac } = this, o = ac.createOscillator(), bp = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = "sawtooth";
+    o.frequency.setValueAtTime(260, t); o.frequency.exponentialRampToValueAtTime(820, t + 0.12);
+    bp.type = "bandpass"; bp.frequency.value = 1200; bp.Q.value = 2;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18 * a, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+    o.connect(bp); bp.connect(g); g.connect(out); o.start(t); o.stop(t + 0.15);
+    this.tone(t + 0.11, out, "sine", 130, 48, 0.12, 0.6 * a);
+    this.sweep(t + 0.11, out, a * 0.5, "lowpass", 1800, 500, 0.05, 0.7);
   }
 
   // dengung plasma: nada turun cepet + desis tinggi
@@ -254,6 +324,8 @@ export class Sound {
 }
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// nama extra -> method (pecut futuristik)
+const FUTURE = { glitch: "glitch", metal: "metal", chain: "chain", crackle: "crackle", void: "void", arp: "arp", servo: "servo" };
 
 function noiseBuffer(ac, seconds) {
   const b = ac.createBuffer(1, ac.sampleRate * seconds, ac.sampleRate);

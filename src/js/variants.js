@@ -8,12 +8,15 @@
 //   rate   kecepatan playback (nada), body = dentum rendah [frek awal, frek akhir, durasi, gain]
 //   wet    banyaknya gema ruangan, echo = pantulan jauh [jeda, feedback, level] atau null
 //   extra  lapisan khas: "rustle" (rumbai), "chime" (denting sakti), "double" (tsik-tsik),
-//          "swish", "zap", "slap", "flame", "laser" (dengung plasma)
+//          "swish", "zap", "slap", "flame", "laser" (dengung plasma), "glitch", "metal", "chain",
+//          "crackle", "void", "arp", "servo"
 //   gain   pengali volume (nada tinggi kedengeran lebih tipis)
 //
 // fx: efek visual khas pas ctarr, word = tulisan yang muncul, shake = kuatnya layar goyang
 // Bentuk khusus: strands (jumlah lidi), plug (colokan di ujung), flat + buckle (sabuk),
 // glow (warna nyala), fire (bara ngikutin ujung), core (inti terang, plasma)
+// Futuristik: holo (hologram kedip + glitch), chrome (logam cair beriak), chain (rantai + warna energinya),
+// arcs (listrik loncat + warnanya), void (lubang hitam di ujung), fiber (denyut cahaya RGB), robot (ruas mekanik)
 export const VARIANTS = {
   jaranan: {
     name: "Jaranan", segs: 34, len: 0.60, handle: 0.17, bend: 0.10, damp: 0.994, grav: 950, w0: 6, w1: 1.4,
@@ -74,6 +77,49 @@ export const VARIANTS = {
     rope: "#4de3ff", grip: "#aeb9c7", glow: "#4de3ff", core: "#eafcff", threshold: 5000,
     sound: { nDur: 0.0005, snap: 0.0012, tail: 0.01, tailLevel: 0.2, rate: 1.3, body: [90, 40, 0.14, 0.6], wet: 0.4, echo: [0.22, 0.35, 0.3], extra: "laser", gain: 1.2 },
     fx: "pulse", word: "VZWAP!", color: "#4de3ff", shake: 1.1,
+  },
+  // ---------- futuristik ----------
+  hologram: {
+    name: "Cambuk hologram", segs: 34, len: 0.66, handle: 0.15, bend: 0.09, damp: 0.995, grav: 600, w0: 6, w1: 1.6,
+    rope: "#7fd8ff", grip: "#26304a", glow: "#8a7dff", holo: true, threshold: 4900,
+    sound: { nDur: 0.0006, snap: 0.0014, tail: 0.012, tailLevel: 0.2, rate: 1.25, body: [110, 50, 0.08, 0.35], wet: 0.35, echo: [0.09, 0.35, 0.25], extra: "glitch", gain: 1.2 },
+    fx: "glitch", word: "BZZRT!", color: "#8a7dff", shake: 0.9,
+  },
+  chrome: {
+    name: "Cambuk logam cair", segs: 36, len: 0.68, handle: 0.14, bend: 0.10, damp: 0.995, grav: 1000, w0: 7, w1: 2.2,
+    rope: "#cfd6de", grip: "#59616b", chrome: true, threshold: 5000,
+    sound: { nDur: 0.0008, snap: 0.002, tail: 0.015, tailLevel: 0.25, rate: 1.1, body: [180, 70, 0.07, 0.4], wet: 0.3, echo: [0.18, 0.3, 0.25], extra: "metal", gain: 1.1 },
+    fx: "droplets", word: "SHHING!", color: "#e6edf3", shake: 1,
+  },
+  rantai: {
+    name: "Rantai energi", segs: 28, len: 0.60, handle: 0.13, bend: 0.05, damp: 0.993, grav: 1500, w0: 6, w1: 5,
+    rope: "#8b939d", grip: "#2b2f36", chain: "#ffb02e", threshold: 4400,
+    sound: { nDur: 0.0014, snap: 0.003, tail: 0.02, tailLevel: 0.35, rate: 0.9, body: [140, 50, 0.12, 0.7], wet: 0.25, echo: [0.2, 0.3, 0.2], extra: "chain", gain: 1.1 },
+    fx: "energy", word: "KLANGG!", color: "#ffb02e", shake: 1.4,
+  },
+  tesla: {
+    name: "Cambuk tesla", segs: 34, len: 0.66, handle: 0.16, bend: 0.09, damp: 0.995, grav: 850, w0: 6, w1: 1.8,
+    rope: "#34405e", grip: "#b87333", arcs: "#9fd4ff", threshold: 4900,
+    sound: { nDur: 0.0005, snap: 0.001, tail: 0.008, tailLevel: 0.2, rate: 1.4, body: [120, 60, 0.05, 0.3], wet: 0.2, echo: null, extra: "crackle", gain: 1.3 },
+    fx: "lightning", word: "KRZZAK!", color: "#9fd4ff", shake: 1.2,
+  },
+  blackhole: {
+    name: "Cambuk lubang hitam", segs: 38, len: 0.70, handle: 0.15, bend: 0.08, damp: 0.996, grav: 700, w0: 7, w1: 2,
+    rope: "#140b24", grip: "#2a1f3d", glow: "#b26bff", void: true, threshold: 5100,
+    sound: { nDur: 0.002, snap: 0.004, tail: 0.03, tailLevel: 0.3, rate: 0.7, body: [70, 28, 0.4, 1.1], wet: 0.45, echo: [0.3, 0.4, 0.3], extra: "void", gain: 1.2 },
+    fx: "warp", word: "VWUUM!", color: "#b26bff", shake: 2,
+  },
+  fiber: {
+    name: "Fiber optik", segs: 36, len: 0.70, handle: 0.12, bend: 0.10, damp: 0.995, grav: 800, w0: 4, w1: 2,
+    rope: "#e8f7ff", grip: "#1d2430", fiber: true, threshold: 4800,
+    sound: { nDur: 0.0005, snap: 0.0012, tail: 0.01, tailLevel: 0.2, rate: 1.5, body: [200, 90, 0.04, 0.2], wet: 0.4, echo: [0.12, 0.3, 0.2], extra: "arp", gain: 1.3 },
+    fx: "rainbow", word: "PEW!", color: "#ff7ad9", shake: 0.7,
+  },
+  robot: {
+    name: "Lengan robot", segs: 9, len: 0.55, handle: 0.12, bend: 0.38, damp: 0.99, grav: 1300, w0: 12, w1: 7,
+    rope: "#9aa4ae", grip: "#2c323b", robot: true, threshold: 3800,
+    sound: { nDur: 0.0018, snap: 0.003, tail: 0.012, tailLevel: 0.3, rate: 0.8, body: [160, 55, 0.1, 0.9], wet: 0.2, echo: null, extra: "servo", gain: 1.1 },
+    fx: "welding", word: "KLANK!", color: "#ffcf5a", shake: 1.6,
   },
 };
 
