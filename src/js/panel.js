@@ -393,10 +393,10 @@ showTab(tab);
 
 // ---------- Update ----------
 // state: idle | checking | latest | fail | found | downloading | restarting
-const upd = { state: "idle", version: null, done: 0, total: 0 };
+const upd = { state: "idle", version: null, done: 0, total: 0, err: "", at: 0 };
 function updateTexts() {
   const T = S();
-  $("updStatus").textContent = { checking: T.checking, latest: T.upToDate, fail: T.updateFail }[upd.state] || "";
+  $("updStatus").textContent = { checking: T.checking, latest: T.upToDate, fail: T.updateFail + (upd.err ? ` (${upd.err})` : "") }[upd.state] || "";
   $("checkUpd").disabled = upd.state === "checking" || upd.state === "downloading" || upd.state === "restarting";
   const show = ["found", "downloading", "restarting"].includes(upd.state);
   $("update").hidden = !show;
@@ -408,13 +408,17 @@ function updateTexts() {
 }
 async function checkUpdate(quiet) {
   if (!TAURI) return;
-  upd.state = "checking"; if (!quiet) updateTexts();
+  if (["checking", "downloading", "restarting"].includes(upd.state)) return;
+  if (upd.state === "found" && quiet) return;
+  upd.state = "checking"; upd.at = Date.now(); updateTexts();
   try {
     upd.version = await TAURI.core.invoke("check_update");
-    upd.state = upd.version ? "found" : quiet ? "idle" : "latest";
+    upd.state = upd.version ? "found" : "latest";
+    upd.err = "";
   } catch (e) {
+    // gagal juga ditampilin di Tentang, biar ketahuan kenapa update nggak muncul
     console.warn("cek update gagal", e);
-    upd.state = quiet ? "idle" : "fail";
+    upd.state = "fail"; upd.err = String(e?.message || e || "").slice(0, 120);
   }
   updateTexts();
 }
@@ -426,7 +430,7 @@ $("updBtn").onclick = async () => {
     upd.state = "restarting";
   } catch (e) {
     console.warn("update gagal", e);
-    upd.state = "fail";
+    upd.state = "fail"; upd.err = String(e?.message || e || "").slice(0, 120);
   }
   updateTexts();
 };
@@ -438,7 +442,13 @@ if (TAURI) {
     updateTexts();
   });
   TAURI.app.getVersion().then((v) => ($("version").textContent = "v" + v)).catch(() => {});
-  setTimeout(() => checkUpdate(true), 2500); // cek diem-diem pas dibuka
+  // cek pas dibuka, tiap jendela Ctas dimunculin lagi (kalau udah >15 menit), dan tiap 6 jam
+  setTimeout(() => checkUpdate(true), 2500);
+  addEventListener("focus", () => { if (Date.now() - upd.at > 15 * 60e3) checkUpdate(true); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - upd.at > 15 * 60e3) checkUpdate(true); });
+  setInterval(() => checkUpdate(true), 6 * 3600e3);
+  // dari menu tray "Cek update"
+  TAURI.event.listen("ctas://check-update", () => { showTab("general"); checkUpdate(false); });
 } else {
   $("checkUpd").hidden = true;
 }

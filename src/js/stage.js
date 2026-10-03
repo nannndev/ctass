@@ -150,42 +150,59 @@ export function createStage(o) {
     return ok;
   }
 
-  // Sabetan otomatis: dari posisi sekarang (biasanya rumah) melesat ke samping target,
-  // narik dikit, nyentak ke arah target (ctarr dipaksa pas di target), terus balik pulang.
+  // Sabetan otomatis (mode klik), kayak orang mecut beneran:
+  //   1. melesat ke posisi ancang-ancang: gagang mundur menjauh dari target
+  //   2. sentak ke depan terus berhenti mendadak -> tali menggulung keluar ke arah target
+  //   3. ujung tali dituntun dikit ke titik klik; ctarr meledak pas ujungnya nyampe
+  //   4. tahan sebentar, terus balik pulang
   function strike(x, y, n = 1) {
     if (!ptr.seen) { ptr.seen = true; o.onFirstMove?.(); }
     if (auto && !auto.fired) { auto.next = { x, y, n }; return; } // double klik: tunggu giliran
-    const L = v.len * S * (o.size ?? 1) + whip.handleLen;
+    const reach = v.len * S * (o.size ?? 1) + whip.handleLen;
+    // gagang dateng dari bawah-samping (sisi yang jauh dari tengah layar)
     const s = x < W * 0.5 ? 1 : -1;
-    const cl = (q, m) => Math.min(m - 20, Math.max(20, q));
-    const hx = cl(x + s * 0.5 * L, W), hy = cl(y + 0.4 * L, H);
-    let dx = x - hx, dy = y - hy; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
-    auto = { t: 0, x, y, n, fired: false, from: [ptr.x, ptr.y],
-      wind: [hx - dx * 0.22 * L - dy * 0.08 * L * s, hy - dy * 0.22 * L + dx * 0.08 * L * s],
-      end: [hx + dx * 0.3 * L, hy + dy * 0.3 * L] };
-    // jarak jauh = melesat sedikit lebih lama
-    const far = Math.hypot(auto.wind[0] - ptr.x, auto.wind[1] - ptr.y);
-    auto.travel = Math.min(0.2, 0.08 + far / 6000);
+    let ux = -s * 0.55, uy = -0.83; // arah dari gagang ke target
+    const cl = (q, m) => Math.min(m - 16, Math.max(16, q));
+    const end = [cl(x - ux * reach * 0.82, W), cl(y - uy * reach * 0.82, H)];
+    // kalau mentok pinggir layar, arahnya disesuaiin biar tetap ngadep target
+    const dx = x - end[0], dy = y - end[1], dl = Math.hypot(dx, dy) || 1;
+    ux = dx / dl; uy = dy / dl;
+    const wind = [cl(end[0] - ux * reach * 0.42 - uy * s * reach * 0.12, W), cl(end[1] - uy * reach * 0.42 + ux * s * reach * 0.12, H)];
+    auto = { t: 0, x, y, n, fired: false, from: [ptr.x, ptr.y], wind, end, reach, min: 1e9 };
+    const far = Math.hypot(wind[0] - ptr.x, wind[1] - ptr.y);
+    auto.travel = Math.min(0.22, 0.1 + far / 5000);
+    // tanda kecil di titik yang diklik
+    fx.push({ k: "ring", x, y, r: 3, speed: 70, width: 1.2, color: C.ring, life: 1, rate: 3.2 });
   }
   function driveAuto(dt) {
     const a = auto; a.t += dt;
-    const T = a.travel, SNAP = 0.1, HOLD = 0.22, BACK = 0.36;
+    const T = a.travel, SNAP = 0.11, HOLD = 0.2, BACK = 0.36;
     const lerp = (p, q, f) => [p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f];
     const ease = (f) => (f < 0.5 ? 2 * f * f : 1 - 2 * (1 - f) * (1 - f));
     let pos;
     if (a.t < T) pos = lerp(a.from, a.wind, ease(a.t / T));
-    else if (a.t < T + SNAP) { const f = (a.t - T) / SNAP; pos = lerp(a.wind, a.end, f * f); }
+    else if (a.t < T + SNAP) { const f = (a.t - T) / SNAP; pos = lerp(a.wind, a.end, 1 - (1 - f) ** 3); } // cepet, berhenti mendadak
     else if (a.t < T + SNAP + HOLD) pos = a.end;
     else pos = lerp(a.end, homePt(), ease(Math.min(1, (a.t - T - SNAP - HOLD) / BACK)));
     [ptr.x, ptr.y] = pos;
-    if (!a.fired && a.t >= T + SNAP * 0.8) {
-      a.fired = true; crackCool = 0.3;
-      onCrack(a.n >= 2 ? 1.7 : 1.3, { x: a.x, y: a.y });
-    }
-    if (a.next && a.fired && a.t > T + SNAP + 0.06) { const q = a.next; auto = null; strike(q.x, q.y, q.n); return; }
-    if (a.t > T + SNAP + HOLD + BACK) auto = null;
-  }
 
+    // tuntun ujung tali ke target selama sentakan
+    const live = a.t >= T * 0.6 && a.t < T + SNAP + HOLD * 0.7;
+    whip.attract = live ? { x: a.x, y: a.y, k: a.t < T ? 0.006 : 0.03 } : null;
+
+    if (!a.fired && a.t >= T) {
+      const tp = whip.tip(), d = Math.hypot(tp.x - a.x, tp.y - a.y);
+      const near = Math.max(14, a.reach * 0.05);
+      const passed = a.t > T + SNAP * 0.5 && a.min < near * 3 && d > a.min + 3; // udah lewat titik terdekat
+      a.min = Math.min(a.min, d);
+      if (d < near || passed || a.t >= T + SNAP + HOLD * 0.8) {
+        a.fired = true; crackCool = 0.3;
+        onCrack(a.n >= 2 ? 1.7 : 1.3, { x: a.x, y: a.y });
+      }
+    }
+    if (a.next && a.fired && a.t > T + SNAP + 0.06) { const q = a.next; auto = null; whip.attract = null; strike(q.x, q.y, q.n); return; }
+    if (a.t > T + SNAP + HOLD + BACK) { auto = null; whip.attract = null; }
+  }
   function onCrack(mach, at) {
     const t = at || whip.tip();
     score.crack++; session.crack++; score.best = Math.max(score.best, mach); o.onScore?.(score);
@@ -670,6 +687,7 @@ export function createStage(o) {
     get is3D() { return view3d; },
     strike, pressAt, releaseAt,
     get mode() { return mode; },
+    get tip() { return whip.tip(); },
     pointer(x, y) {
       if (mode === "click") { dragTo(x, y); return; }
       ptr.x = x; ptr.y = y;

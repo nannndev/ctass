@@ -16,6 +16,7 @@ export class Whip {
     this.k = 1;    // faktor panjang tali (< 1 = sebagian lagi digulung)
     this.wind = 0; // angin sepoi-sepoi pas diem (px/s², ke samping)
     this.windZ = 0; // angin ke arah depan/belakang (3D)
+    this.attract = null; // { x, y, k }: ujung tali ditarik ke titik ini (mode klik, biar sabetannya kena)
     const hx = base.x + dir.x * this.handleLen, hy = base.y + dir.y * this.handleLen;
     for (let i = 0; i < this.n; i++) {
       this.x[i] = this.px[i] = hx + i * this.seg * 0.15 * Math.sign(dir.x || 1);
@@ -41,6 +42,14 @@ export class Whip {
       for (let i = 0; i < n - 1; i++) link(x, y, z, i, i + 1, seg, 1, i === 0);
       // kekakuan lentur: titik i & i+2 pengin lurus (cuma dorong, nggak narik)
       for (let i = 0; i < n - 2; i++) link(x, y, z, i, i + 2, bendRest, v.bend, i === 0, true);
+    }
+    const at = this.attract;
+    if (at) {
+      // makin ke ujung makin kuat; pangkal tali tetap ngikut gagang
+      for (let i = (n * 0.45) | 0; i < n; i++) {
+        const f = (i / (n - 1)) ** 3 * at.k;
+        x[i] += (at.x - x[i]) * f; y[i] += (at.y - y[i]) * f; z[i] -= z[i] * f;
+      }
     }
     const t = n - 1;
     return Math.hypot(x[t] - px[t], y[t] - py[t], z[t] - pz[t]) / dt;
