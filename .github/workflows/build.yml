@@ -4,10 +4,38 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+    # perubahan landing / dokumen doang nggak perlu build app
+    paths-ignore: ["web/**", "**.md"]
   workflow_dispatch:
 
 jobs:
+  # release versi ini udah ada? jangan build & upload ulang, soalnya upload ulang
+  # nge-reset jumlah download file-nya jadi 0. Rilis baru = naikin version.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.ver.outputs.tag }}
+      exists: ${{ steps.rel.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version
+        id: ver
+        run: echo "tag=v$(node -p "require('./src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Release exists?
+        id: rel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.ver.outputs.tag }}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${{ steps.ver.outputs.tag }} sudah dirilis, build dilewati. Naikin version buat rilis baru."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: check
+    if: github.event_name != 'push' || needs.check.outputs.exists != 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -95,10 +123,10 @@ jobs:
           name: Ctas-${{ matrix.name }}
           path: out/*
 
-  # tiap push ke main / tag: bikin (atau update) release sesuai versi di tauri.conf.json
+  # push ke main / tag dengan versi baru: bikin release sesuai versi di tauri.conf.json
   release:
-    needs: build
-    if: github.event_name == 'push'
+    needs: [check, build]
+    if: github.event_name == 'push' && needs.check.outputs.exists != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
