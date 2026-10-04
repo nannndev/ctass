@@ -10,6 +10,7 @@ const at = (f) => new URL(`../sounds/${f}`, import.meta.url).href;
 export const PRESETS = {
   "preset:special1": { name: "Special #1", url: at("special-1.mp3") },
   "preset:special2": { name: "Special #2", url: at("special-2.mp3") },
+  "preset:special3": { name: "Special #3", url: at("special-3.mp3") },
 };
 // rekaman pecut asli yang dipakai beberapa pecut (lihat `file` di variants.js), nggak muncul di dropdown
 const SAMPLES = {
