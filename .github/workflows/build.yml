@@ -5,7 +5,7 @@ on:
     branches: [main]
     tags: ["v*"]
     # perubahan landing / dokumen doang nggak perlu build app
-    paths-ignore: ["web/**", "**.md"]
+    paths-ignore: ["web/**", "docs/**", "**.md"]
   workflow_dispatch:
 
 jobs:

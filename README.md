@@ -1,16 +1,23 @@
 # Ctas
 
-Pecut virtual di layar. Ayun mouse, sentak, ctarr. Jalan di macOS, Windows, dan Linux.
+A virtual whip for your screen. Swing the mouse, flick it, crack. Runs on macOS, Windows, and Linux.
 
-**[Download](https://github.com/nannndev/ctass/releases/latest)** · Gratis
+**[Download](https://github.com/nannndev/ctass/releases/latest)** · **[Try it in the browser](https://ctass.vercel.app)** · Free
 
-## Pakai
+![Cracking the whip in 3D](docs/demo.png)
 
-1. Buka Ctas, pilih pecut, klik **Mulai mecut**.
-2. Ayun mouse terus balik arah mendadak. Ctarr.
-3. Udahan: **⌘⇧X** (Mac) / **Ctrl+Alt+X** (Windows, Linux), atau Esc.
+<p>
+  <img src="docs/panel-whips.png" width="49%" alt="Choosing a whip">
+  <img src="docs/panel-customize.png" width="49%" alt="Customizing a whip">
+</p>
 
-Overlay-nya tembus klik, jadi layar tetap bisa dipakai biasa. Jendela Ctas ada di menu bar / system tray.
+## Usage
+
+1. Open Ctas, pick a whip, and click **Start whipping**.
+2. Swing the mouse and suddenly reverse direction. Crack.
+3. To stop, press **⌘⇧X** (Mac), **Ctrl+Alt+X** (Windows, Linux), or Esc.
+
+The overlay is click-through, so you can keep using your screen as usual. The Ctas window lives in the menu bar / system tray.
 
 ## Install
 
@@ -20,23 +27,23 @@ Overlay-nya tembus klik, jadi layar tetap bisa dipakai biasa. Jendela Ctas ada d
 | Windows 10/11 | `Ctas-Windows-setup.exe` |
 | Linux x64 (X11) | `Ctas-Linux.AppImage` / `.deb` |
 
-- **macOS:** kalau dibilang "rusak", jalanin `xattr -cr /Applications/Ctas.app`.
-- **Windows:** kalau muncul SmartScreen, klik **More info → Run anyway**.
+- **macOS:** if it says the app is "damaged", run `xattr -cr /Applications/Ctas.app`.
+- **Windows:** if SmartScreen appears, click **More info → Run anyway**.
 
-Setelah ke-install, update berikutnya otomatis dari dalam app.
+Once installed, updates arrive automatically from inside the app.
 
-## Develop
+## Development
 
-Butuh Node 22+ dan Rust stable.
+Requires Node 22+ and stable Rust.
 
 ```sh
 npm install
-npm run dev   # app desktop
-npm run web   # landing page di localhost:3000
+npm run dev   # desktop app
+npm run web   # landing page at localhost:3000
 ```
 
-Rilis: naikin `version` di `src-tauri/tauri.conf.json`, push ke `main`. CI yang build dan bikin release.
+To release, bump `version` in `src-tauri/tauri.conf.json` and push to `main`. CI builds the installers and publishes the release.
 
-## Kredit
+## Credits
 
-Rekaman cambuk dan ayunan dari [Pixabay](https://pixabay.com) (Universfield, freesound_community).
+Whip crack and swing recordings from [Pixabay](https://pixabay.com) (Universfield, freesound_community).
