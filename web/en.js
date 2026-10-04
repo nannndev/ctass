@@ -4,7 +4,7 @@ export const EN = {
   "Cara pakai": "How it works",
   "Install": "Install",
   "Download": "Download",
-  "Mac · Windows · Linux · gratis": "Mac · Windows · Linux · free",
+  "Pecut virtual · Mac · Windows · Linux · gratis": "Virtual whip · Mac · Windows · Linux · free",
   "Ctas.<br><em>Ctass.</em>": "Ctas.<br><em>Ctass.</em>",
   "Pecut virtual di layar lu. Ayun, sentak, ctas. Nggak bikin AI-nya lebih pinter, tapi lumayan buat ngelampiasin kesel.":
     "A virtual whip on your screen. Swing, flick, crack. It won't make your AI any smarter, but it's a decent way to blow off steam.",

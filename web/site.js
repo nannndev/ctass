@@ -179,7 +179,7 @@ function applyLang() {
   if (typeof showDownloads === "function") showDownloads();
   $("langBtn").textContent = lang === "en" ? "ID" : "EN";
   $("langBtn").title = lang === "en" ? "Ganti ke Bahasa Indonesia" : "Switch to English";
-  document.title = lang === "en" ? "Ctas · a virtual whip" : "Ctas · pecut virtual";
+  document.title = lang === "en" ? "Ctas: Free Virtual Whip for Mac, Windows & Linux" : "Ctas: Pecut Virtual Gratis untuk Mac, Windows & Linux";
   labels();
 }
 $("langBtn").onclick = () => {
