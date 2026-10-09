@@ -11,6 +11,7 @@ import * as T from "./vendor/three.min.js";
 
 const RAD = 10; // sisi lingkaran tabung
 const SUB = 3;  // titik halus per segmen tali
+const HANDLE_PTS = 10; // titik di sepanjang gagang
 const TASSEL = ["#d63a2a", "#f2c23a", "#2f8f4e", "#d63a2a"];
 
 export function createWhip3D() {
@@ -130,15 +131,18 @@ export function createWhip3D() {
       const tex = keep(makeTexture(32, 64)); paintGrip(tex, v.grip);
       gripMat = new T.MeshStandardMaterial({ map: tex.tex, bumpMap: tex.tex, bumpScale: 2, roughness: 0.5, metalness: 0.05 });
     }
+    gripMat.side = T.DoubleSide; // gagang = Tube, segitiganya ngadep ke dalam
     keep(gripMat);
-    const handle = new T.Mesh(keep(new T.CylinderGeometry(1, 0.82, 1, 18, 1)), gripMat);
+    // gagang = tabung sepanjang kurva (bisa melengkung kalau gagangnya lentur)
+    const handle = new Tube(group, gripMat, 18, 1, 1 / (HANDLE_PTS - 1));
+    dispose.push(handle);
     const knob = new T.Mesh(keep(new T.SphereGeometry(1, 18, 12)), gripMat);
     const neon = kind === "plasma" ? v.rope : kind === "holo" || kind === "void" ? glow : kind === "chain" ? v.chain : kind === "rubber" ? v.arcs : null;
     const collarMat = keep(neon
       ? new T.MeshStandardMaterial({ color: neon, emissive: neon, emissiveIntensity: 1.2 })
       : new T.MeshStandardMaterial({ color: 0xb8925c, roughness: 0.3, metalness: 0.7 }));
     const collar = new T.Mesh(keep(new T.CylinderGeometry(1, 1, 1, 18, 1)), collarMat);
-    group.add(handle, knob, collar);
+    group.add(knob, collar);
     if (kind === "plastic") knob.visible = false;
 
     // ujung
@@ -295,18 +299,27 @@ export function createWhip3D() {
     }
     if (P.halo) P.halo.update(px, py, pz, M, (f) => radius(f) * 2.4 + 2);
 
-    // gagang: dari tangan ke titik 0 tali
+    // gagang: kurva Bezier dari tangan ke titik 0 tali, titik kontrolnya dari physics.js
     const { x, y, z } = whip;
     const hr = v.plug ? Math.max(3, S * 0.006) : Math.max(5.5, S * 0.012);
     const ax = base.x, ay = -base.y, az = base.z || 0, hx = x[0], hy = -y[0], hz = z[0];
-    place(P.handle, ax, ay, az, hx, hy, hz, hr);
+    const qx = whip.cx ?? (ax + hx) / 2, qy = whip.cy != null ? -whip.cy : (ay + hy) / 2, qz = whip.cz ?? (az + hz) / 2;
+    const hb = P.handle.ensure(HANDLE_PTS);
+    for (let j = 0; j < HANDLE_PTS; j++) {
+      const f = j / (HANDLE_PTS - 1), g = 1 - f;
+      hb.cx[j] = g * g * ax + 2 * g * f * qx + f * f * hx;
+      hb.cy[j] = g * g * ay + 2 * g * f * qy + f * f * hy;
+      hb.cz[j] = g * g * az + 2 * g * f * qz + f * f * hz;
+    }
+    hb.update(hb.cx, hb.cy, hb.cz, HANDLE_PTS, (f) => hr * (0.82 + 0.18 * f));
     P.knob.position.set(ax, ay, az); P.knob.scale.setScalar(hr * 1.25);
-    const ux = hx - ax, uy = hy - ay, uz = hz - az, ul = Math.hypot(ux, uy, uz) || 1;
+    // kerah ngikut arah ujung kurva gagang
+    const ux = hx - qx, uy = hy - qy, uz = hz - qz, ul = Math.hypot(ux, uy, uz) || 1;
     place(P.collar, hx - (ux / ul) * 4, hy - (uy / ul) * 4, hz - (uz / ul) * 4, hx + (ux / ul) * 2, hy + (uy / ul) * 2, hz + (uz / ul) * 2, hr * 0.9);
 
     // rumbai: kibas dari pangkal gagang, ngarah ke belakang gagang + jatuh kena gravitasi
     P.tassels.forEach((tube, i) => {
-      const a = Math.atan2(-uy, ux) + Math.PI + (i - 1.5) * 0.35 + Math.sin(clock * 3.3 + i) * 0.1;
+      const a = Math.atan2(-(qy - ay), qx - ax) + Math.PI + (i - 1.5) * 0.35 + Math.sin(clock * 3.3 + i) * 0.1;
       const K = 6; tube.ensure(K);
       const sx = tube.cx, sy = tube.cy, sz = tube.cz;
       for (let j = 0; j < K; j++) {

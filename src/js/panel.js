@@ -19,7 +19,7 @@ let settings = normalize({});
 const STR = {
   id: {
     tagline: "pecut virtual", start: "Mulai mecut", whips: "Pecut", customize: "Atur", reset: "Balikin default",
-    length: "Panjang", stiffness: "Kekakuan", weight: "Berat", rope: "Tali", handle: "Gagang",
+    length: "Panjang", stiffness: "Kekakuan", weight: "Berat", flex: "Kelenturan gagang", rope: "Tali", handle: "Gagang",
     sound: "Suara", effect: "Efek", word: "Tulisan pas ctarr",
     showWord: "Tampilkan tulisan pas ctarr", showWordSub: "Matiin kalau mau efeknya aja tanpa tulisan.",
     general: "Umum",
@@ -48,7 +48,7 @@ const STR = {
   },
   en: {
     tagline: "a virtual whip", start: "Start whipping", whips: "Whips", customize: "Customize", reset: "Reset to default",
-    length: "Length", stiffness: "Stiffness", weight: "Weight", rope: "Rope", handle: "Handle",
+    length: "Length", stiffness: "Stiffness", weight: "Weight", flex: "Handle flex", rope: "Rope", handle: "Handle",
     sound: "Sound", effect: "Effect", word: "Word on crack",
     showWord: "Show the word on crack", showWordSub: "Turn off if you only want the effect, no text.",
     general: "General",
@@ -140,6 +140,8 @@ function render() {
   const bend = c.bend ?? b.bend;
   setRange("bend", RANGES.bend, bend); $("oBend").textContent = bend > 0.2 ? T.stiff : bend > 0.1 ? T.medium : T.loose;
   setRange("grav", RANGES.grav, c.grav ?? 1); $("oGrav").textContent = pct(c.grav ?? 1);
+  const flex = c.flex ?? b.flex ?? 0;
+  setRange("flex", RANGES.flex, flex); $("oFlex").textContent = flex > 0 ? pct(flex) : T.stiff;
   $("rope").value = c.rope ?? b.rope; $("oRope").textContent = $("rope").value;
   $("grip").value = c.grip ?? b.grip; $("oGrip").textContent = $("grip").value;
   $("sound").value = c.sound === "file" && c.file ? (isPreset(c.file.id) ? c.file.id : "file") : c.sound && c.sound !== "file" ? c.sound : k;
@@ -216,7 +218,7 @@ const bindCustom = (id, parse = Number) => $(id).addEventListener("input", (e) =
   if (val === "" || val == null) delete custom()[id]; else custom()[id] = val;
   changed();
 });
-bindCustom("len"); bindCustom("bend"); bindCustom("grav");
+bindCustom("len"); bindCustom("bend"); bindCustom("grav"); bindCustom("flex");
 bindCustom("rope", String); bindCustom("grip", String);
 bindCustom("fx", String);
 bindCustom("echo"); bindCustom("room"); bindCustom("pitch");

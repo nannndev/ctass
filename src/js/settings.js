@@ -15,7 +15,7 @@ export const DEFAULTS = {
   theme: "classic", // "classic" (gelap elegan) / "future" (neon futuristik)
   swing: false,    // suara wush pas tali diayun / diputer
   swingVol: 0.7,
-  custom: {},     // { [key pecut]: { len, bend, grav, rope, grip, sound, fx, word, echo, room, pitch, file } }
+  custom: {},     // { [key pecut]: { len, bend, grav, flex, rope, grip, sound, fx, word, echo, room, pitch, file } }
                   // sound = key pecut lain, atau "file" = suara sendiri (file: { id, name, start, end, gain })
 };
 
@@ -24,6 +24,7 @@ export const RANGES = {
   len: [0.6, 1.5, 0.05],   // pengali panjang
   bend: [0.03, 0.4, 0.01], // kekakuan
   grav: [0.5, 1.6, 0.05],  // pengali berat
+  flex: [0, 1, 0.05],      // kelenturan gagang (0 = kaku)
   sensitivity: [0.6, 1.4, 0.05],
   volume: [0, 1.5, 0.05],
   echo: [0, 0.8, 0.02],    // level gema jauh
@@ -64,6 +65,7 @@ export function effective(settings) {
   if (c.len) v.len = base.len * c.len;
   if (c.bend != null) v.bend = c.bend;
   if (c.grav) v.grav = base.grav * c.grav;
+  if (c.flex != null) v.flex = c.flex;
   if (c.rope) v.rope = c.rope;
   if (c.grip) v.grip = c.grip;
   v.sound = { ...(c.sound && VARIANTS[c.sound] ? VARIANTS[c.sound].sound : base.sound) };

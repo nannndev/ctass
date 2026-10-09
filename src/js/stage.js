@@ -67,7 +67,7 @@ export function createStage(o) {
     build();
   }
   const showAI = o.showAI ?? false;
-  function build() { whip = new Whip(v, S * (o.size ?? 1), ptr, dir); }
+  function build() { whip = new Whip(v, S * (o.size ?? 1), ptr, dir); trail.length = 0; }
 
   function pick(k) { if (!VARIANTS[k]) return; key = k; v = VARIANTS[k]; build(); warm(); }
   // pakai pecut yang udah dicustom (lihat settings.js)
@@ -345,6 +345,8 @@ export function createStage(o) {
     return false;
   }
 
+  // jejak ujung pecut (x, y, x, y, ...), diambil tiap sub-step; digambar pas lagi kenceng
+  const TRAIL = 28, trail = [];
   let last = performance.now(), running = true;
   function frame(now) {
     const dt = Math.min(0.033, (now - last) / 1000 || 0.016); last = now;
@@ -360,9 +362,11 @@ export function createStage(o) {
 
     // arah gagang ikut arah ayunan tangan. Kalau diam, gagang tegak dan miring dikit
     // ke sisi terakhir lu ngayun (kiri atau kanan), jadi bisa nyabet ke dua arah.
-    ptr.vx += ((ptr.x - ptr.px) / dt - ptr.vx) * 0.35;
-    ptr.vy += ((ptr.y - ptr.py) / dt - ptr.vy) * 0.35;
-    if (Math.abs(ptr.vx) > 250) side += (Math.sign(ptr.vx) - side) * 0.2;
+    // pelurusan pakai "per 1/60 detik" biar rasanya sama di layar 60 Hz maupun 120/144 Hz
+    const ease = (k) => 1 - Math.pow(1 - k, dt * 60);
+    ptr.vx += ((ptr.x - ptr.px) / dt - ptr.vx) * ease(0.35);
+    ptr.vy += ((ptr.y - ptr.py) / dt - ptr.vy) * ease(0.35);
+    if (Math.abs(ptr.vx) > 250) side += (Math.sign(ptr.vx) - side) * ease(0.2);
     const moving = Math.abs(ptr.vx) + Math.abs(ptr.vy) > 12 || auto || dragging;
     still = moving ? 0 : still + dt;
     const sway = reduced || !(o.idle ?? true) ? 0 : Math.min(1, Math.max(0, (still - 1.5) / 2));
@@ -371,14 +375,14 @@ export function createStage(o) {
     let tx = rx * 260 + ptr.vx * 0.6, ty = ry * 260 + ptr.vy * 0.6;
     const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
     const ox = dir.x, oy = dir.y;
-    dir.x += (tx - dir.x) * 0.3; dir.y += (ty - dir.y) * 0.3;
+    dir.x += (tx - dir.x) * ease(0.3); dir.y += (ty - dir.y) * ease(0.3);
     const dl = Math.hypot(dir.x, dir.y) || 1; dir.x /= dl; dir.y /= dl;
 
     // 3D: gagang agak nyondong ke depan, makin kenceng ngayun makin keluar layar
     const d3 = is3D(), oz = dz;
     if (d3) {
       const tz = 0.35 + Math.max(-0.35, Math.min(0.35, (ptr.vx * side) / 5000)) + sway * 0.25 * Math.sin(clock * 1.1);
-      dz += (tz - dz) * 0.2;
+      dz += (tz - dz) * ease(0.2);
     } else dz = 0;
     whip.windZ = d3 ? sway * S * 0.9 * Math.sin(clock * 0.7 + 2) : 0;
 
@@ -390,7 +394,10 @@ export function createStage(o) {
       const ddx = ox + (dir.x - ox) * f, ddy = oy + (dir.y - oy) * f;
       const ddz = oz + (dz - oz) * f, hl = whip.handleLen / Math.sqrt(1 + ddz * ddz);
       tip = Math.max(tip, whip.step(h, bx, by, bx + ddx * hl, by + ddy * hl, 0, ddz * hl));
+      const t = whip.n - 1;
+      trail.push(whip.x[t], whip.y[t]);
     }
+    if (trail.length > TRAIL * 2) trail.splice(0, trail.length - TRAIL * 2);
     ptr.px = ptr.x; ptr.py = ptr.y;
 
     const mach = tip / v.threshold;
@@ -426,6 +433,7 @@ export function createStage(o) {
       shake *= 0.82; if (shake < 0.3) shake = 0;
     }
     if (showAI) drawAI(dt);
+    drawTrail();
     if (is3D()) {
       if (coil > 0.01) drawCoil();
       cx.drawImage(r3d.render(whip, { x: ptr.x, y: ptr.y, z: 0 }, v, S, clock, clock - lastCrackAt), 0, 0, W, H);
@@ -458,6 +466,21 @@ export function createStage(o) {
     cx.fillStyle = glow; cx.fillRect(0, hz - 40, W, 70);
   }
 
+  // garis kabur di belakang ujung pecut: makin kenceng makin keliatan
+  function drawTrail() {
+    const a = reduced ? 0 : Math.min(1, (machShown - 0.45) * 1.4), m = trail.length / 2;
+    if (a <= 0 || m < 3) return;
+    cx.save(); cx.lineCap = "round";
+    const col = theme === "future" ? C.ring : v.glow ? "255,214,140" : C.ring;
+    for (let i = 1; i < m; i++) {
+      const f = i / (m - 1);
+      cx.strokeStyle = `rgba(${col},${(a * f * f * 0.4).toFixed(3)})`;
+      cx.lineWidth = 0.8 + f * 3.2;
+      cx.beginPath(); cx.moveTo(trail[i * 2 - 2], trail[i * 2 - 1]); cx.lineTo(trail[i * 2], trail[i * 2 + 1]); cx.stroke();
+    }
+    cx.restore();
+  }
+
   // lingkaran tipis di gagang: tanda pecut bisa digeser
   function drawHomeRing() {
     const pulse = dragging ? 1 : 0.35 + Math.sin(performance.now() / 600) * 0.15;
@@ -465,18 +488,22 @@ export function createStage(o) {
     cx.beginPath(); cx.arc(ptr.x, ptr.y, 16, 0, Math.PI * 2); cx.stroke(); cx.setLineDash([]);
   }
 
+  // gagang = kurva Bezier dari tangan ke ujung gagang (lurus kalau gagangnya kaku, lihat physics.js)
   function drawHandle() {
-    const hx = whip.x[0], hy = whip.y[0];
+    const bx = ptr.x, by = ptr.y, qx = whip.cx, qy = whip.cy, hx = whip.x[0], hy = whip.y[0];
     cx.lineCap = "round";
     cx.strokeStyle = v.grip; cx.lineWidth = Math.max(8, S * 0.018);
-    cx.beginPath(); cx.moveTo(ptr.x, ptr.y); cx.lineTo(hx, hy); cx.stroke();
-    // lilitan kulit
-    const L = Math.hypot(hx - ptr.x, hy - ptr.y) || 1, nx = -(hy - ptr.y) / L, ny = (hx - ptr.x) / L, hw = Math.max(4, S * 0.009);
+    cx.beginPath(); cx.moveTo(bx, by); cx.quadraticCurveTo(qx, qy, hx, hy); cx.stroke();
+    // lilitan kulit, ngikut lengkungnya
+    const L = Math.hypot(hx - bx, hy - by) || 1, hw = Math.max(4, S * 0.009);
     cx.strokeStyle = "rgba(0,0,0,0.35)"; cx.lineWidth = 2;
     for (let i = 1; i < 10; i++) {
-      const f = i / 10, px = ptr.x + (hx - ptr.x) * f, py = ptr.y + (hy - ptr.y) * f;
-      cx.beginPath(); cx.moveTo(px + nx * hw, py + ny * hw);
-      cx.lineTo(px - nx * hw + (hx - ptr.x) * 0.03, py - ny * hw + (hy - ptr.y) * 0.03); cx.stroke();
+      const f = i / 10, g = 1 - f;
+      const px = g * g * bx + 2 * g * f * qx + f * f * hx, py = g * g * by + 2 * g * f * qy + f * f * hy;
+      let tx = g * (qx - bx) + f * (hx - qx), ty = g * (qy - by) + f * (hy - qy);
+      const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+      cx.beginPath(); cx.moveTo(px - ty * hw, py + tx * hw);
+      cx.lineTo(px + ty * hw + tx * L * 0.03, py - tx * hw + ty * L * 0.03); cx.stroke();
     }
     if (v.tassel && !v.glow) { // rumbai jaranan
       ["#d63a2a", "#f2c23a", "#2f8f4e", "#d63a2a"].forEach((c, i) => {
@@ -539,11 +566,14 @@ export function createStage(o) {
     cx.strokeStyle = v.rope;
     cx.lineCap = v.flat ? "butt" : "round";
     if (v.fiber) { cx.strokeStyle = "rgba(232,247,255,0.35)"; }
-    for (let i = 0; i < n - 1; i++) {
-      const f = i / (n - 1);
+    // tiap potongan: dari tengah segmen sebelumnya ke tengah segmen berikutnya, melengkung lewat
+    // titik i. Jadi talinya mulus tanpa patahan, tapi ketebalannya tetap bisa beda-beda.
+    for (let i = 0; i < n; i++) {
+      const f = i / (n - 1), j = Math.max(0, i - 1), k = Math.min(n - 1, i + 1);
       // logam cair: ketebalannya beriak jalan sepanjang tali
       cx.lineWidth = (v.w0 + (v.w1 - v.w0) * Math.pow(f, 0.7)) * (v.chrome ? 1 + 0.22 * Math.sin(f * 18 - clock * 9) : 1);
-      cx.beginPath(); cx.moveTo(x[i], y[i]); cx.lineTo(x[i + 1], y[i + 1]); cx.stroke();
+      cx.beginPath(); cx.moveTo((x[j] + x[i]) / 2, (y[j] + y[i]) / 2);
+      cx.quadraticCurveTo(x[i], y[i], (x[i] + x[k]) / 2, (y[i] + y[k]) / 2); cx.stroke();
     }
     cx.lineCap = "round";
     cx.shadowBlur = 0;
