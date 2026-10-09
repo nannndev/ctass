@@ -210,7 +210,8 @@ fetch(`https://api.github.com/repos/${REPO}`).then((r) => (r.ok ? r.json() : nul
 }).catch(() => {});
 fetch(`https://api.github.com/repos/${REPO}/contributors?per_page=24`).then((r) => (r.ok ? r.json() : [])).then((list) => {
   const box = $("contributors"), more = box.querySelector(".more");
-  (Array.isArray(list) ? list : []).filter((c) => c.type !== "Bot").forEach((c) => {
+  const isSafe = (u, host) => { try { const p = new URL(u); return p.protocol === "https:" && p.hostname === host; } catch { return false; } };
+  (Array.isArray(list) ? list : []).filter((c) => c.type !== "Bot" && isSafe(c.html_url, "github.com") && isSafe(c.avatar_url, "avatars.githubusercontent.com")).forEach((c) => {
     const a = document.createElement("a");
     a.className = "av"; a.href = c.html_url; a.target = "_blank"; a.rel = "noopener";
     a.title = `${c.login} · ${c.contributions} commit`;
