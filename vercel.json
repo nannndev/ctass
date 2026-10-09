@@ -4,5 +4,5 @@
   "installCommand": "echo skip",
   "buildCommand": "node scripts/build-web.mjs",
   "outputDirectory": "dist",
-  "cleanUrls": true
+  "cleanUrls": false
 }
