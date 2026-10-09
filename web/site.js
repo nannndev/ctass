@@ -44,6 +44,7 @@ const ID = {
   view2d: "Tampilan: 2D", view3d: "Tampilan: 3D", view3dFail: "3D nggak didukung browser ini",
   themeClassic: "Tema: klasik", themeFuture: "Tema: futuristik",
   swingOn: "Ayunan: on", swingOff: "Ayunan: off",
+  targetOn: "Samsak: on", targetOff: "Samsak: off",
   hintClick: "<strong>Klik di mana aja.</strong>Pecutnya nyabet titik itu. Double klik = dua kali. Seret gagangnya buat mindahin.",
   hintFollow: "<strong>Klik, terus ayun dan sentak.</strong>Ayun pelan nggak bunyi. Harus disentak.",
   star: "★ Star di GitHub", seeAll: "Lihat semua",
@@ -118,6 +119,11 @@ $("swingBtn").onclick = () => {
   if (swingOn) loadSwing(sound);
   labels();
 };
+// samsak: nyala dari awal di demo, posisinya agak ke kanan bawah biar nggak ketutupan tombol
+let targetOn = true;
+stage.setTargetPos({ x: 0.74, y: 0.3 });
+stage.setTarget(true);
+$("targetBtn").onclick = () => { targetOn = !targetOn; stage.setTarget(targetOn); labels(); };
 let future = false;
 $("themeBtn").onclick = () => {
   future = !future;
@@ -160,6 +166,8 @@ function labels() {
   $("themeBtn").textContent = future ? T.themeFuture : T.themeClassic;
   $("swingBtn").textContent = swingOn ? T.swingOn : T.swingOff;
   $("swingBtn").setAttribute("aria-pressed", String(swingOn));
+  $("targetBtn").textContent = targetOn ? T.targetOn : T.targetOff;
+  $("targetBtn").setAttribute("aria-pressed", String(targetOn));
   $("themeBtn").setAttribute("aria-pressed", String(future));
   $("viewBtn").setAttribute("aria-pressed", String(on));
 }

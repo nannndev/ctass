@@ -347,6 +347,35 @@ export class Sound {
     });
   }
 
+  // kena samsak: "buk" kulit tebel. Makin kenceng sabetannya makin berat & keras.
+  bag(mach = 1, pan = 0) {
+    if (!this.ac || !this.on) return;
+    const { ac } = this, t = ac.currentTime, out = this.panner(pan), p = Math.min(1.6, Math.max(0.3, mach));
+    const n = ac.createBufferSource(); n.buffer = this.noise;
+    const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 900 + p * 900;
+    const ng = ac.createGain();
+    ng.gain.setValueAtTime(0.5 * p, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+    n.connect(f); f.connect(ng); ng.connect(out); ng.connect(this.verb);
+    n.start(t, Math.random()); n.stop(t + 0.1);
+    const o = ac.createOscillator(), og = ac.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(120 + 30 * Math.random(), t); o.frequency.exponentialRampToValueAtTime(42, t + 0.18);
+    og.gain.setValueAtTime(0.9 * p, t); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    o.connect(og); og.connect(out); o.start(t); o.stop(t + 0.24);
+  }
+
+  // samsak jebol: dentum gede + pasir/isi muncrat (desis panjang)
+  bagBurst(pan = 0) {
+    if (!this.ac || !this.on) return;
+    const { ac } = this, t = ac.currentTime, out = this.panner(pan);
+    this.bag(1.6, pan);
+    const n = ac.createBufferSource(); n.buffer = this.noise; n.loop = true;
+    const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.setValueAtTime(2600, t); f.frequency.exponentialRampToValueAtTime(700, t + 1.1); f.Q.value = 0.6;
+    const ng = ac.createGain();
+    ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(0.35, t + 0.04); ng.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+    n.connect(f); f.connect(ng); ng.connect(out); ng.connect(this.verb);
+    n.start(t); n.stop(t + 1.25);
+  }
+
   // kena si AI: tamparan + "aduh" kecil
   thud(pan = 0) {
     if (!this.ac || !this.on) return;

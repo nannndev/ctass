@@ -21,11 +21,10 @@ const stage = createStage({
   cursorDot: !OVERLAY,    // di overlay pakai kursor sistem
   size: OVERLAY ? 0.75 : 1,
   onFirstMove: () => { $("hint").style.opacity = "0"; },
-  onHomeChange: (h) => {
-    settings.home = h;
-    if (OVERLAY) TAURI.core.invoke("save_settings", { settings }).catch(console.error);
-    else try { localStorage.setItem("ctas.settings", JSON.stringify(settings)); } catch {}
-  },
+  onHomeChange: (h) => { settings.home = h; persist(); },
+  onTargetMove: (p) => { settings.targetPos = p; persist(); },
+  // overlay tembus klik: pas kursor di atas samsak, tembusnya dimatiin biar samsaknya bisa dipegang
+  onTargetHover: (over) => { if (OVERLAY && $("unlock").hidden) TAURI.core.invoke("set_passthrough", { on: !over }).catch(console.error); },
   onScore: (s) => {
     $("pillCount").textContent = stage.session.crack + " " + t("ctarr", settings.lang);
     $("sCrack").textContent = s.crack;
@@ -44,6 +43,11 @@ const stage = createStage({
   },
 });
 
+function persist() {
+  if (OVERLAY) TAURI.core.invoke("save_settings", { settings }).catch(console.error);
+  else try { localStorage.setItem("ctas.settings", JSON.stringify(settings)); } catch {}
+}
+
 // ---------- Varian ----------
 const chips = $("variants");
 Object.keys(VARIANTS).forEach((k, i) => {
@@ -60,6 +64,8 @@ function applySettings(s) {
   stage.use(v, settings.variant);
   stage.setShowWord(settings.showWord);
   if (settings.home) stage.setHome(settings.home);
+  stage.setTarget(settings.target);
+  if (settings.targetPos) stage.setTargetPos(settings.targetPos);
   if (stage.mode !== settings.mode) stage.setMode(settings.mode);
   if (stage.is3D !== (settings.view === "3d")) stage.set3D(settings.view === "3d");
   stage.setTheme(settings.theme);
@@ -144,9 +150,10 @@ if (OVERLAY) {
   // (biar lompatan posisi nggak kebaca sebagai sentakan)
   TAURI.event.listen("ctas://monitor", () => { stage.rearm(); setTimeout(() => stage.rearm(), 80); });
   TAURI.event.listen("ctas://settings", (e) => applySettings(e.payload));
-  // mode klik: tekan = nyabet (atau mulai geser kalau kena gagang), lepas = selesai geser
+  // mode klik: tekan = nyabet (atau mulai geser kalau kena gagang), lepas = selesai geser.
+  // Samsak: tekan di samsak = mulai nyeret (di mode mana aja)
   TAURI.event.listen("ctas://click", (e) => {
-    if (settings.mode !== "click") return;
+    if (settings.mode !== "click" && !settings.target) return;
     const [x, y, n] = e.payload;
     sound.init(); stage.pressAt(x, y, n);
   });

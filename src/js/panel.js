@@ -34,6 +34,7 @@ const STR = {
     tooBig: "File kegedean (maks 8 MB). Potong dulu ya.", badFile: "File ini nggak bisa dibaca. Coba mp3 / wav / ogg / m4a.",
     missingFile: "File suaranya udah nggak ada. Pilih lagi ya.",
     themeClassic: "Klasik", themeFuture: "Futuristik",
+    target: "Samsak", targetSub: "Sasaran buat dipecut: penyok, ninggalin bekas sesuai pecutnya, bisa jebol. Seret buat mindahin.",
     swing: "Suara ayunan", swingSub: "Bunyi wush ngikutin tali: diputer makin kenceng, wush-nya makin cepet & keras. Diem = sunyi.", swingVol: "Volume ayunan",
     sampleOk: "🎙 Pakai rekaman cambuk asli.", sampleLoading: "Lagi muat rekaman cambuk…", sampleFail: "⚠ Rekaman cambuk gagal dimuat, sementara pakai suara sintetis.",
     view2d: "2D", view2dSub: "Paling ringan. Semua pecut.", view3d: "3D", view3dSub: "Pecutnya jadi 3D beneran. Sedikit lebih berat.", view3dFail: "3D nggak didukung di komputer ini, balik ke 2D.",
@@ -63,6 +64,7 @@ const STR = {
     tooBig: "That file's too big (max 8 MB). Trim it first.", badFile: "Can't read this file. Try an mp3 / wav / ogg / m4a.",
     missingFile: "That sound file is gone. Pick it again.",
     themeClassic: "Classic", themeFuture: "Futuristic",
+    target: "Punching bag", targetSub: "A target to whip: it dents, keeps marks from each whip and can burst. Drag it to move it.",
     swing: "Swing sound", swingSub: "A whoosh that follows the rope: the faster you spin it, the faster and louder it gets. Still = silent.", swingVol: "Swing volume",
     sampleOk: "🎙 Using a real whip recording.", sampleLoading: "Loading the whip recording…", sampleFail: "⚠ Couldn't load the whip recording, using the synthesized sound for now.",
     view2d: "2D", view2dSub: "Lightest. Every whip.", view3d: "3D", view3dSub: "Real 3D whips. A bit heavier.", view3dFail: "3D isn't supported on this computer, back to 2D.",
@@ -104,6 +106,7 @@ const stage = createStage({
   onMach: (mach, shown) => { $("bar").style.width = Math.min(100, (shown / 1.5) * 100) + "%"; },
   // preview = layar mini: posisi pecut di sini kepake juga di overlay
   onHomeChange: (h) => { settings.home = h; save(); },
+  onTargetMove: (p) => { settings.targetPos = p; save(); },
 });
 $("stage").addEventListener("pointerdown", () => sound.init());
 addEventListener("resize", () => stage.resize());
@@ -159,6 +162,7 @@ function render() {
   setRange("sensitivity", RANGES.sensitivity, 2 - settings.sensitivity);
   $("oSens").textContent = pct(2 - settings.sensitivity);
   setRange("volume", RANGES.volume, settings.volume); $("oVol").textContent = pct(settings.volume);
+  $("target").checked = settings.target;
   $("swing").checked = settings.swing; $("swingVolRow").hidden = !settings.swing;
   setRange("swingVol", RANGES.swingVol, settings.swingVol); $("oSwingVol").textContent = pct(settings.swingVol);
   document.querySelectorAll('input[name="mode"]').forEach((r) => (r.checked = r.value === settings.mode));
@@ -174,6 +178,8 @@ function apply() {
   stage.use(effective(settings), settings.variant);
   stage.setShowWord(settings.showWord);
   if (settings.home) stage.setHome(settings.home);
+  stage.setTarget(settings.target);
+  if (settings.targetPos) stage.setTargetPos(settings.targetPos);
   if (stage.mode !== settings.mode) stage.setMode(settings.mode);
   if (stage.is3D !== (settings.view === "3d")) {
     stage.set3D(settings.view === "3d").then((ok) => {
@@ -233,6 +239,7 @@ $("showWord").addEventListener("change", (e) => { settings.showWord = e.target.c
 // umum
 $("sensitivity").addEventListener("input", (e) => { settings.sensitivity = +(2 - e.target.value).toFixed(2); changed(); });
 $("swing").addEventListener("change", (e) => { settings.swing = e.target.checked; sound.init(); changed(); });
+$("target").addEventListener("change", (e) => { settings.target = e.target.checked; changed(); });
 $("swingVol").addEventListener("input", (e) => { settings.swingVol = +e.target.value; changed(); });
 $("volume").addEventListener("input", (e) => { settings.volume = +e.target.value; sound.init(); changed(); });
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", () => {

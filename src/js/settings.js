@@ -15,6 +15,8 @@ export const DEFAULTS = {
   theme: "classic", // "classic" (gelap elegan) / "future" (neon futuristik)
   swing: false,    // suara wush pas tali diayun / diputer
   swingVol: 0.7,
+  target: false,   // samsak buat dipecut
+  targetPos: null, // posisi jangkar samsak { x, y } dalam pecahan layar (null = bawaan)
   custom: {},     // { [key pecut]: { len, bend, grav, flex, rope, grip, sound, fx, word, echo, room, pitch, file } }
                   // sound = key pecut lain, atau "file" = suara sendiri (file: { id, name, start, end, gain })
 };
@@ -44,6 +46,8 @@ export function normalize(raw) {
   s.view = s.view === "3d" ? "3d" : "2d";
   s.theme = s.theme === "future" ? "future" : "classic";
   s.swing = !!s.swing;
+  s.target = !!s.target;
+  if (!s.targetPos || !isFinite(s.targetPos.x) || !isFinite(s.targetPos.y)) s.targetPos = null;
   s.swingVol = isFinite(s.swingVol) ? Math.min(1.5, Math.max(0, +s.swingVol)) : 0.7;
   delete s.nag; delete s.autosend; // fitur omelan udah dihapus
   if (!s.custom || typeof s.custom !== "object") s.custom = {};

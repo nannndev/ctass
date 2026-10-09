@@ -97,6 +97,7 @@ export const EN_DYNAMIC = {
   view2d: "View: 2D", view3d: "View: 3D", view3dFail: "3D isn't supported in this browser",
   themeClassic: "Theme: classic", themeFuture: "Theme: futuristic",
   swingOn: "Swing: on", swingOff: "Swing: off",
+  targetOn: "Punching bag: on", targetOff: "Punching bag: off",
   hintClick: "<strong>Click anywhere.</strong>The whip lashes that spot. Double-click = twice. Drag its handle to move it.",
   hintFollow: "<strong>Click, then swing and flick.</strong>A slow swing won't crack. You have to snap it.",
   star: "★ Star on GitHub", seeAll: "See all",

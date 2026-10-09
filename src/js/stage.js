@@ -1,6 +1,7 @@
 // Panggung pecut: fisika + gambar + deteksi ctarr. Dipakai app desktop dan demo di landing page.
 import { VARIANTS, AI_LINES } from "./variants.js";
 import { Whip } from "./physics.js";
+import { Bag, markKind, profile, paintMark, BAG_COLORS } from "./target.js";
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -16,6 +17,9 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
  * @param {(mach:number, shown:number) => void} [o.onMach]
  * @param {(text:string, x:number, y:number) => void} [o.onSay]  x,y relatif ke kanvas
  * @param {() => void} [o.onFirstMove]
+ * @param {boolean} [o.target]      tampilkan samsak (sasaran yang bisa dipecut & diseret)
+ * @param {(p:{x:number,y:number}) => void} [o.onTargetMove]  samsak selesai diseret (posisi dalam pecahan layar)
+ * @param {(over:boolean) => void} [o.onTargetHover]  kursor masuk/keluar samsak (overlay: matiin tembus klik)
  */
 export function createStage(o) {
   const cv = o.canvas, cx = cv.getContext("2d");
@@ -63,10 +67,102 @@ export function createStage(o) {
     ai.w = Math.max(72, S * (o.aiScale ?? 0.17)); ai.h = ai.w * 0.86;
     ai.x = W > 700 ? W * 0.8 : W * 0.74; ai.y = H * 0.48;
     if (!ptr.seen) { ptr.x = ptr.px = W * 0.3; ptr.y = ptr.py = H * 0.62; }
+    bag.size(S); placeBag();
     if (mode === "click" && !auto && !dragging) { goHome(); return; }
     build();
   }
   const showAI = o.showAI ?? false;
+
+  // ---------- Samsak ----------
+  // Digantung dari jangkar (bisa diseret). Kena sabetan = penyok, ayun, ninggalin bekas, HP berkurang.
+  const bag = new Bag();
+  let bagOn = o.target ?? false, bagPos = { x: 0.66, y: 0.04 }, bagGrab = null, bagHover = false, bagCool = 0;
+  const bagAnchor = () => [Math.min(W - 30, Math.max(30, bagPos.x * W)), Math.min(H * 0.7, Math.max(8, bagPos.y * H))];
+  function placeBag() { if (W) { const [x, y] = bagAnchor(); bag.setAnchor(x, y); } }
+  function setBagHover(h) {
+    if (h === bagHover) return;
+    bagHover = h; cv.style.cursor = h ? (bagGrab ? "grabbing" : "grab") : "";
+    o.onTargetHover?.(h);
+  }
+  function hoverBag(x, y) { setBagHover(bagOn && (!!bagGrab || bag.grabbable(x, y))); }
+  // tekan di samsak = mulai nyeret (kalau nggak digeser, di mode klik jadi sabetan ke situ)
+  function grabBag(x, y, n = 1) {
+    if (bagGrab) return true;
+    if (!bagOn || !bag.grabbable(x, y)) return false;
+    bagGrab = { x0: x, y0: y, ox: bag.anchor.x - x, oy: bag.anchor.y - y, n, moved: false, tx: bag.anchor.x, ty: bag.anchor.y };
+    cv.style.cursor = "grabbing";
+    return true;
+  }
+  function dragBag(x, y) {
+    const g = bagGrab;
+    if (!g) return;
+    if (Math.hypot(x - g.x0, y - g.y0) > 6) g.moved = true;
+    g.tx = Math.min(W - 30, Math.max(30, x + g.ox)); g.ty = Math.min(H * 0.7, Math.max(8, y + g.oy));
+  }
+  function dropBag() {
+    const g = bagGrab;
+    if (!g) return false;
+    bagGrab = null; cv.style.cursor = bagHover ? "grab" : "";
+    if (g.moved) { bagPos = { x: g.tx / W, y: g.ty / H }; o.onTargetMove?.(bagPos); }
+    else if (mode === "click") strike(g.x0, g.y0, g.n);
+    return true;
+  }
+  // tali nggak bisa nembus samsak: titik yang masuk didorong keluar ke samping, kecepatan masuknya diilangin.
+  // Ujung tali yang masuk kenceng = kena sabet.
+  function bagCollide(h) {
+    if (!bagOn || bagGrab || bag.broken > 0 || bag.drop > 0.3) return;
+    if (bag.contains(ptr.x, ptr.y, 12)) return; // tangannya di dalam samsak: biarin, biar nggak getar
+    const { x, y, px, py, n } = whip;
+    for (let i = 2; i < n; i++) {
+      if (!bag.contains(x[i], y[i])) continue;
+      if (i >= n - 4 && bagCool <= 0) {
+        const vx = (x[i] - px[i]) / h, vy = (y[i] - py[i]) / h, mach = Math.hypot(vx, vy) / v.threshold;
+        if (mach > 0.3) { bagHit(x[i], y[i], vx, vy, mach); bagCool = 0.12; }
+      }
+      const [lx, ly] = bag.toLocal(x[i], y[i]);
+      const vv = Math.min(1, Math.max(0, (ly - bag.top) / bag.h)), rr = bag.r * profile(vv) + 1;
+      const [tx, ty] = bag.toScreen(lx >= 0 ? rr : -rr, ly);
+      const dx = (tx - x[i]) * 0.7, dy = (ty - y[i]) * 0.7, dl = Math.hypot(dx, dy) || 1, nx = dx / dl, ny = dy / dl;
+      const vn = (x[i] - px[i]) * nx + (y[i] - py[i]) * ny;
+      x[i] += dx; y[i] += dy;
+      px[i] += dx + (vn < 0 ? nx * vn : 0); py[i] += dy + (vn < 0 ? ny * vn : 0);
+    }
+  }
+  function bagHit(x, y, vx, vy, mach) {
+    const kind = markKind(v), dmg = bag.hit(x, y, vx, vy, mach, kind, typeof v.glow === "string" ? v.glow : v.rope);
+    if (!dmg) return;
+    score.hit++; session.hit++;
+    const pan = (x / W) * 2 - 1;
+    o.sound.bag?.(mach, pan);
+    fx.push({ k: "text", x: x + (Math.random() - 0.5) * 20, y: y - 14, life: 1, rate: 1.6, s: "-" + dmg, color: C.ember, size: 0.45 });
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    if (!reduced) {
+      const n = 4 + Math.round(mach * 4);
+      for (let k = 0; k < n; k++) {
+        const a = Math.atan2(-vy, -vx) + rnd(-0.9, 0.9), sp = rnd(60, 220) * Math.min(2, mach + 0.3);
+        if (kind === "burn") fx.push({ k: "ember", x, y, vx: Math.cos(a) * sp * 0.5, vy: Math.sin(a) * sp * 0.5 - 60, size: rnd(1.5, 3.5), life: 1, rate: rnd(1.4, 2.4) });
+        else if (kind === "melt" || kind === "char") fx.push({ k: "spark", x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, size: rnd(1.5, 3), life: 1, rate: rnd(2, 3) });
+        else fx.push({ k: "dust", x, y, vx: Math.cos(a) * sp * 0.4, vy: Math.sin(a) * sp * 0.4, r: rnd(2, 5), grow: rnd(10, 26), life: 1, rate: rnd(1.6, 2.6) });
+      }
+    }
+    if (bag.broken > 0) bagBurst();
+  }
+  // HP habis: samsak jebol, isinya muncrat
+  function bagBurst() {
+    const col = BAG_COLORS[theme], [cxx, cyy] = bag.toScreen(0, bag.top + bag.h * 0.5), rnd = (a, b) => a + Math.random() * (b - a);
+    o.sound.bagBurst?.((cxx / W) * 2 - 1);
+    shake = reduced ? 0 : 14;
+    fx.push({ k: "text", x: cxx, y: cyy - bag.h * 0.3, life: 1, rate: 0.8, s: "K.O.!", color: C.ember, size: 1.3 });
+    if (reduced) return;
+    for (let k = 0; k < 46; k++) {
+      const a = rnd(0, Math.PI * 2), sp = rnd(80, 520), leather = k % 3 === 0;
+      fx.push({ k: "bit", x: cxx + rnd(-bag.r, bag.r), y: cyy + rnd(-bag.h / 2, bag.h / 2), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 180,
+        w: leather ? rnd(6, 14) : rnd(2, 4), h: leather ? rnd(4, 9) : rnd(2, 4), rot: rnd(0, 6), vr: rnd(-12, 12),
+        color: leather ? col.body : ["#d8c49a", "#b89f73", "#efe2c2"][k % 3], life: 1, rate: rnd(0.5, 0.9) });
+    }
+    for (let k = 0; k < 10; k++) fx.push({ k: "dust", x: cxx + rnd(-bag.r, bag.r), y: cyy + rnd(-bag.h / 2, bag.h / 2), vx: rnd(-80, 80), vy: rnd(-90, 20), r: rnd(6, 12), grow: rnd(30, 60), life: 1, rate: rnd(0.7, 1.1) });
+    o.onTarget?.({ ko: bag.ko });
+  }
   function build() { whip = new Whip(v, S * (o.size ?? 1), ptr, dir); trail.length = 0; }
 
   function pick(k) { if (!VARIANTS[k]) return; key = k; v = VARIANTS[k]; build(); warm(); }
@@ -90,20 +186,24 @@ export function createStage(o) {
   }
   // tekan di deket gagang = mulai geser rumah; tekan di tempat lain = nyabet
   function pressAt(x, y, n = 1) {
+    if (grabBag(x, y, n)) { o.onFirstMove?.(); return; }
     if (mode !== "click") return;
     o.onFirstMove?.(); // sembunyiin petunjuk
     if (!auto && Math.hypot(x - ptr.x, y - ptr.y) < 34) { dragging = true; return; }
     strike(x, y, n);
   }
-  function dragTo(x, y) { if (dragging) { ptr.x = x; ptr.y = y; } }
+  function dragTo(x, y) { dragBag(x, y); if (dragging) { ptr.x = x; ptr.y = y; } }
   function releaseAt() {
+    if (dropBag()) return;
     if (!dragging) return;
     dragging = false;
     home = { x: ptr.x / W, y: ptr.y / H };
     o.onHomeChange?.(home);
   }
   function move(e) {
+    hoverBag(...local(e));
     if (mode === "click") { dragTo(...local(e)); return; }
+    dragBag(...local(e));
     [ptr.x, ptr.y] = local(e);
     if (!ptr.seen) { ptr.seen = true; o.onFirstMove?.(); }
   }
@@ -112,6 +212,7 @@ export function createStage(o) {
     o.sound.init();
     cv.setPointerCapture?.(e.pointerId);
     if (mode === "click") { const [x, y] = local(e); pressAt(x, y, e.detail >= 2 ? 2 : 1); return; }
+    if (grabBag(...local(e))) o.onFirstMove?.();
     move(e);
   });
   cv.addEventListener("pointerup", () => releaseAt());
@@ -352,6 +453,12 @@ export function createStage(o) {
     const dt = Math.min(0.033, (now - last) / 1000 || 0.016); last = now;
     if (auto) driveAuto(dt);
     clock += dt;
+    if (bagOn) {
+      const [ax, ay] = bagGrab ? [bagGrab.tx, bagGrab.ty] : bagAnchor();
+      bag.setAnchor(ax, ay, dt);
+      bag.step(dt);
+      bagCool -= dt;
+    }
 
     // gulungan: dikejar halus. Selama lagi digulung/diulur nggak boleh ctarr.
     if (now - coilAt > 1600) coilT = Math.max(0, coilT - dt * 0.35);
@@ -394,6 +501,7 @@ export function createStage(o) {
       const ddx = ox + (dir.x - ox) * f, ddy = oy + (dir.y - oy) * f;
       const ddz = oz + (dz - oz) * f, hl = whip.handleLen / Math.sqrt(1 + ddz * ddz);
       tip = Math.max(tip, whip.step(h, bx, by, bx + ddx * hl, by + ddy * hl, 0, ddz * hl));
+      bagCollide(h);
       const t = whip.n - 1;
       trail.push(whip.x[t], whip.y[t]);
     }
@@ -433,10 +541,11 @@ export function createStage(o) {
       shake *= 0.82; if (shake < 0.3) shake = 0;
     }
     if (showAI) drawAI(dt);
+    if (bagOn && !is3D()) drawBag();
     drawTrail();
     if (is3D()) {
       if (coil > 0.01) drawCoil();
-      cx.drawImage(r3d.render(whip, { x: ptr.x, y: ptr.y, z: 0 }, v, S, clock, clock - lastCrackAt), 0, 0, W, H);
+      cx.drawImage(r3d.render(whip, { x: ptr.x, y: ptr.y, z: 0 }, v, S, clock, clock - lastCrackAt, bagOn ? { bag, theme } : null), 0, 0, W, H);
       drawExtras(true);
     } else {
       drawHandle();
@@ -445,6 +554,7 @@ export function createStage(o) {
       drawExtras(false);
     }
     if (mode === "click" && !auto) drawHomeRing();
+    if (bagOn) drawBagHud();
     drawFx(dt);
     cx.restore();
     if ((o.cursorDot ?? true) && mode === "follow") {
@@ -464,6 +574,98 @@ export function createStage(o) {
     const glow = cx.createLinearGradient(0, hz - 40, 0, hz + 30);
     glow.addColorStop(0, "rgba(77,227,255,0)"); glow.addColorStop(0.6, "rgba(77,227,255,0.10)"); glow.addColorStop(1, "rgba(77,227,255,0)");
     cx.fillStyle = glow; cx.fillRect(0, hz - 40, W, 70);
+  }
+
+  // ---------- Samsak 2D ----------
+  function drawBag() {
+    const B = bag, col = BAG_COLORS[theme], top = B.top, h = B.h, r = B.r;
+    cx.save();
+    cx.translate(B.anchor.x, B.anchor.y); cx.rotate(B.theta);
+    // kait + rantai + 4 tali ke tutup atas
+    const ring = Math.max(4, top - B.chain * 0.35);
+    cx.strokeStyle = col.chain; cx.lineWidth = 2;
+    cx.beginPath(); cx.arc(0, -3, 4, 0, Math.PI * 2); cx.stroke();
+    if (ring > 2) {
+      cx.setLineDash([4, 3]); cx.lineWidth = 2.4;
+      cx.beginPath(); cx.moveTo(0, 1); cx.lineTo(0, ring); cx.stroke(); cx.setLineDash([]);
+      if (B.broken <= 0) {
+        cx.lineWidth = 1.2;
+        for (const f of [-0.85, -0.3, 0.3, 0.85]) { cx.beginPath(); cx.moveTo(0, ring); cx.lineTo(f * r * profile(0.04), top + h * 0.03); cx.stroke(); }
+      }
+    }
+    if (B.broken > 0) { cx.restore(); return; }
+    // badan: sisi kiri & kanan dari jari-jari tiap tinggi (udah termasuk penyok)
+    const N = 28, body = new Path2D();
+    for (let j = 0; j <= N; j++) { const t = j / N; body[j ? "lineTo" : "moveTo"](B.radius(t, 0), top + t * h); }
+    for (let j = N; j >= 0; j--) { const t = j / N; body.lineTo(-B.radius(t, Math.PI), top + t * h); }
+    body.closePath();
+    const gr = cx.createLinearGradient(-r, 0, r, 0);
+    gr.addColorStop(0, col.band); gr.addColorStop(0.18, col.body); gr.addColorStop(0.36, col.hi);
+    gr.addColorStop(0.6, col.body); gr.addColorStop(1, col.band);
+    cx.fillStyle = gr; cx.fill(body);
+    cx.save(); cx.clip(body);
+    // pita kulit hitam atas-bawah + jahitan
+    cx.fillStyle = col.band; cx.globalAlpha = 0.92;
+    cx.fillRect(-r * 1.5, top - 2, r * 3, h * 0.13); cx.fillRect(-r * 1.5, top + h * 0.87, r * 3, h * 0.15);
+    cx.globalAlpha = 1; cx.strokeStyle = col.stitch; cx.lineWidth = 1; cx.setLineDash([3, 3]);
+    for (const yy of [top + h * 0.15, top + h * 0.85]) { cx.beginPath(); cx.moveTo(-r * 1.5, yy); cx.lineTo(r * 1.5, yy); cx.stroke(); }
+    cx.setLineDash([]);
+    // tulisan CTAS di muka (ikut muter sama samsaknya)
+    const face = Math.sin(Math.PI / 2 + B.psi);
+    if (face > 0.2) {
+      cx.save(); cx.translate(Math.cos(Math.PI / 2 + B.psi) * r * 0.9, top + h * 0.5); cx.scale(face, 1);
+      cx.fillStyle = col.logo; cx.font = `800 ${Math.round(r * 0.5)}px ${FONT_DISPLAY}`; cx.textAlign = "center"; cx.textBaseline = "middle";
+      cx.globalAlpha = 0.85; cx.fillText("CTAS", 0, 0); cx.restore();
+    }
+    // penyok di muka: bayangan gelap
+    for (let rI = 0; rI < 12; rI++) {
+      for (let k = 0; k < 20; k++) {
+        const p = B.perm[rI * 20 + k];
+        if (p < 0.05) continue;
+        const aw = (k / 20) * Math.PI * 2 + B.psi, sn = Math.sin(aw);
+        if (sn < 0.15) continue;
+        const t = rI / 11, xx = Math.cos(aw) * B.r * profile(t), yy = top + t * h, rad = r * (0.35 + p);
+        const g2 = cx.createRadialGradient(xx, yy, 0, xx, yy, rad);
+        g2.addColorStop(0, `rgba(0,0,0,${Math.min(0.5, p * 1.4) * sn})`); g2.addColorStop(1, "rgba(0,0,0,0)");
+        cx.fillStyle = g2; cx.fillRect(xx - rad, yy - rad, rad * 2, rad * 2);
+      }
+    }
+    // bekas sabetan yang ngadep kita
+    for (const m of B.marks) {
+      const aw = m.a + B.psi, sn = Math.sin(aw);
+      if (sn < 0.1) continue;
+      cx.save(); cx.translate(Math.cos(aw) * B.r * profile(m.v), top + m.v * h); cx.scale(Math.max(0.25, sn), 1); cx.rotate(m.rot);
+      paintMark(cx, m, r * 0.9);
+      cx.restore();
+    }
+    // sobek kalau HP tinggal dikit
+    if (B.hp < 50) {
+      cx.strokeStyle = "rgba(10,6,4,0.85)"; cx.lineWidth = 2.2;
+      const tears = B.hp < 25 ? 3 : 1;
+      for (let k = 0; k < tears; k++) {
+        const yy = top + h * (0.3 + k * 0.22), xx = (k % 2 ? -0.3 : 0.25) * r;
+        cx.beginPath(); cx.moveTo(xx - r * 0.25, yy); cx.lineTo(xx - r * 0.05, yy + 4); cx.lineTo(xx + r * 0.1, yy - 3); cx.lineTo(xx + r * 0.3, yy + 2); cx.stroke();
+      }
+      if (B.hp < 25 && !reduced && Math.random() < 0.25) {
+        const [sx, sy] = B.toScreen(0.25 * r, top + h * 0.3);
+        fx.push({ k: "bit", x: sx, y: sy, vx: (Math.random() - 0.5) * 20, vy: 20, w: 2, h: 2, rot: 0, vr: 0, color: "#d8c49a", life: 1, rate: 1.2 });
+      }
+    }
+    cx.restore();
+    // garis tepi tipis biar kebaca di latar apa aja (overlay)
+    cx.strokeStyle = "rgba(0,0,0,0.35)"; cx.lineWidth = 1; cx.stroke(body);
+    cx.restore();
+  }
+  // bar HP di atas samsak (muncul sebentar abis kena)
+  function drawBagHud() {
+    const B = bag;
+    if (B.hpShown <= 0 || B.broken > 0) return;
+    const a = Math.min(1, B.hpShown), [x, y] = B.toScreen(0, B.top - 14), w = Math.max(40, B.r * 2.2);
+    cx.save(); cx.globalAlpha = a;
+    cx.fillStyle = "rgba(0,0,0,0.55)"; roundRect(x - w / 2 - 2, y - 4, w + 4, 8, 4); cx.fill();
+    cx.fillStyle = B.hp > 50 ? C.accent : B.hp > 25 ? "#e2a35a" : C.ember;
+    roundRect(x - w / 2, y - 2, (w * B.hp) / 100, 4, 2); cx.fill();
+    cx.restore();
   }
 
   // garis kabur di belakang ujung pecut: makin kenceng makin keliatan
@@ -917,7 +1119,13 @@ export function createStage(o) {
     score, session, pick, use, resize,
     get variant() { return key; },
     reset() { score.crack = score.hit = score.best = 0; o.onScore?.(score); },
-    rearm() { ptr.seen = false; resize(); },
+    rearm() { ptr.seen = false; bagGrab = null; bagHover = false; resize(); },
+    setTarget(on) {
+      bagOn = !!on;
+      if (!bagOn) { bagGrab = null; setBagHover(false); }
+    },
+    setTargetPos(p) { if (p && isFinite(p.x) && isFinite(p.y)) { bagPos = { x: p.x, y: p.y }; if (!bagGrab) placeBag(); } },
+    get target() { return bagOn ? bag : null; },
     // posisi kursor dari luar (overlay tembus klik nggak dapet event mouse)
     setMode(m) { mode = m === "click" ? "click" : "follow"; auto = null; dragging = false; if (mode === "click") goHome(); else build(); },
     setHome(h) { if (h && isFinite(h.x) && isFinite(h.y)) { home = { x: h.x, y: h.y }; if (mode === "click" && !auto && !dragging) goHome(); } },
@@ -928,7 +1136,9 @@ export function createStage(o) {
     get mode() { return mode; },
     get tip() { return whip.tip(); },
     pointer(x, y) {
+      hoverBag(x, y);
       if (mode === "click") { dragTo(x, y); return; }
+      dragBag(x, y);
       ptr.x = x; ptr.y = y;
       if (!ptr.seen) { ptr.seen = true; ptr.px = x; ptr.py = y; build(); o.onFirstMove?.(); }
     },

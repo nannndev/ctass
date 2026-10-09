@@ -8,6 +8,7 @@
 // Hasil render dibalikin sebagai canvas, terus ditempel stage.js ke canvas 2D-nya
 // (jadi efek ctarr, tulisan, guncangan tetap nyatu).
 import * as T from "./vendor/three.min.js";
+import { BAG_COLORS, paintMark } from "./target.js";
 
 const RAD = 10; // sisi lingkaran tabung
 const SUB = 3;  // titik halus per segmen tali
@@ -35,11 +36,111 @@ export function createWhip3D() {
   rimLight.position.set(0.9, -0.4, -0.5);
   scene.add(hemi, keyLight, rimLight);
 
-  const group = new T.Group();
-  scene.add(group);
+  // world = pecut + samsak; digeser bareng pas gambar bayangan
+  const world = new T.Group(), group = new T.Group();
+  world.add(group);
+  scene.add(world);
   const shadowMat = new T.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.32, depthWrite: false });
 
   let W = 0, H = 0, sig = "", parts = null;
+
+  // ---------- samsak 3D ----------
+  // Tabung yang titiknya digeser tiap frame ngikut penyok di target.js. Kulitnya tekstur kanvas:
+  // u = keliling (dibalik biar tulisan kebaca dari depan), v = tinggi. Bekas sabetan dicat ke situ.
+  const BR = 26, BS = 36, TAU = Math.PI * 2;
+  const bagRoot = new T.Group(), bagBody = new T.Group();
+  bagRoot.add(bagBody); world.add(bagRoot); bagRoot.visible = false;
+  const skin = makeTexture(512, 256);
+  const bagMat = new T.MeshStandardMaterial({ map: skin.tex, roughness: 0.6, metalness: 0.04, side: T.DoubleSide });
+  const bagGeo = new T.BufferGeometry();
+  {
+    const count = (BR + 1) * (BS + 1), uv = new Float32Array(count * 2), idx = [];
+    for (let i = 0; i <= BR; i++) for (let j = 0; j <= BS; j++) { const o = (i * (BS + 1) + j) * 2; uv[o] = 1 - j / BS; uv[o + 1] = 1 - i / BR; }
+    for (let i = 0; i < BR; i++) for (let j = 0; j < BS; j++) {
+      const a = i * (BS + 1) + j, b = a + BS + 1;
+      idx.push(a, a + 1, b, b, a + 1, b + 1);
+    }
+    bagGeo.setIndex(idx);
+    bagGeo.setAttribute("position", new T.BufferAttribute(new Float32Array(count * 3), 3));
+    bagGeo.setAttribute("uv", new T.BufferAttribute(uv, 2));
+  }
+  const bagMesh = new T.Mesh(bagGeo, bagMat);
+  bagBody.add(bagMesh);
+  const chainMat = new T.MeshStandardMaterial({ color: 0xa9a39a, roughness: 0.35, metalness: 0.85 });
+  const links = new T.InstancedMesh(new T.TorusGeometry(1, 0.3, 6, 12), chainMat, 40);
+  const hook = new T.Mesh(new T.TorusGeometry(4, 1, 6, 16), chainMat);
+  const straps = [0, 1, 2, 3].map(() => new T.Mesh(new T.CylinderGeometry(1, 1, 1, 6, 1), chainMat));
+  bagRoot.add(links, hook, ...straps);
+  for (const m of [bagMesh, links, hook, ...straps]) m.frustumCulled = false;
+  let skinKey = "", skinTick = 0;
+
+  function paintSkin(B, theme) {
+    const g = skin.g, Wt = skin.c.width, Ht = skin.c.height, col = BAG_COLORS[theme];
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.fillStyle = col.body; g.fillRect(0, 0, Wt, Ht);
+    // panel kulit + jahitannya
+    g.strokeStyle = col.stitch; g.lineWidth = 1.5; g.setLineDash([5, 4]);
+    for (let k = 0; k < 6; k++) { const x = (k / 6) * Wt + 2; g.beginPath(); g.moveTo(x, Ht * 0.13); g.lineTo(x, Ht * 0.87); g.stroke(); }
+    g.fillStyle = col.band; g.fillRect(0, 0, Wt, Ht * 0.13); g.fillRect(0, Ht * 0.87, Wt, Ht * 0.13);
+    for (const y of [Ht * 0.15, Ht * 0.85]) { g.beginPath(); g.moveTo(0, y); g.lineTo(Wt, y); g.stroke(); }
+    g.setLineDash([]);
+    // tulisan di muka (sudut 90° = u 0.75)
+    g.fillStyle = col.logo; g.font = `800 ${Math.round(Ht * 0.16)}px sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText("CTAS", Wt * 0.75, Ht * 0.5);
+    // bekas sabetan: satuan sama kayak 2D (piksel layar), diskala ke ukuran tekstur
+    const su = Wt / (TAU * B.r), sv = Ht / B.h;
+    for (const m of B.marks) {
+      const a = ((m.a % TAU) + TAU) % TAU, x = (1 - a / TAU) * Wt, y = m.v * Ht;
+      for (const off of [-Wt, 0, Wt]) {
+        if (x + off < -80 || x + off > Wt + 80) continue;
+        g.save(); g.translate(x + off, y); g.scale(su, sv); g.rotate(m.rot);
+        paintMark(g, m, B.r * 0.9);
+        g.restore();
+      }
+    }
+    skin.tex.needsUpdate = true;
+  }
+
+  function updateBag(info) {
+    const { bag: B, theme } = info, col = BAG_COLORS[theme];
+    bagRoot.visible = true;
+    bagRoot.position.set(B.anchor.x, -B.anchor.y, 0);
+    bagRoot.rotation.set(B.phi * 0.6, 0, -B.theta);
+    bagBody.rotation.y = -B.psi;
+    chainMat.color.set(col.chain);
+    const alive = B.broken <= 0, top = B.top;
+    bagMesh.visible = alive;
+    if (alive) {
+      const pos = bagGeo.attributes.position.array;
+      for (let i = 0; i <= BR; i++) {
+        const v = i / BR, y = -(top + v * B.h);
+        for (let j = 0; j <= BS; j++) {
+          const a = (j / BS) * TAU, r = B.radiusLocal(v, a), o = (i * (BS + 1) + j) * 3;
+          pos[o] = Math.cos(a) * r; pos[o + 1] = y; pos[o + 2] = Math.sin(a) * r;
+        }
+      }
+      bagGeo.attributes.position.needsUpdate = true;
+      bagGeo.computeVertexNormals();
+      // tekstur dicat ulang kalau ada bekas baru (atau bekas yang masih nyala, tiap 3 frame)
+      const hot = B.marks.some((m) => m.age < 1.5), key = B.version + theme;
+      if (key !== skinKey || (hot && ++skinTick % 3 === 0)) { skinKey = key; paintSkin(B, theme); }
+    }
+    // rantai: dari kait ke cincin, terus 4 tali ke tutup atas
+    const ring = top - B.chain * 0.35, step = 7;
+    const count = ring > 4 ? Math.min(40, Math.floor(ring / step)) : 0;
+    for (let k = 0; k < count; k++) {
+      V.set(0, -(k + 0.5) * (ring / count), 0); Q.setFromAxisAngle(up, k % 2 ? Math.PI / 2 : 0); SC.set(2.2, 3.6, 2.2);
+      links.setMatrixAt(k, M4.compose(V, Q, SC));
+    }
+    links.count = count; links.instanceMatrix.needsUpdate = true;
+    hook.position.set(0, 3, 0);
+    straps.forEach((m, k) => {
+      m.visible = alive && ring > 4;
+      if (!m.visible) return;
+      const a = Math.PI / 4 + (k * Math.PI) / 2 - B.psi, rr = B.r * 0.8;
+      place(m, 0, -ring, 0, Math.cos(a) * rr, -(top + B.h * 0.03), Math.sin(a) * rr, 0.8);
+    });
+  }
 
   function resize(w, h, dpr) {
     W = w; H = h;
@@ -214,7 +315,7 @@ export function createWhip3D() {
 
   // whip = Whip dari physics.js, base = pangkal gagang (posisi tangan)
   const M4 = new T.Matrix4(), Q = new T.Quaternion(), Q2 = new T.Quaternion(), V = new T.Vector3(), SC = new T.Vector3(), C3 = new T.Color();
-  function render(whip, base, v, S, clock = 0, sinceCrack = 99) {
+  function render(whip, base, v, S, clock = 0, sinceCrack = 99, bagInfo = null) {
     if (!W || !H) return canvas;
     const key = [v.rope, v.grip, v.strands, v.flat, v.plug, v.glow, v.tassel, v.core, v.fire, v.holo, v.chrome, v.chain, v.arcs, v.void, v.fiber, v.robot].join("|");
     if (key !== sig) { sig = key; build(v); }
@@ -345,14 +446,20 @@ export function createWhip3D() {
       }
     }
 
-    // dua kali gambar: bayangan (geser ke kanan bawah, di belakang) terus pecutnya
+    if (bagInfo) updateBag(bagInfo); else bagRoot.visible = false;
+
+    // dua kali gambar: bayangan (geser ke kanan bawah, di belakang) terus pecut + samsak
     renderer.clear();
-    if (P.kind !== "holo") { // hologram nggak punya bayangan
+    const whipShadow = P.kind !== "holo"; // hologram nggak punya bayangan
+    if (whipShadow || bagRoot.visible) {
       if (P.halo) P.halo.mesh.visible = false;
+      group.visible = whipShadow;
       scene.overrideMaterial = shadowMat;
-      group.position.set(S * 0.012, -S * 0.022, -S * 0.08);
+      world.position.set(S * 0.012, -S * 0.022, -S * 0.08);
       renderer.render(scene, camera);
       scene.overrideMaterial = null;
+      world.position.set(0, 0, 0);
+      group.visible = true;
       if (P.halo) P.halo.mesh.visible = true;
       renderer.clearDepth();
     }
