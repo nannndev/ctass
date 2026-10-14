@@ -13,12 +13,12 @@ export const EN = {
     "<strong>Click, then swing and flick.</strong> A slow swing won't crack. You have to snap it.",
   "Kenapa bisa bunyi": "Why it cracks",
   "Ujungnya lebih cepet dari suara.": "The tip outruns sound.",
-  "Pecut asli bunyi karena ujungnya tembus kecepatan suara. Ctas ngitung kecepatan ujung talinya, dan pas lewat batas itu, ctarr. Suaranya dibikin langsung pakai kode, nggak ada rekaman.":
-    "A real whip cracks because its tip breaks the speed of sound. Ctas tracks the speed of the rope's tip, and once it crosses that line: crack. Every sound is synthesized in code, no recordings.",
+  "Pecut asli bunyi karena ujungnya tembus kecepatan suara. Ctas ngitung kecepatan ujung talinya, dan pas lewat batas itu, ctarr. Suaranya campuran rekaman cambuk asli sama suara yang dibikin langsung pakai kode.":
+    "A real whip cracks because its tip breaks the speed of sound. Ctas tracks the speed of the rope's tip, and once it crosses that line: crack. The sound mixes real whip recordings with sounds synthesized in code.",
   "Segmen tali": "Rope segments",
   "Hitungan fisika": "Physics steps",
   "Batas bunyi": "Crack at",
-  "File suara": "Sound files",
+  "Jenis pecut": "Whips",
   "Ada 17 pecut.": "17 whips.",
   "Beda panjang, berat, bunyi, sama efeknya. Semuanya ada versi 3D. Di app, semuanya bisa dicustom: panjang, kekakuan, warna, gema, sampai pakai suara lu sendiri.":
     "Each has its own length, weight, sound, and effect, and every one comes in 3D. In the app you can customize all of it: length, stiffness, colors, echo, even your own sound.",
@@ -66,7 +66,10 @@ export const EN = {
     "Thanks to everyone who's helped build it. Want to add a whip or fix something? Fork it and send a pull request.",
   "Donasi": "Donate",
   "Ctas bakal tetap gratis. Kalau lu suka, boleh traktir kopi.": "Ctas will stay free. If you like it, feel free to buy me a coffee.",
-  "Dibikin iseng.": "Made for fun.",
+  "Developer": "Developer",
+  "Yang ngoding Ctas, dari fisika talinya sampai app desktopnya.": "The one who codes Ctas, from the rope physics to the desktop app.",
+  "Dibikin iseng oleh <a href=\"https://github.com/nannndev\" target=\"_blank\" rel=\"noopener\">nannndev</a>.":
+    "Made for fun by <a href=\"https://github.com/nannndev\" target=\"_blank\" rel=\"noopener\">nannndev</a>.",
 };
 
 export const EN_DYNAMIC = {
@@ -101,6 +104,8 @@ export const EN_DYNAMIC = {
   hintClick: "<strong>Click anywhere.</strong>The whip lashes that spot. Double-click = twice. Drag its handle to move it.",
   hintFollow: "<strong>Click, then swing and flick.</strong>A slow swing won't crack. You have to snap it.",
   star: "★ Star on GitHub", seeAll: "See all",
+  madeBy: "Made by", follow: "Follow on GitHub",
+  devStats: (repos, followers) => ` · ${repos} repos · ${followers} followers`,
   downloads: (n) => `⬇ <b>${n}</b> downloads`,
   copied: "Copied", copy: "Copy", pressCopy: (mac) => (mac ? "Press ⌘C" : "Press Ctrl+C"),
 };

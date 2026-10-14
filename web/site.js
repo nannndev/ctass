@@ -11,7 +11,7 @@ const $ = (id) => document.getElementById(id);
 const sound = new Sound();
 const demo = document.querySelector(".demo");
 const IS_MAC = /Mac/i.test(navigator.userAgent);
-const TRANSLATE = "nav a, a.btn:not(#starBtn), .eyebrow, h1, h2, h3, main p, main li:not(.steps li), figcaption, dt, .demo-hint, .foot span";
+const TRANSLATE = "nav a, a.btn:not(#starBtn):not(#devFollow), .eyebrow, h1, h2, h3, main p, main li:not(.steps li), figcaption, dt, .demo-hint, .foot span";
 
 let lang = "id";
 try { lang = localStorage.getItem("ctas.lang") || detectLang(); } catch { lang = detectLang(); }
@@ -48,6 +48,8 @@ const ID = {
   hintClick: "<strong>Klik di mana aja.</strong>Pecutnya nyabet titik itu. Double klik = dua kali. Seret gagangnya buat mindahin.",
   hintFollow: "<strong>Klik, terus ayun dan sentak.</strong>Ayun pelan nggak bunyi. Harus disentak.",
   star: "★ Star di GitHub", seeAll: "Lihat semua",
+  madeBy: "Dibikin oleh", follow: "Follow di GitHub",
+  devStats: (repos, followers) => ` · ${repos} repo · ${followers} follower`,
   downloads: (n) => `⬇ <b>${n}</b> kali di-download`,
   copied: "Ke-copy", copy: "Copy", pressCopy: (mac) => (mac ? "Tekan ⌘C" : "Tekan Ctrl+C"),
 };
@@ -184,6 +186,9 @@ function applyLang() {
   $("heroDl").textContent = T.download[OS || "none"];
   $("starBtn").firstChild.textContent = T.star + " ";
   $("contributors").querySelector(".more").textContent = T.seeAll;
+  $("makerBy").textContent = T.madeBy;
+  $("devFollowLabel").textContent = T.follow;
+  showDev();
   if (typeof showDownloads === "function") showDownloads();
   $("langBtn").textContent = lang === "en" ? "ID" : "EN";
   $("langBtn").title = lang === "en" ? "Ganti ke Bahasa Indonesia" : "Switch to English";
@@ -214,7 +219,21 @@ const REPO = "nannndev/ctass";
 // Isi link donasi di sini (Saweria / Trakteer / GitHub Sponsors / Ko-fi). Kosong = kartu donasi disembunyiin.
 const DONATE = [{ label: "☕ Buy me a coffee", url: "https://buymeacoffee.com/ekaprasety8" }];
 fetch(`https://api.github.com/repos/${REPO}`).then((r) => (r.ok ? r.json() : null)).then((d) => {
-  if (d && typeof d.stargazers_count === "number") $("starCount").textContent = d.stargazers_count;
+  if (d && typeof d.stargazers_count === "number") $("starCount").textContent = $("navStars").textContent = d.stargazers_count;
+}).catch(() => {});
+// ---------- Developer: nama asli + statistik dari profil GitHub ----------
+const DEV = "nannndev";
+let dev = null;
+function showDev() {
+  if (!dev) return;
+  const n = (x) => Number(x || 0).toLocaleString(lang === "en" ? "en-US" : "id-ID");
+  $("devStats").textContent = L().devStats(n(dev.public_repos), n(dev.followers));
+}
+fetch(`https://api.github.com/users/${DEV}`).then((r) => (r.ok ? r.json() : null)).then((d) => {
+  if (!d) return;
+  dev = d;
+  if (d.name) document.querySelectorAll(".dev-name").forEach((el) => (el.textContent = d.name));
+  showDev();
 }).catch(() => {});
 fetch(`https://api.github.com/repos/${REPO}/contributors?per_page=24`).then((r) => (r.ok ? r.json() : [])).then((list) => {
   const box = $("contributors"), more = box.querySelector(".more");
